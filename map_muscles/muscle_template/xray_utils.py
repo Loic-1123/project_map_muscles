@@ -24,6 +24,20 @@ def get_leg(data_dir=data_path, leg='LH'):
     return leg
 
 
+# function to create a line from two points
+def create_line(p1, p2, str = True):
+    if str:
+        p1 = eval(p1)
+        p2 = eval(p2)
+    x = [p1[0], p2[0]]
+    y = [p1[1], p2[1]]
+    z = [p1[2], p2[2]]
+    return x, y, z
+
+
+
+
+
 if __name__ == "__main__":
     muscles = load_muscle_state()
     anno_layers = [layer for layer in muscles['layers'] if layer['type'] == 'annotation']
