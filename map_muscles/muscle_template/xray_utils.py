@@ -23,6 +23,12 @@ def get_leg(data_dir=data_path, leg='LH'):
     leg = pd.read_csv(data_dir / f'{leg}.csv')
     return leg
 
+def get_femur_muscles(data_dir=data_path, leg='LH', femur_id = 'Fe'):
+    lh = get_leg(data_dir, leg)
+    layers_names = lh['layer_name'].unique()
+    fe_ids = [layer for layer in layers_names if femur_id in layer]
+    femur_muscles = [lh[lh['layer_name'] == fe] for fe in fe_ids]
+    return femur_muscles
 
 # function to create a line from two points
 def create_line(p1, p2, str = True):
@@ -33,9 +39,6 @@ def create_line(p1, p2, str = True):
     y = [p1[1], p2[1]]
     z = [p1[2], p2[2]]
     return x, y, z
-
-
-
 
 
 if __name__ == "__main__":
