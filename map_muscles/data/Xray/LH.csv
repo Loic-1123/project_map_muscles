@@ -1,0 +1,387 @@
+pointA,pointB,layer_name,origin-insertion,origin,insertion
+"[995, 900, 1994]","[1354, 1021, 2007]",LH ThCo 1,ThCo,Th,Co
+"[1001, 892, 2001]","[1355, 1018, 2004]",LH ThCo 1,ThCo,Th,Co
+"[1013, 901, 2008]","[1354, 1013, 2006]",LH ThCo 1,ThCo,Th,Co
+"[990, 913, 1993]","[1343, 1019, 2013]",LH ThCo 1,ThCo,Th,Co
+"[1015, 912, 2008]","[1355, 1010, 2011]",LH ThCo 1,ThCo,Th,Co
+"[1009, 924, 2010]","[1338, 1003, 2016]",LH ThCo 1,ThCo,Th,Co
+"[1011, 940, 2020]","[1339, 1004, 2020]",LH ThCo 1,ThCo,Th,Co
+"[996, 928, 2003]","[1328, 1008, 2018]",LH ThCo 1,ThCo,Th,Co
+"[1362, 1113, 1876]","[1442, 1086, 2019]",LH ThCo 2,ThCo,Th,Co
+"[1346, 1108, 1876]","[1426, 1058, 2022]",LH ThCo 2,ThCo,Th,Co
+"[1331, 1121, 1881]","[1436, 1065, 2026]",LH ThCo 2,ThCo,Th,Co
+"[1336, 1092, 1883]","[1411, 1050, 2014]",LH ThCo 2,ThCo,Th,Co
+"[1323, 1124, 1897]","[1405, 1042, 2018]",LH ThCo 2,ThCo,Th,Co
+"[1344, 1134, 1873]","[1466, 1103, 2040]",LH ThCo 2,ThCo,Th,Co
+"[1377, 1136, 1885]","[1479, 1123, 2040]",LH ThCo 2,ThCo,Th,Co
+"[1348, 1155, 1871]","[1479, 1131, 2040]",LH ThCo 2,ThCo,Th,Co
+"[1324, 1168, 1878]","[1493, 1131, 2055]",LH ThCo 2,ThCo,Th,Co
+"[1321, 1152, 1889]","[1457, 1082, 2038]",LH ThCo 2,ThCo,Th,Co
+"[1325, 1192, 1878]","[1495, 1156, 2052]",LH ThCo 2,ThCo,Th,Co
+"[1353, 1179, 1876]","[1491, 1185, 2053]",LH ThCo 2,ThCo,Th,Co
+"[1376, 1163, 1890]","[1486, 1173, 2042]",LH ThCo 2,ThCo,Th,Co
+"[1370, 1188, 1884]","[1476, 1191, 2040]",LH ThCo 2,ThCo,Th,Co
+"[1162, 1160, 1910]","[1337, 1107, 2215]",LH ThCo 3,ThCo,Th,Co
+"[1164, 1141, 1909]","[1333, 1095, 2206]",LH ThCo 3,ThCo,Th,Co
+"[1182, 1146, 1935]","[1349, 1092, 2234]",LH ThCo 3,ThCo,Th,Co
+"[1204, 1157, 1959]","[1357, 1110, 2236]",LH ThCo 3,ThCo,Th,Co
+"[1174, 1173, 1921]","[1338, 1121, 2211]",LH ThCo 3,ThCo,Th,Co
+"[1194, 1173, 1947]","[1361, 1129, 2238]",LH ThCo 3,ThCo,Th,Co
+"[1186, 1192, 1936]","[1352, 1135, 2234]",LH ThCo 3,ThCo,Th,Co
+"[1246, 1159, 2015]","[1352, 1147, 2218]",LH ThCo 3,ThCo,Th,Co
+"[1226, 1183, 1984]","[1345, 1156, 2200]",LH ThCo 3,ThCo,Th,Co
+"[1271, 1163, 2043]","[1366, 1135, 2220]",LH ThCo 3,ThCo,Th,Co
+"[1213, 1203, 1960]","[1344, 1165, 2193]",LH ThCo 3,ThCo,Th,Co
+"[1257, 1196, 2020]","[1351, 1173, 2196]",LH ThCo 3,ThCo,Th,Co
+"[1276, 1202, 2034]","[1350, 1183, 2182]",LH ThCo 3,ThCo,Th,Co
+"[1301, 1208, 2053]","[1357, 1192, 2187]",LH ThCo 3,ThCo,Th,Co
+"[1289, 1172, 2053]","[1365, 1155, 2225]",LH ThCo 3,ThCo,Th,Co
+"[1312, 1179, 2068]","[1370, 1162, 2216]",LH ThCo 3,ThCo,Th,Co
+"[1327, 1191, 2077]","[1372, 1176, 2214]",LH ThCo 3,ThCo,Th,Co
+"[1334, 1204, 2082]","[1371, 1194, 2208]",LH ThCo 3,ThCo,Th,Co
+"[1339, 1213, 2085]","[1364, 1200, 2186]",LH ThCo 3,ThCo,Th,Co
+"[1351, 1199, 2093]","[1381, 1179, 2202]",LH ThCo 3,ThCo,Th,Co
+"[1356, 1212, 2098]","[1378, 1204, 2207]",LH ThCo 3,ThCo,Th,Co
+"[1375, 1206, 2110]","[1381, 1196, 2203]",LH ThCo 3,ThCo,Th,Co
+"[1355, 1229, 2097]","[1371, 1203, 2206]",LH ThCo 3,ThCo,Th,Co
+"[1374, 1227, 2111]","[1376, 1208, 2189]",LH ThCo 3,ThCo,Th,Co
+"[1391, 1227, 2125]","[1382, 1209, 2192]",LH ThCo 3,ThCo,Th,Co
+"[1395, 1218, 2127]","[1391, 1199, 2192]",LH ThCo 3,ThCo,Th,Co
+"[1207, 1046, 2022]","[1170, 1112, 1960]",LH ThCo? 4,ThCo?,Th,Co?
+"[1181, 1053, 2010]","[1147, 1111, 1930]",LH ThCo? 4,ThCo?,Th,Co?
+"[1207, 1054, 2022]","[1176, 1110, 1978]",LH ThCo? 4,ThCo?,Th,Co?
+"[1176, 1066, 2015]","[1151, 1108, 1962]",LH ThCo? 4,ThCo?,Th,Co?
+"[1159, 1057, 2003]","[1121, 1110, 1896]",LH ThCo? 4,ThCo?,Th,Co?
+"[1151, 1067, 2006]","[1124, 1111, 1925]",LH ThCo? 4,ThCo?,Th,Co?
+"[1139, 1058, 2004]","[1112, 1101, 1901]",LH ThCo? 4,ThCo?,Th,Co?
+"[1125, 1050, 2010]","[1109, 1104, 1909]",LH ThCo? 4,ThCo?,Th,Co?
+"[663, 867, 2094]","[1306, 1096, 2025]",LH tergotrochanter,tergotrochanter,te,rgotrochanter
+"[659, 873, 2109]","[1262, 1078, 2010]",LH tergotrochanter,tergotrochanter,te,rgotrochanter
+"[651, 879, 2125]","[1323, 1106, 2035]",LH tergotrochanter,tergotrochanter,te,rgotrochanter
+"[658, 891, 2125]","[1179, 1032, 1982]",LH tergotrochanter,tergotrochanter,te,rgotrochanter
+"[652, 895, 2137]","[1192, 1043, 1987]",LH tergotrochanter,tergotrochanter,te,rgotrochanter
+"[645, 899, 2147]","[1273, 1089, 2019]",LH tergotrochanter,tergotrochanter,te,rgotrochanter
+"[644, 908, 2147]","[1230, 1067, 2005]",LH tergotrochanter,tergotrochanter,te,rgotrochanter
+"[1029, 900, 2037]","[1473, 1084, 2241]",LH ThTr 2,ThTr,Th,Tr
+"[1027, 916, 2035]","[1468, 1090, 2244]",LH ThTr 2,ThTr,Th,Tr
+"[1090, 940, 2037]","[1475, 1074, 2230]",LH ThTr 2,ThTr,Th,Tr
+"[1099, 997, 2027]","[1446, 1055, 2200]",LH ThTr 2,ThTr,Th,Tr
+"[1053, 952, 2035]","[1442, 1070, 2210]",LH ThTr 2,ThTr,Th,Tr
+"[1067, 981, 2038]","[1460, 1096, 2242]",LH ThTr 2,ThTr,Th,Tr
+"[1129, 1029, 2022]","[1426, 1066, 2196]",LH ThTr 2,ThTr,Th,Tr
+"[1121, 1041, 2021]","[1442, 1085, 2219]",LH ThTr 2,ThTr,Th,Tr
+"[1191, 917, 2020]","[1424, 1034, 2172]",LH ThTr 3 (same as 2?),ThTr,Th,Tr
+"[1135, 902, 2011]","[1399, 1029, 2159]",LH ThTr 3 (same as 2?),ThTr,Th,Tr
+"[1089, 923, 2034]","[1407, 1046, 2178]",LH ThTr 3 (same as 2?),ThTr,Th,Tr
+"[1110, 917, 2046]","[1409, 1038, 2176]",LH ThTr 3 (same as 2?),ThTr,Th,Tr
+"[1105, 902, 2036]","[1399, 1039, 2167]",LH ThTr 3 (same as 2?),ThTr,Th,Tr
+"[1096, 1072, 1765]","[1396, 1133, 2061]",LH ThTr 4,ThTr,Th,Tr
+"[1082, 1072, 1772]","[1323, 1110, 2032]",LH ThTr 4,ThTr,Th,Tr
+"[1098, 1087, 1777]","[1353, 1119, 2043]",LH ThTr 4,ThTr,Th,Tr
+"[1085, 1079, 1792]","[1328, 1122, 2035]",LH ThTr 4,ThTr,Th,Tr
+"[1086, 1083, 1819]","[1438, 1150, 2110]",LH ThTr 4,ThTr,Th,Tr
+"[1098, 1090, 1846]","[1497, 1189, 2179]",LH ThTr 4,ThTr,Th,Tr
+"[1127, 1104, 1870]","[1388, 1152, 2084]",LH ThTr 4,ThTr,Th,Tr
+"[1144, 1106, 1863]","[1469, 1172, 2137]",LH ThTr 4,ThTr,Th,Tr
+"[1115, 1105, 1826]","[1427, 1149, 2093]",LH ThTr 4,ThTr,Th,Tr
+"[1093, 1096, 1790]","[1404, 1140, 2070]",LH ThTr 4,ThTr,Th,Tr
+"[1106, 1087, 1805]","[1370, 1134, 2053]",LH ThTr 4,ThTr,Th,Tr
+"[1155, 1122, 1875]","[1456, 1166, 2108]",LH ThTr 4,ThTr,Th,Tr
+"[1102, 1084, 1761]","[1445, 1154, 2096]",LH ThTr 4,ThTr,Th,Tr
+"[1108, 1114, 1829]","[1526, 1209, 2157]",LH ThTr 4,ThTr,Th,Tr
+"[1090, 1104, 1787]","[1532, 1203, 2139]",LH ThTr 4,ThTr,Th,Tr
+"[1097, 1098, 1765]","[1502, 1190, 2123]",LH ThTr 4,ThTr,Th,Tr
+"[1213, 1164, 1942]","[1505, 1197, 2155]",LH ThTr 5 (same as 4?),ThTr,Th,Tr
+"[1237, 1173, 1982]","[1481, 1186, 2130]",LH ThTr 5 (same as 4?),ThTr,Th,Tr
+"[1210, 1152, 1953]","[1468, 1176, 2120]",LH ThTr 5 (same as 4?),ThTr,Th,Tr
+"[1243, 1157, 2000]","[1496, 1193, 2165]",LH ThTr 5 (same as 4?),ThTr,Th,Tr
+"[1367, 999, 2036]","[1495, 1040, 2201]",LH CoTr 1,CoTr,Co,Tr
+"[1382, 992, 2044]","[1519, 1048, 2216]",LH CoTr 1,CoTr,Co,Tr
+"[1403, 1004, 2040]","[1503, 1056, 2220]",LH CoTr 1,CoTr,Co,Tr
+"[1369, 1012, 2023]","[1484, 1055, 2210]",LH CoTr 1,CoTr,Co,Tr
+"[1377, 1024, 2018]","[1470, 1070, 2220]",LH CoTr 1,CoTr,Co,Tr
+"[1371, 981, 2058]","[1464, 1029, 2173]",LH CoTr 1,CoTr,Co,Tr
+"[1353, 986, 2051]","[1446, 1036, 2175]",LH CoTr 1,CoTr,Co,Tr
+"[1342, 986, 2065]","[1434, 1029, 2167]",LH CoTr 1,CoTr,Co,Tr
+"[1347, 1004, 2035]","[1447, 1069, 2207]",LH CoTr 1,CoTr,Co,Tr
+"[1338, 1001, 2049]","[1431, 1049, 2188]",LH CoTr 1,CoTr,Co,Tr
+"[1346, 968, 2075]","[1500, 1056, 2220]",LH CoTr 1,CoTr,Co,Tr
+"[1352, 987, 2137]","[1519, 1065, 2246]",LH CoTr 1,CoTr,Co,Tr
+"[1460, 1036, 2055]","[1539, 1061, 2241]",LH CoTr 1,CoTr,Co,Tr
+"[1447, 1058, 2042]","[1485, 1076, 2233]",LH CoTr 1,CoTr,Co,Tr
+"[1477, 1061, 2054]","[1519, 1065, 2239]",LH CoTr 1,CoTr,Co,Tr
+"[1468, 1070, 2047]","[1507, 1076, 2241]",LH CoTr 1,CoTr,Co,Tr
+"[1461, 1079, 2046]","[1472, 1094, 2245]",LH CoTr 1,CoTr,Co,Tr
+"[1503, 1068, 2079]","[1535, 1078, 2264]",LH CoTr 1,CoTr,Co,Tr
+"[1487, 1102, 2057]","[1491, 1089, 2251]",LH CoTr 1,CoTr,Co,Tr
+"[1519, 1111, 2078]","[1526, 1095, 2268]",LH CoTr 1,CoTr,Co,Tr
+"[1505, 1121, 2066]","[1512, 1091, 2266]",LH CoTr 1,CoTr,Co,Tr
+"[1357, 1036, 2018]","[1536, 1196, 2153]",LH CoTr 2,CoTr,Co,Tr
+"[1358, 1030, 2018]","[1544, 1190, 2169]",LH CoTr 2,CoTr,Co,Tr
+"[1339, 1020, 2028]","[1539, 1181, 2184]",LH CoTr 2,CoTr,Co,Tr
+"[1327, 1027, 2032]","[1502, 1183, 2166]",LH CoTr 2,CoTr,Co,Tr
+"[1326, 1015, 2046]","[1516, 1176, 2190]",LH CoTr 2,CoTr,Co,Tr
+"[1321, 1018, 2054]","[1496, 1169, 2196]",LH CoTr 2,CoTr,Co,Tr
+"[1315, 1029, 2044]","[1495, 1181, 2185]",LH CoTr 2,CoTr,Co,Tr
+"[1348, 999, 2195]","[1453, 1098, 2279]",LH CoTr 3,CoTr,Co,Tr
+"[1352, 1021, 2224]","[1450, 1108, 2290]",LH CoTr 3,CoTr,Co,Tr
+"[1358, 1049, 2232]","[1471, 1121, 2300]",LH CoTr 3,CoTr,Co,Tr
+"[1364, 1078, 2240]","[1458, 1123, 2298]",LH CoTr 3,CoTr,Co,Tr
+"[1366, 1096, 2239]","[1468, 1130, 2304]",LH CoTr 3,CoTr,Co,Tr
+"[1370, 1113, 2228]","[1471, 1106, 2291]",LH CoTr 3,CoTr,Co,Tr
+"[1370, 1121, 2235]","[1467, 1140, 2311]",LH CoTr 3,CoTr,Co,Tr
+"[1375, 1135, 2228]","[1468, 1143, 2311]",LH CoTr 3,CoTr,Co,Tr
+"[1382, 1151, 2216]","[1481, 1115, 2294]",LH CoTr 3,CoTr,Co,Tr
+"[1386, 1170, 2215]","[1478, 1139, 2310]",LH CoTr 3,CoTr,Co,Tr
+"[1372, 1189, 2236]","[1487, 1209, 2251]",LH CoTr 4,CoTr,Co,Tr
+"[1396, 1196, 2213]","[1507, 1215, 2241]",LH CoTr 4,CoTr,Co,Tr
+"[1429, 1213, 2210]","[1524, 1221, 2242]",LH CoTr 4,CoTr,Co,Tr
+"[1424, 1207, 2189]","[1530, 1222, 2238]",LH CoTr 4,CoTr,Co,Tr
+"[1427, 1214, 2173]","[1529, 1222, 2233]",LH CoTr 4,CoTr,Co,Tr
+"[1444, 1214, 2160]","[1535, 1221, 2229]",LH CoTr 4,CoTr,Co,Tr
+"[1544, 1143, 2092]","[1589, 1174, 2204]",LH CoTr 5,CoTr,Co,Tr
+"[1541, 1101, 2114]","[1589, 1157, 2202]",LH CoTr 5,CoTr,Co,Tr
+"[1537, 1072, 2132]","[1591, 1160, 2211]",LH CoTr 5,CoTr,Co,Tr
+"[1526, 1074, 2139]","[1579, 1178, 2219]",LH CoTr 5,CoTr,Co,Tr
+"[1558, 1077, 2168]","[1594, 1159, 2227]",LH CoTr 5,CoTr,Co,Tr
+"[1554, 1066, 2190]","[1582, 1144, 2235]",LH CoTr 5,CoTr,Co,Tr
+"[1608, 1187, 2234]","[1612, 1141, 2329]",LH TrFe,TrFe,Tr,Fe
+"[1592, 1213, 2234]","[1605, 1149, 2332]",LH TrFe,TrFe,Tr,Fe
+"[1606, 1224, 2258]","[1606, 1147, 2343]",LH TrFe,TrFe,Tr,Fe
+"[1577, 1236, 2266]","[1593, 1154, 2346]",LH TrFe,TrFe,Tr,Fe
+"[1571, 1220, 2232]","[1596, 1155, 2337]",LH TrFe,TrFe,Tr,Fe
+"[1556, 1227, 2241]","[1581, 1160, 2338]",LH TrFe,TrFe,Tr,Fe
+"[1542, 1203, 2235]","[1591, 1141, 2364]",LH TrFe,TrFe,Tr,Fe
+"[1578, 1166, 2231]","[1613, 1129, 2352]",LH TrFe,TrFe,Tr,Fe
+"[1562, 1168, 2241]","[1609, 1134, 2356]",LH TrFe,TrFe,Tr,Fe
+"[1556, 1151, 2256]","[1605, 1123, 2384]",LH TrFe,TrFe,Tr,Fe
+"[1557, 1132, 2266]","[1619, 1106, 2397]",LH TrFe,TrFe,Tr,Fe
+"[1578, 1135, 2249]","[1619, 1116, 2364]",LH TrFe,TrFe,Tr,Fe
+"[1616, 1131, 2269]","[1626, 1109, 2357]",LH TrFe,TrFe,Tr,Fe
+"[1594, 1095, 2285]","[1627, 1099, 2385]",LH TrFe,TrFe,Tr,Fe
+"[1575, 1093, 2311]","[1622, 1094, 2400]",LH TrFe,TrFe,Tr,Fe
+"[1533, 1223, 2261]","[1572, 1167, 2341]",LH TrFe,TrFe,Tr,Fe
+"[1521, 1201, 2261]","[1580, 1143, 2371]",LH TrFe,TrFe,Tr,Fe
+"[1550, 1232, 2295]","[1582, 1156, 2352]",LH TrFe,TrFe,Tr,Fe
+"[1574, 1226, 2314]","[1599, 1130, 2385]",LH TrFe,TrFe,Tr,Fe
+"[1600, 1228, 2301]","[1610, 1123, 2385]",LH TrFe,TrFe,Tr,Fe
+"[1624, 1211, 2301]","[1615, 1123, 2372]",LH TrFe,TrFe,Tr,Fe
+"[1633, 1184, 2294]","[1624, 1119, 2364]",LH TrFe,TrFe,Tr,Fe
+"[1625, 1209, 2336]","[1628, 1113, 2403]",LH TrFe,TrFe,Tr,Fe
+"[1602, 1210, 2351]","[1617, 1109, 2414]",LH TrFe,TrFe,Tr,Fe
+"[1562, 1209, 2349]","[1593, 1122, 2404]",LH TrFe,TrFe,Tr,Fe
+"[1534, 1223, 2321]","[1576, 1149, 2371]",LH TrFe,TrFe,Tr,Fe
+"[1502, 1216, 2317]","[1562, 1152, 2370]",LH TrFe,TrFe,Tr,Fe
+"[1490, 1187, 2305]","[1604, 1101, 2422]",LH TrFe,TrFe,Tr,Fe
+"[1496, 1167, 2333]","[1582, 1109, 2422]",LH TrFe,TrFe,Tr,Fe
+"[1525, 1187, 2361]","[1580, 1121, 2410]",LH TrFe,TrFe,Tr,Fe
+"[1501, 1180, 2354]","[1598, 1112, 2412]",LH TrFe,TrFe,Tr,Fe
+"[1496, 1138, 2352]","[1591, 1093, 2439]",LH TrFe,TrFe,Tr,Fe
+"[1500, 1099, 2370]","[1606, 1089, 2444]",LH TrFe,TrFe,Tr,Fe
+"[1502, 1105, 2397]","[1586, 1077, 2464]",LH TrFe,TrFe,Tr,Fe
+"[1502, 1078, 2415]","[1549, 1076, 2451]",LH TrFe,TrFe,Tr,Fe
+"[1522, 1089, 2436]","[1564, 1077, 2470]",LH TrFe,TrFe,Tr,Fe
+"[1519, 1117, 2410]","[1560, 1092, 2449]",LH TrFe,TrFe,Tr,Fe
+"[1543, 1112, 2438]","[1569, 1089, 2462]",LH TrFe,TrFe,Tr,Fe
+"[1513, 1049, 2450]","[1560, 1055, 2476]",LH TrFe,TrFe,Tr,Fe
+"[1548, 1180, 2380]","[1591, 1109, 2426]",LH TrFe,TrFe,Tr,Fe
+"[1581, 1197, 2376]","[1605, 1109, 2424]",LH TrFe,TrFe,Tr,Fe
+"[1589, 1176, 2407]","[1609, 1115, 2433]",LH TrFe,TrFe,Tr,Fe
+"[1630, 1178, 2398]","[1627, 1115, 2421]",LH TrFe,TrFe,Tr,Fe
+"[1601, 1161, 2427]","[1611, 1111, 2441]",LH TrFe,TrFe,Tr,Fe
+"[1576, 1140, 2438]","[1590, 1102, 2453]",LH TrFe,TrFe,Tr,Fe
+"[1548, 1142, 2414]","[1576, 1105, 2444]",LH TrFe,TrFe,Tr,Fe
+"[1554, 1128, 2435]","[1582, 1098, 2453]",LH TrFe,TrFe,Tr,Fe
+"[1559, 1159, 2408]","[1581, 1117, 2439]",LH TrFe,TrFe,Tr,Fe
+"[1580, 1002, 2407]","[1382, 667, 2581]",LH FeTi flexor,FeTi,Fe,Ti
+"[1580, 980, 2416]","[1422, 715, 2561]",LH FeTi flexor,FeTi,Fe,Ti
+"[1612, 1024, 2408]","[1390, 666, 2587]",LH FeTi flexor,FeTi,Fe,Ti
+"[1590, 972, 2440]","[1457, 764, 2534]",LH FeTi flexor,FeTi,Fe,Ti
+"[1583, 942, 2415]","[1392, 663, 2584]",LH FeTi flexor,FeTi,Fe,Ti
+"[1584, 901, 2428]","[1420, 696, 2570]",LH FeTi flexor,FeTi,Fe,Ti
+"[1587, 911, 2458]","[1420, 694, 2574]",LH FeTi flexor,FeTi,Fe,Ti
+"[1575, 952, 2480]","[1438, 733, 2559]",LH FeTi flexor,FeTi,Fe,Ti
+"[1555, 891, 2515]","[1339, 602, 2621]",LH FeTi flexor,FeTi,Fe,Ti
+"[1558, 853, 2494]","[1331, 566, 2643]",LH FeTi flexor,FeTi,Fe,Ti
+"[1573, 960, 2401]","[1392, 677, 2573]",LH FeTi flexor,FeTi,Fe,Ti
+"[1574, 912, 2404]","[1330, 595, 2623]",LH FeTi flexor,FeTi,Fe,Ti
+"[1560, 856, 2415]","[1294, 543, 2650]",LH FeTi flexor,FeTi,Fe,Ti
+"[1551, 823, 2452]","[1313, 547, 2652]",LH FeTi flexor,FeTi,Fe,Ti
+"[1539, 796, 2483]","[1283, 496, 2678]",LH FeTi flexor,FeTi,Fe,Ti
+"[1530, 783, 2467]","[1272, 495, 2678]",LH FeTi flexor,FeTi,Fe,Ti
+"[1508, 735, 2526]","[1269, 456, 2700]",LH FeTi flexor,FeTi,Fe,Ti
+"[1507, 752, 2466]","[1247, 475, 2686]",LH FeTi flexor,FeTi,Fe,Ti
+"[1485, 711, 2482]","[1223, 438, 2706]",LH FeTi flexor,FeTi,Fe,Ti
+"[1492, 705, 2515]","[1252, 438, 2710]",LH FeTi flexor,FeTi,Fe,Ti
+"[1462, 662, 2510]","[1214, 412, 2722]",LH FeTi flexor,FeTi,Fe,Ti
+"[1436, 623, 2518]","[1175, 376, 2736]",LH FeTi flexor,FeTi,Fe,Ti
+"[1420, 591, 2549]","[1208, 386, 2738]",LH FeTi flexor,FeTi,Fe,Ti
+"[1395, 552, 2568]","[1168, 349, 2758]",LH FeTi flexor,FeTi,Fe,Ti
+"[1361, 507, 2580]","[1130, 305, 2778]",LH FeTi flexor,FeTi,Fe,Ti
+"[1522, 838, 2556]","[1276, 509, 2672]",LH FeTi flexor,FeTi,Fe,Ti
+"[1507, 794, 2569]","[1256, 466, 2696]",LH FeTi flexor,FeTi,Fe,Ti
+"[1475, 744, 2598]","[1229, 417, 2724]",LH FeTi flexor,FeTi,Fe,Ti
+"[1409, 717, 2632]","[1173, 363, 2753]",LH FeTi flexor,FeTi,Fe,Ti
+"[1443, 785, 2602]","[1202, 411, 2722]",LH FeTi flexor,FeTi,Fe,Ti
+"[1373, 711, 2634]","[1144, 334, 2766]",LH FeTi flexor,FeTi,Fe,Ti
+"[1329, 464, 2614]","[1152, 306, 2754]",LH FeTi anterior acc flexor,FeTi,Fe,Ti
+"[1293, 401, 2683]","[1130, 274, 2783]",LH FeTi anterior acc flexor,FeTi,Fe,Ti
+"[1329, 456, 2671]","[1160, 309, 2762]",LH FeTi anterior acc flexor,FeTi,Fe,Ti
+"[1364, 503, 2615]","[1187, 336, 2736]",LH FeTi anterior acc flexor,FeTi,Fe,Ti
+"[1300, 422, 2626]","[1130, 284, 2767]",LH FeTi anterior acc flexor,FeTi,Fe,Ti
+"[1265, 368, 2666]","[1112, 262, 2783]",LH FeTi anterior acc flexor,FeTi,Fe,Ti
+"[1249, 340, 2714]","[1127, 266, 2784]",LH FeTi anterior acc flexor,FeTi,Fe,Ti
+"[1225, 313, 2702]","[1109, 254, 2785]",LH FeTi anterior acc flexor,FeTi,Fe,Ti
+"[1215, 299, 2724]","[1103, 246, 2793]",LH FeTi anterior acc flexor,FeTi,Fe,Ti
+"[1236, 337, 2746]","[1101, 248, 2804]",LH FeTi anterior acc flexor,FeTi,Fe,Ti
+"[1212, 297, 2750]","[1097, 240, 2804]",LH FeTi anterior acc flexor,FeTi,Fe,Ti
+"[1197, 279, 2718]","[1088, 234, 2798]",LH FeTi anterior acc flexor,FeTi,Fe,Ti
+"[1188, 264, 2745]","[1084, 227, 2807]",LH FeTi anterior acc flexor,FeTi,Fe,Ti
+"[1174, 245, 2758]","[1077, 217, 2815]",LH FeTi anterior acc flexor,FeTi,Fe,Ti
+"[1156, 226, 2761]","[1068, 207, 2822]",LH FeTi anterior acc flexor,FeTi,Fe,Ti
+"[1250, 551, 2681]","[1161, 402, 2736]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1204, 482, 2720]","[1119, 333, 2775]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1249, 563, 2633]","[1166, 407, 2721]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1221, 524, 2642]","[1144, 375, 2735]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1194, 486, 2636]","[1111, 322, 2749]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1179, 464, 2664]","[1106, 320, 2757]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1156, 430, 2658]","[1083, 278, 2774]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1127, 390, 2666]","[1061, 242, 2795]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1170, 445, 2721]","[1098, 305, 2782]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1162, 425, 2751]","[1078, 274, 2804]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1128, 385, 2753]","[1067, 260, 2804]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1104, 354, 2764]","[1050, 233, 2815]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1097, 349, 2720]","[1058, 246, 2798]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1096, 342, 2671]","[1055, 232, 2797]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1084, 330, 2692]","[1052, 236, 2795]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1082, 315, 2668]","[1049, 218, 2808]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1068, 289, 2682]","[1042, 211, 2810]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1070, 312, 2740]","[1039, 214, 2821]",LH FeTi posterior acc flexor,FeTi,Fe,Ti
+"[1509, 967, 2379]","[1401, 759, 2456]",LH FeTi extensor,FeTi,Fe,Ti
+"[1486, 971, 2395]","[1394, 752, 2468]",LH FeTi extensor,FeTi,Fe,Ti
+"[1454, 935, 2394]","[1372, 702, 2485]",LH FeTi extensor,FeTi,Fe,Ti
+"[1424, 908, 2420]","[1351, 657, 2515]",LH FeTi extensor,FeTi,Fe,Ti
+"[1391, 853, 2442]","[1319, 601, 2542]",LH FeTi extensor,FeTi,Fe,Ti
+"[1419, 877, 2394]","[1343, 645, 2507]",LH FeTi extensor,FeTi,Fe,Ti
+"[1454, 877, 2367]","[1356, 663, 2487]",LH FeTi extensor,FeTi,Fe,Ti
+"[1490, 930, 2365]","[1381, 723, 2465]",LH FeTi extensor,FeTi,Fe,Ti
+"[1490, 900, 2361]","[1389, 731, 2472]",LH FeTi extensor,FeTi,Fe,Ti
+"[1490, 861, 2363]","[1356, 664, 2507]",LH FeTi extensor,FeTi,Fe,Ti
+"[1486, 824, 2372]","[1340, 633, 2501]",LH FeTi extensor,FeTi,Fe,Ti
+"[1480, 790, 2387]","[1332, 619, 2530]",LH FeTi extensor,FeTi,Fe,Ti
+"[1426, 812, 2378]","[1313, 585, 2521]",LH FeTi extensor,FeTi,Fe,Ti
+"[1345, 728, 2451]","[1268, 514, 2557]",LH FeTi extensor,FeTi,Fe,Ti
+"[1366, 790, 2441]","[1296, 566, 2557]",LH FeTi extensor,FeTi,Fe,Ti
+"[1320, 682, 2540]","[1273, 524, 2581]",LH FeTi extensor,FeTi,Fe,Ti
+"[1317, 678, 2488]","[1230, 437, 2582]",LH FeTi extensor,FeTi,Fe,Ti
+"[1421, 740, 2397]","[1274, 504, 2545]",LH FeTi extensor,FeTi,Fe,Ti
+"[1429, 695, 2426]","[1288, 528, 2541]",LH FeTi extensor,FeTi,Fe,Ti
+"[1472, 753, 2410]","[1313, 587, 2535]",LH FeTi extensor,FeTi,Fe,Ti
+"[1457, 704, 2444]","[1294, 556, 2558]",LH FeTi extensor,FeTi,Fe,Ti
+"[1423, 645, 2468]","[1240, 451, 2578]",LH FeTi extensor,FeTi,Fe,Ti
+"[1411, 616, 2485]","[1264, 508, 2571]",LH FeTi extensor,FeTi,Fe,Ti
+"[1383, 564, 2513]","[1257, 495, 2594]",LH FeTi extensor,FeTi,Fe,Ti
+"[1362, 527, 2535]","[1242, 469, 2601]",LH FeTi extensor,FeTi,Fe,Ti
+"[1333, 490, 2548]","[1226, 443, 2611]",LH FeTi extensor,FeTi,Fe,Ti
+"[1304, 457, 2560]","[1212, 419, 2614]",LH FeTi extensor,FeTi,Fe,Ti
+"[1288, 433, 2575]","[1196, 395, 2628]",LH FeTi extensor,FeTi,Fe,Ti
+"[1265, 400, 2598]","[1180, 371, 2644]",LH FeTi extensor,FeTi,Fe,Ti
+"[1252, 379, 2614]","[1165, 345, 2657]",LH FeTi extensor,FeTi,Fe,Ti
+"[1229, 352, 2627]","[1152, 324, 2668]",LH FeTi extensor,FeTi,Fe,Ti
+"[1210, 323, 2645]","[1137, 300, 2682]",LH FeTi extensor,FeTi,Fe,Ti
+"[1196, 301, 2661]","[1124, 278, 2695]",LH FeTi extensor,FeTi,Fe,Ti
+"[1179, 273, 2685]","[1111, 246, 2712]",LH FeTi extensor,FeTi,Fe,Ti
+"[1283, 630, 2554]","[1250, 487, 2594]",LH FeTi extensor,FeTi,Fe,Ti
+"[1249, 580, 2575]","[1229, 452, 2609]",LH FeTi extensor,FeTi,Fe,Ti
+"[1219, 533, 2590]","[1207, 420, 2623]",LH FeTi extensor,FeTi,Fe,Ti
+"[1197, 497, 2595]","[1190, 395, 2635]",LH FeTi extensor,FeTi,Fe,Ti
+"[1175, 460, 2604]","[1171, 365, 2649]",LH FeTi extensor,FeTi,Fe,Ti
+"[1155, 424, 2613]","[1153, 334, 2664]",LH FeTi extensor,FeTi,Fe,Ti
+"[1137, 387, 2621]","[1137, 308, 2679]",LH FeTi extensor,FeTi,Fe,Ti
+"[1116, 356, 2636]","[1120, 280, 2696]",LH FeTi extensor,FeTi,Fe,Ti
+"[1101, 319, 2647]","[1100, 252, 2707]",LH FeTi extensor,FeTi,Fe,Ti
+"[1515, 1008, 2435]","[1380, 718, 2563]",LH FeCl ltm2,FeCl,Fe,Cl
+"[1502, 999, 2430]","[1348, 665, 2583]",LH FeCl ltm2,FeCl,Fe,Cl
+"[1478, 977, 2442]","[1377, 727, 2554]",LH FeCl ltm2,FeCl,Fe,Cl
+"[1488, 989, 2446]","[1307, 613, 2620]",LH FeCl ltm2,FeCl,Fe,Cl
+"[1517, 1003, 2454]","[1369, 702, 2572]",LH FeCl ltm2,FeCl,Fe,Cl
+"[1499, 993, 2462]","[1340, 652, 2599]",LH FeCl ltm2,FeCl,Fe,Cl
+"[1521, 984, 2482]","[1404, 762, 2554]",LH FeCl ltm2,FeCl,Fe,Cl
+"[1015, 118, 2984]","[1059, 147, 3083]",LH TiCl ltm1,TiCl,Ti,Cl
+"[1025, 111, 3016]","[1067, 147, 3119]",LH TiCl ltm1,TiCl,Ti,Cl
+"[1021, 132, 3054]","[1081, 153, 3176]",LH TiCl ltm1,TiCl,Ti,Cl
+"[1042, 107, 3076]","[1112, 164, 3258]",LH TiCl ltm1,TiCl,Ti,Cl
+"[1049, 120, 3134]","[1147, 178, 3357]",LH TiCl ltm1,TiCl,Ti,Cl
+"[1059, 130, 3188]","[1177, 193, 3454]",LH TiCl ltm1,TiCl,Ti,Cl
+"[1120, 158, 3152]","[1142, 154, 3264]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1123, 127, 3170]","[1150, 150, 3280]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1119, 106, 3197]","[1152, 147, 3294]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1144, 143, 3227]","[1169, 158, 3321]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1123, 171, 3214]","[1155, 153, 3307]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1140, 178, 3260]","[1169, 156, 3348]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1166, 153, 3278]","[1188, 165, 3367]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1140, 118, 3255]","[1167, 152, 3333]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1112, 103, 3237]","[1153, 148, 3317]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1120, 107, 3271]","[1163, 149, 3353]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1163, 126, 3303]","[1196, 165, 3396]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1178, 158, 3380]","[1141, 104, 3306]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1181, 160, 3406]","[1141, 109, 3335]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1194, 166, 3432]","[1166, 115, 3363]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1197, 129, 3390]","[1208, 172, 3451]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1208, 133, 3428]","[1219, 178, 3470]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1165, 193, 3312]","[1184, 163, 3395]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1177, 194, 3342]","[1201, 169, 3424]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1183, 206, 3399]","[1211, 178, 3462]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1200, 209, 3445]","[1218, 184, 3499]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1223, 198, 3461]","[1236, 189, 3518]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1200, 215, 3483]","[1226, 192, 3530]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1194, 113, 3459]","[1214, 177, 3489]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1216, 132, 3478]","[1225, 184, 3515]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1238, 132, 3516]","[1239, 191, 3553]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1247, 163, 3504]","[1249, 193, 3537]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1255, 165, 3533]","[1253, 197, 3559]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1248, 145, 3548]","[1248, 200, 3577]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1262, 155, 3576]","[1258, 207, 3603]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1266, 162, 3596]","[1264, 214, 3619]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1282, 183, 3585]","[1273, 214, 3616]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1282, 181, 3628]","[1273, 224, 3649]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1277, 186, 3564]","[1267, 206, 3588]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1293, 227, 3621]","[1281, 231, 3665]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1304, 218, 3656]","[1289, 241, 3700]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1308, 260, 3680]","[1297, 257, 3719]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1279, 215, 3571]","[1274, 220, 3620]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1216, 220, 3519]","[1243, 200, 3560]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1227, 227, 3540]","[1249, 208, 3585]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1245, 233, 3571]","[1261, 217, 3607]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1247, 239, 3589]","[1263, 227, 3630]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1241, 242, 3617]","[1264, 233, 3647]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1276, 255, 3649]","[1282, 245, 3688]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1267, 264, 3681]","[1288, 260, 3720]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1244, 246, 3657]","[1269, 243, 3677]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1245, 248, 3695]","[1277, 251, 3710]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1269, 268, 3708]","[1291, 266, 3738]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1266, 266, 3724]","[1290, 270, 3747]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1268, 271, 3741]","[1294, 277, 3760]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1254, 258, 3734]","[1283, 257, 3743]",LH TiTa 1 (detached origin),TiTa,Ti,Ta
+"[1327, 220, 3766]","[1298, 254, 3743]",LH TiTa 2,TiTa,Ti,Ta
+"[1337, 226, 3783]","[1306, 256, 3770]",LH TiTa 2,TiTa,Ti,Ta
+"[1345, 240, 3775]","[1303, 271, 3761]",LH TiTa 2,TiTa,Ti,Ta
+"[1352, 249, 3796]","[1308, 272, 3786]",LH TiTa 2,TiTa,Ti,Ta
+"[1346, 236, 3815]","[1314, 266, 3800]",LH TiTa 2,TiTa,Ti,Ta
+"[1277, 291, 3830]","[1301, 278, 3800]",LH TiTa 2,TiTa,Ti,Ta
+"[1267, 273, 3815]","[1294, 271, 3788]",LH TiTa 2,TiTa,Ti,Ta
+"[1269, 278, 3801]","[1297, 277, 3783]",LH TiTa 2,TiTa,Ti,Ta
+"[1264, 269, 3790]","[1292, 271, 3772]",LH TiTa 2,TiTa,Ti,Ta
+"[1143, 135, 3399]","[1196, 163, 3540]",LH TiTa 3 (detached origin),TiTa,Ti,Ta
+"[1156, 150, 3460]","[1211, 174, 3589]",LH TiTa 3 (detached origin),TiTa,Ti,Ta
+"[1162, 154, 3498]","[1221, 179, 3613]",LH TiTa 3 (detached origin),TiTa,Ti,Ta
+"[1169, 122, 3443]","[1204, 164, 3558]",LH TiTa 3 (detached origin),TiTa,Ti,Ta
+"[1188, 124, 3473]","[1225, 177, 3606]",LH TiTa 3 (detached origin),TiTa,Ti,Ta
+"[1202, 132, 3531]","[1239, 187, 3639]",LH TiTa 3 (detached origin),TiTa,Ti,Ta
+"[1222, 141, 3568]","[1249, 193, 3659]",LH TiTa 3 (detached origin),TiTa,Ti,Ta
+"[1237, 152, 3595]","[1275, 219, 3706]",LH TiTa 3 (detached origin),TiTa,Ti,Ta
+"[1244, 155, 3622]","[1294, 235, 3738]",LH TiTa 3 (detached origin),TiTa,Ti,Ta
+"[1175, 158, 3546]","[1240, 196, 3653]",LH TiTa 3 (detached origin),TiTa,Ti,Ta
+"[1209, 161, 3611]","[1273, 228, 3717]",LH TiTa 3 (detached origin),TiTa,Ti,Ta
+"[1215, 180, 3644]","[1286, 242, 3742]",LH TiTa 3 (detached origin),TiTa,Ti,Ta
+"[1225, 172, 3645]","[1285, 230, 3737]",LH TiTa 3 (detached origin),TiTa,Ti,Ta

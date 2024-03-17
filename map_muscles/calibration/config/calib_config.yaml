@@ -1,0 +1,13 @@
+nas_base_folder_path: "/Volumes/data2/VAS/newflytrackerdata"
+
+# Paths to the camera calibration files for the muscles camera
+muscle_images_paths: ["20240212_calibration_muscle/output_20240212_calibration_left",
+                      "20240212_calibration_muscle/output_20240212_calibration_right"]
+
+# Paths to the camera calibration files for the kinematic camera
+kinematic_images_paths: ["20240212_calibration_muscle/calibration_left",
+                         "20240212_calibration_muscle/calibration_right"]
+
+kin_to_muscle_div_factor: 4
+
+save_images: True
