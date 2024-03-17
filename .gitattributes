@@ -1,1 +1,2 @@
 *.h5 filter=lfs diff=lfs merge=lfs -text
+map_muscles/sleap/label_femur_V1.000_900_1440_kin.analysis.h5 filter=lfs diff=lfs merge=lfs -text
