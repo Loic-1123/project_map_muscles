@@ -4,6 +4,7 @@ add_root()
 from pathlib import Path
 import pandas as pd
 import json
+import numpy as np
 
 data_path = Path(get_root_path()) / 'map_muscles' / 'data' / 'Xray'
 muscle_state_path = data_path / 'muscles_state.json'
@@ -39,6 +40,14 @@ def create_line(p1, p2, str = True):
     y = [p1[1], p2[1]]
     z = [p1[2], p2[2]]
     return x, y, z
+
+def add_lines_to_df(df, A_key='pointA', B_key='pointB'):
+    df['line'] = df.apply(lambda row: np.array([eval(row[A_key]), eval(row[B_key])]), axis=1)
+
+    # assert type of element in line is np.array
+    assert type(df['line'].iloc[0]) == np.ndarray
+    
+    return df
 
 
 if __name__ == "__main__":

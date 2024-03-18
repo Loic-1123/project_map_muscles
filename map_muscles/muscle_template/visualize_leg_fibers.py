@@ -26,6 +26,19 @@ def set_xyz_labels(ax):
        ax.set_zlabel('Z Label')
 
 
+def get_shuffled_color_ids(parts):
+       color_ids = np.linspace(0, 1, len(parts))
+       np.random.shuffle(color_ids)
+       return color_ids
+
+def get_random_color_map(parts, palette=plt.cm.hsv):
+       color_ids = get_shuffled_color_ids(parts)
+       return palette(color_ids)
+
+def get_linear_color_map(parts, palette=plt.cm.hsv):
+       color_ids = np.linspace(0, 1, len(parts))
+       return palette(color_ids)
+
 def plot_fibers(parts, colors):
        fig = plt.figure()
        ax = fig.add_subplot(111, projection='3d')
@@ -39,19 +52,6 @@ def plot_fibers(parts, colors):
 
               plot_text_label(ax, lines, part['layer_name'].iloc[0], c)
 
-
-def get_shuffled_color_ids(parts):
-       color_ids = np.linspace(0, 1, len(parts))
-       np.random.shuffle(color_ids)
-       return color_ids
-
-def get_random_color_map(parts, palette=plt.cm.hsv):
-       color_ids = get_shuffled_color_ids(parts)
-       return palette(color_ids)
-
-def get_linear_color_map(parts, palette=plt.cm.hsv):
-       color_ids = np.linspace(0, 1, len(parts))
-       return palette(color_ids)
 
 if __name__ == "__main__":
        lh = xu.get_leg(leg='LH')

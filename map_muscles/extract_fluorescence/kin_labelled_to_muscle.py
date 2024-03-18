@@ -71,7 +71,7 @@ factor = 100
 video_dimensions = (int(figzise[0]*factor), int(figzise[1]*factor))
 """
 fourcc = vc.get_fourcc()
-video_name = 'labelled_kinematic_and_cropped_femur2.mp4'
+video_name = 'labelled_kinematic_and_cropped_femur.mp4'
 output_file = root_path / 'map_muscles' / 'data' / '20240213_muscle_recording' / 'videos' / video_name
 fps = 10
 out = cv2.VideoWriter(str(output_file), fourcc, fps, video_dimensions)  # Adjust width and height accordingly
