@@ -143,7 +143,7 @@ muscle_min_id = imu.get_min_id(muscle_path, 'tif', id_format='{:06d}')
 muscle_frames = vc.extract_muscle_frames(muscle_path, 'tif', start_index = muscle_min_id, gain=1)
 
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec to use for the video
-video_name = 'calibration_check_on_cropped_femur.mp4'
+video_name = 'calibration_check_on_cropped_femur2.mp4'
 output_file = root_path / 'map_muscles' / 'data' / '20240213_muscle_recording' / 'videos' / video_name
 fps =6
 out = cv2.VideoWriter(str(output_file), fourcc, fps, video_dimensions)  

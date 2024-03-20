@@ -315,51 +315,6 @@ for i, cropped_img in enumerate(cropped_imgs):
 
 plt.show()
 
-###
-
-def get_rectangle(pts, half_width, margin):
-    pts_vector = pts[1] - pts[0]
-    pts_vector = pts_vector/np.linalg.norm(pts_vector)
-    perp_pts_vector = np.array([-pts_vector[1], pts_vector[0]])
-    perp_pts_vector = perp_pts_vector/np.linalg.norm(perp_pts_vector)
-
-    rectangle_pts = np.array([pts[0] - pts_vector*margin  - half_width*perp_pts_vector,
-                                pts[0] - pts_vector*margin + half_width*perp_pts_vector,
-                                pts[1] + pts_vector*margin + half_width*perp_pts_vector,
-                                pts[1] + pts_vector*margin - half_width*perp_pts_vector]).astype(int)
-    return rectangle_pts
-
-def draw_rectangle(pts, img, rectangle_half_width=50, margin=0):
-    rectangle_pts = get_rectangle(pts, rectangle_half_width, margin)
-    img_rect = cv2.polylines(img.copy(), [rectangle_pts], isClosed=True, color=(255, 255, 255), thickness=2)
-    return img_rect
-
-
-selected_muscle_file = muscle_files[-1]
-muscle_image = cv2.imread(str(selected_muscle_file), -1) # -1 important
-muscle_frame_id = int(selected_muscle_file.stem)
-kin_img = get_matching_kin_img(
-    muscle_frame_id, 
-    min_id_muscle_file,
-    kin_to_muscle_div_factor, 
-    min_id_kin_file, kin_path)
-
-cropped_imgs = cropped_images(muscle_image, margin=70, plot=True)
-
-kin_img_shape = kin_img.shape
-kin_crop_margin = 300
-kin_image_centers = (kin_img_shape[1]//2, kin_img_shape[0]//2)
-cropped_kin_image = kin_img[kin_image_centers[1] - kin_crop_margin:kin_image_centers[1] + kin_crop_margin,
-                             kin_image_centers[0] - kin_crop_margin:kin_image_centers[0] + kin_crop_margin]
-
-cropped_muscle_image = ...
-
-#TODO from muscle cropped images, get corresponding cropped kin images
-
-#TODO plot cropped muscle images and their associated kin images
-
-#TODO function for comparing multiple images
-
 
 # good indexes to show correspondance of muscle and kin images
 # -1, 12, 50

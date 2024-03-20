@@ -26,7 +26,7 @@ image_dir = '900_1440'
 
 image_dir_path = map_muscles_dir_path / data_dir / recording_dir / image_dir
 output_folder = map_muscles_dir_path/data_dir/recording_dir / 'videos'
-video_name = 'kin_muscle_match.mp4'
+video_name = 'kin_muscle_match2.mp4'
 video_file = output_folder / video_name
 
 kin_path = image_dir_path / 'kin'
@@ -66,7 +66,8 @@ width = 1000
 height = 500
 
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec to use for the video
-out = cv2.VideoWriter(str(video_file), fourcc, 2, (width, height))  # Adjust width and height accordingly
+out_fps = 5
+out = cv2.VideoWriter(str(video_file), fourcc, out_fps, (width, height))  # Adjust width and height accordingly
 
 if not out.isOpened():
     print("Error: Failed to open video writer.")
@@ -94,6 +95,10 @@ for muscle_id in tqdm_ids:
     ax[0].set_title('Muscle Image')
     ax[1].imshow(kin_img, cmap='gray')
     ax[1].set_title('Kin Image')
+
+    # remove axis
+    for a in ax:
+        a.axis('off')
 
     # put pixel buffer in numpy array
     canvas = FigureCanvas(fig)
