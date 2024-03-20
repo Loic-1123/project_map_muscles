@@ -1,6 +1,11 @@
+from _root_path import add_root, get_root_path
+add_root()
+
 import numpy as np
 import matplotlib.pyplot as plt
-from skspatial.objects import Points, Plane
+import map_muscles.muscle_template.xray_utils as xu
+import map_muscles.muscle_template.visualize_leg_fibers as vf
+# To use later: from skspatial.objects import Points, Plane
 
 def assert_orthogonalilty(U):
     for u1 in U:
@@ -18,13 +23,24 @@ def project_point_on_plane(point, U):
     return projection
 
 def plane_abcd(v1, v2, plot_function=True):
+    # doesnt work for vertical planes: c=0
+
     cp  = np.cross(v1, v2)
+
     a, b, c = cp
     d = np.dot(cp, v1)
 
     if plot_function:
-        plotting = lambda xx, yy : (-a*xx -b*yy + d)/c
+        if c!=0:
+            plotting = lambda xx, yy : (-a*xx -b*yy + d)/c
+        else:
+            def vertical_plane(xx, yy):
+                zz = np.zeros(xx.shape)
+                return zz
+            plotting = vertical_plane
+        
         return a, b, c, d, plotting
+    
     else:
         return a, b, c, d
 
@@ -52,49 +68,51 @@ def orthonormal_vectors(v1, v2):
     return u1, u2
 
 
-if __name__ == "__main__":
-    v1 = np.array([1.,1.,1.])
-    v2 = np.array([1.,.0,.0])
+#if __name__ == "__main__":
 
-    fiber_segment = np.array([[3, 5, 1], [7, 4, 3]])
-    f1 = fiber_segment[0]
-    f2 = fiber_segment[1]
+femur_muscles = xu.get_femur_muscles()
 
-    # project f1 on v1-v2 plane
+v1 = np.array([1.0,.0,.0])
+v2 = np.array([.0,1.0,.0])
 
-    ## find orthogonal vector spanning v1-v2 plane
-    ### project v2 on v1
-    v2_on_v1 = np.dot(v2, v1) / np.dot(v1, v1) * v1
+# project f1 on v1-v2 plane
 
-    ### subtract v2_on_v1 from v2 to get orthogonal vector
-    orthogonal_vector = v2 - v2_on_v1
-    assert np.isclose(np.dot(orthogonal_vector, v1), 0)
+## find orthogonal vector spanning v1-v2 plane
+### project v2 on v1
+u1, u2 = orthonormal_vectors(v1, v2)
 
-    u1 = v1 / np.linalg.norm(v1)
-    u2 = orthogonal_vector / np.linalg.norm(orthogonal_vector)
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
 
-    assert np.isclose(np.dot(u1, u1), 1)
-    assert np.isclose(np.dot(u2, u2), 1)
+colors = vf.get_random_color_map(femur_muscles)
 
-    projected_fiber = project_segment_on_plane(fiber_segment, [u1, u2])
+for muscle, c in zip(femur_muscles, colors):
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    segments = muscle['line']
+
+    projected_fibers = projected_segments(segments, [u1, u2])
+    
+    for fiber_segment, projected_fiber in zip(segments, projected_fibers):
+        # plot fiber
+        ax.plot(*fiber_segment.T, color=c)
+        ax.plot(*projected_fiber.T, color=c, linestyle='--')
+
+# plot v1 and v2
+ax.plot(*np.array([np.zeros(3), u1]).T, color='g')
+ax.plot(*np.array([np.zeros(3), u2]).T, color='r')
 
 
-    # plot v1 and v2
-    ax.plot(*np.array([np.zeros(3), v1]).T, color='g')
-    ax.plot(*np.array([np.zeros(3), v2]).T, color='r')
+# plot plane
 
-    # plot fiber
-    ax.plot(*fiber_segment.T, color='b')
-    ax.plot(*projected_fiber.T, color='b', linestyle='--')
+# get max coordinates from the fibers
+max_x = int(max([fiber[:,0].max() for fiber in projected_fibers]))
+max_y = int(max([fiber[:,1].max() for fiber in projected_fibers]))
 
-    # plot plane
-    xx, yy = np.meshgrid(range(10), range(10))
+xx, yy = np.meshgrid(range(2*max_x), range(2*max_y))
 
-    a,b,c,d, plot_plane = plane_abcd(v1, v2)
+# vertical x-z plane
+a,b,c,d, plot_plane = plane_abcd(v1, v2)
 
-    ax.plot_surface(xx, yy, plot_plane(xx, yy), alpha=0.5)
+ax.plot_surface(xx, yy, plot_plane(xx, yy), alpha=0.5)
 
-    plt.show()
+plt.show()

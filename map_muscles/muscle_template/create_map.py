@@ -11,7 +11,7 @@ import map_muscles.muscle_template.visualize_leg_fibers as vf
 import map_muscles.muscle_template.projection_on_plane as pp
 
 femur_muscles = xu.get_femur_muscles()
-
+    
 layers_names = set([muscle['layer_name'].iloc[0] for muscle in femur_muscles])
 """
 {'LH FeTi anterior acc flexor', 'LH FeCl ltm2', 

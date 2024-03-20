@@ -77,8 +77,6 @@ if __name__ == "__main__":
 
        plot_fibers(leg_parts, colors)
 
-       plt.show()
-
        # isolate fibers related to femur: layer names containing 'Fe'
        fe_ids = [layer for layer in layers_names if 'Fe' in layer]
        femur_fibers = xu.get_femur_muscles()
