@@ -127,13 +127,20 @@ out.release()
 
 print("Video created to ", output_file)
 """
+def is_id_corresponding(kin_frame_id, muscle_frame_id, discrepancy, min_id_kin, min_id_muscle, ratio):
+    """
+    Check if the kin_frame_id corresponds to the muscle_frame_id
+    """
+    muscle_frame_id = imu.get_matching_muscle_id(kin_frame_id, min_id_kin, ratio, min_id_muscle)
+    return muscle_frame_id == kin_frame_id + discrepancy
+
 # plot cropped femur for calibration check
 size = 4
 size_cropped = 100
 half_width = 30
 margin = 30
 
-figzise = (25,10)
+figzise = (20,10)
 factor = 100
 
 # video_dimensions = 10 times the size of the figure
@@ -142,10 +149,12 @@ video_dimensions = (int(figzise[0]*factor), int(figzise[1]*factor))
 muscle_min_id = imu.get_min_id(muscle_path, 'tif', id_format='{:06d}')
 muscle_frames = vc.extract_muscle_frames(muscle_path, 'tif', start_index = muscle_min_id, gain=1)
 
+
+
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec to use for the video
-video_name = 'calibration_check_on_cropped_femur2.mp4'
+video_name = 'calibration_check_on_cropped_femur_fps_3.mp4'
 output_file = root_path / 'map_muscles' / 'data' / '20240213_muscle_recording' / 'videos' / video_name
-fps =6
+fps =3
 out = cv2.VideoWriter(str(output_file), fourcc, fps, video_dimensions)  
 
 if not out.isOpened():
@@ -156,6 +165,9 @@ n = 1
 length = min(len(kin_frames), len(trochanter_locations))
 r = range(0, length, n)
 print(f"Creating {video_name} with {length} frames...")
+
+count = 0
+
 for i in tqdm.tqdm(r):
     fig, axs = plt.subplots(1, 2, figsize=figzise)
     
@@ -183,7 +195,7 @@ for i in tqdm.tqdm(r):
         kin_to_muscle_div_factor=4,
         min_id_muscle=muscle_min_id)
     
-    muscle_frame = muscle_frames[muscle_id-(discrepancy//2)]
+    muscle_frame = muscle_frames[muscle_id-(discrepancy//3)]
     muscle_frame = cv2.flip(muscle_frame, 1)
     muscle_pts = imu.map_points(pts, muscle_frame.shape)
 
@@ -202,7 +214,10 @@ for i in tqdm.tqdm(r):
         ax.legend()
         ax.axis('off')
 
-    vc.save_frame_plt_film(out, fig)
+    if count % 3 ==0:
+        vc.save_frame_plt_film(out, fig)
+
+    count += 1
 
     plt.close(fig)
 
