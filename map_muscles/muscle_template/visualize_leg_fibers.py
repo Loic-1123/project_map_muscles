@@ -39,18 +39,18 @@ def get_linear_color_map(parts, palette=plt.cm.hsv):
        color_ids = np.linspace(0, 1, len(parts))
        return palette(color_ids)
 
-def plot_fibers(parts, colors):
+def plot_fibers(parts, colors, plot_labels=False):
        fig = plt.figure()
        ax = fig.add_subplot(111, projection='3d')
+       set_xyz_labels(ax)
 
        for part, c in zip(parts, colors):
               part.loc[:,'line'] = part.apply(lambda row: xu.create_line(row['pointA'], row['pointB']), axis=1)
               lines = part['line']
               plot_lines(ax, lines, c)
 
-              set_xyz_labels(ax)
-
-              plot_text_label(ax, lines, part['layer_name'].iloc[0], c)
+              if plot_labels:
+                     plot_text_label(ax, lines, part['layer_name'].iloc[0], c)
 
 
 if __name__ == "__main__":

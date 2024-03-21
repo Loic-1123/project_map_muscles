@@ -75,23 +75,21 @@ width = 1000
 height = 500
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec to use for the video
 
-video_name = 'kin_labelled.mp4'
+video_name = 'check_labelling_on_kinematic_fps6.mp4'
 output_file = out_path / video_name
-out = cv2.VideoWriter(str(output_file), fourcc, 2, (width, height))  # Adjust width and height accordingly
+fps = 6
+out = cv2.VideoWriter(str(output_file), fourcc, fps, (width, height))  # Adjust width and height accordingly
 
 frame_start = 710
 frame_end = len_max
 n = 1
 
 r = range(frame_start, frame_end, n)
-
-tqdm_range = tqdm.tqdm(r)
-
 print("===Creating video===")
 
-size = 2
+size = 5
 
-for i in tqdm_range:
+for i in tqdm.tqdm(r):
     frame = kin_frames[i]
 
     fig, ax = plt.subplots(1,1, figsize=(10,5))

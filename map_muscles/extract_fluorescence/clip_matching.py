@@ -1,6 +1,7 @@
 from _root_path import add_root, get_root_path
 add_root()
 import map_muscles.extract_fluorescence.imaging_utils as imu
+import map_muscles.video_converter as vc
 
 from pathlib import Path
 import cv2
@@ -26,7 +27,7 @@ image_dir = '900_1440'
 
 image_dir_path = map_muscles_dir_path / data_dir / recording_dir / image_dir
 output_folder = map_muscles_dir_path/data_dir/recording_dir / 'videos'
-video_name = 'kin_muscle_match2.mp4'
+video_name = 'kin_muscle_match3.mp4'
 video_file = output_folder / video_name
 
 kin_path = image_dir_path / 'kin'
@@ -40,8 +41,8 @@ assert muscle_path.exists(), f'Following muscle_path does not exist: {muscle_pat
 
 fps = 30
 
-start_sec = 24
-end_sec = 29
+start_sec = 15
+end_sec = 40
 
 kin_min_index = imu.get_min_id(kin_path, 'jpg')
 
@@ -66,7 +67,7 @@ width = 1000
 height = 500
 
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec to use for the video
-out_fps = 5
+out_fps = 8
 out = cv2.VideoWriter(str(video_file), fourcc, out_fps, (width, height))  # Adjust width and height accordingly
 
 if not out.isOpened():
@@ -100,14 +101,9 @@ for muscle_id in tqdm_ids:
     for a in ax:
         a.axis('off')
 
-    # put pixel buffer in numpy array
-    canvas = FigureCanvas(fig)
-    canvas.draw()
-    mat = np.array(canvas.renderer._renderer)
-    mat = cv2.cvtColor(mat, cv2.COLOR_RGB2BGR)
+    vc.save_frame_plt_film(out, fig)
 
-    # Write the frame to the video file
-    out.write(mat)
+    plt.close(fig)
 
 print("Video writing complete to ", video_file)
 # close video writer

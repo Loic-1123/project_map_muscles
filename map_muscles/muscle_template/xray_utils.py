@@ -6,7 +6,7 @@ import pandas as pd
 import json
 import numpy as np
 
-data_path = Path(get_root_path()) / 'map_muscles' / 'data' / 'Xray'
+data_path = Path(get_root_path()) / 'map_muscles' / 'data' / 'xray'
 muscle_state_path = data_path / 'muscles_state.json'
 
 def load_muscle_state(path=muscle_state_path):

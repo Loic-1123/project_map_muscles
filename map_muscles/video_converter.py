@@ -84,8 +84,7 @@ def extract_kin_frames(kin_path, img_extension='jpg', start_index=None, end_inde
     nb_frames = len(images)*3
 
     print(f'Extracting {nb_frames} frames from {kin_path}')
-    tqdm_images = tqdm.tqdm(images)
-    for image in tqdm_images:
+    for image in tqdm.tqdm(images):
         frames.append(image[:,:,0])
         frames.append(image[:,:,1])
         frames.append(image[:,:,2])

@@ -59,6 +59,16 @@ kin_label_end_id = len(trochanter_locations) + kin_min_id - discrepancy
 
 kin_frames = vc.extract_kin_frames(kin_path, 'jpg', start_index = kin_label_start_id, end_index = kin_label_end_id)
 
+
+# plot some frames with labels to check correspondence
+size = 4
+size_cropped = 100
+half_width = 30
+margin = 20
+
+figzise = (25,10)
+video_dimensions = imu.get_video_dimensions(figzise)
+
 def is_id_corresponding(kin_frame_id, muscle_frame_id, discrepancy, min_id_kin, min_id_muscle, ratio):
     """
     Check if the kin_frame_id corresponds to the muscle_frame_id
@@ -72,7 +82,7 @@ size_cropped = 100
 half_width = 30
 margin = 30
 
-figzise = (20,10)
+figzise = (10,15)
 factor = 100
 
 # video_dimensions = 10 times the size of the figure
@@ -84,9 +94,9 @@ muscle_frames = vc.extract_muscle_frames(muscle_path, 'tif', start_index = muscl
 
 
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec to use for the video
-video_name = 'calibration_check_on_cropped_femur_fps_3.mp4'
+video_name = 'cropped_femur_muscle_fps2.mp4'
 output_file = root_path / 'map_muscles' / 'data' / '20240213_muscle_recording' / 'videos' / video_name
-fps =3
+fps =2
 out = cv2.VideoWriter(str(output_file), fourcc, fps, video_dimensions)  
 
 if not out.isOpened():
@@ -101,7 +111,7 @@ print(f"Creating {video_name} with {length} frames...")
 count = 0
 
 for i in tqdm.tqdm(r):
-    fig, axs = plt.subplots(1, 2, figsize=figzise)
+    fig, ax = plt.subplots(1, 1, figsize=figzise)
     
     # frame 4356 see to adjust: label_id = ... + 1 or + 2? let's take + 1
     label_id = i + label_start_id
@@ -113,13 +123,6 @@ for i in tqdm.tqdm(r):
     # cropped image 
     rectangle = imu.get_rectangle(pts, half_width, margin)
     cropped_img = imu.get_cropped_rectangle(kin_frames[i],rectangle)
-    axs[0].imshow(cropped_img, cmap='gray')
-    axs[0].set_title(f'Kinetic cropped frame {i+kin_label_start_id}')
-    # plot points on the kin cropped image
-    cropped_tro, cropped_ft  = imu.get_points_coor_for_cropped_img(pts, half_width, margin)
-    axs[0].scatter(cropped_tro[0], cropped_tro[1], s=size_cropped, c='r', label='trochanter')
-    axs[0].scatter(cropped_ft[0], cropped_ft[1], s=size_cropped, c='g', label='femur-tibia')
-
 
     muscle_id = imu.get_matching_muscle_id(
         kin_frame_id=label_id,
@@ -133,18 +136,10 @@ for i in tqdm.tqdm(r):
 
     rectangle = imu.get_rectangle(muscle_pts, half_width, margin)
     cropped_muscle_img = imu.get_cropped_rectangle(muscle_frame, rectangle)
-    axs[1].imshow(cropped_muscle_img, cmap='gray')
-    axs[1].set_title(f'Muscle cropped frame {muscle_id}')
+    ax.imshow(cropped_muscle_img, cmap='gray')
+    ax.set_title(f'Muscle cropped frame {muscle_id}')
 
-    # plot points on the muscle cropped image
-    cropped_tro, cropped_ft  = imu.get_points_coor_for_cropped_img(muscle_pts, half_width, margin)
-    axs[1].scatter(cropped_tro[0], cropped_tro[1], s=size_cropped, c='r', label='trochanter')
-    axs[1].scatter(cropped_ft[0], cropped_ft[1], s=size_cropped, c='g', label='femur-tibia')
-
-
-    for ax in axs:
-        ax.legend()
-        ax.axis('off')
+    ax.axis('off')
 
     if count % 3 ==0:
         vc.save_frame_plt_film(out, fig)

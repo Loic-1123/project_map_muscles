@@ -404,3 +404,14 @@ def map_points(kin_pts, muscle_img_shape, ret_line_pts=False):
     else:
         return muscle_pts
 
+def get_video_dimensions(figsize, factor=100):
+    """Returns the video dimensions based on the figsize and factor.
+
+    Args:
+        figsize (tuple): The size of the figure (width, height).
+        factor (int, optional): The scaling factor. Defaults to 100.
+
+    Returns:
+        tuple: The video dimensions (width, height).
+    """
+    return (int(figsize[0]*factor), int(figsize[1]*factor))
