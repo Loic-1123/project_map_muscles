@@ -27,19 +27,6 @@ img_path = root_path / 'map_muscles' / 'data' / '20240213_muscle_recording'
 
 assert img_path.exists(), f"Following path for recorded images does not exist: {img_path}"
 
-
-def get_img_dir(number='900_1440'):
-    return img_path / number
-
-
-def get_kin_dir(number='900_1440'):
-    return get_img_dir(number) / 'kin'
-
-def get_muscle_folder(number='900_1440'):
-    return get_img_dir(number) / 'muscle'
-
-
-
 def get_biggest_files(files_path, n_files=100, extension='tif'):
     """
     Get the n_files biggest files in a directory

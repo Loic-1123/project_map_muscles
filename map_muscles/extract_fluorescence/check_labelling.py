@@ -12,14 +12,14 @@ mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
+import map_muscles.path_utils as pu
 import map_muscles.video_converter as vc
 import map_muscles.extract_fluorescence.imaging_utils as imu
 import map_muscles.video_converter as vc
 
 filename = 'label_femur_V1.000_900_1440_kin.analysis.h5'
 
-root_path = Path(get_root_path())
-sleap_folder = root_path / 'map_muscles' / 'sleap'
+sleap_folder = pu.get_sleap_dir()
 
 file_path = sleap_folder / filename
 
@@ -59,7 +59,7 @@ tibia_tarsus_locations = locations[:, TIBIA_TARSUS_ID, :, :]
 
 mpl.rcParams['figure.figsize'] = [15,6]
 
-kin_path = imu.get_kin_folder()
+kin_path = pu.get_kin_dir()
 
 kin_frames = vc.extract_kin_frames(kin_path, 'jpg')
 

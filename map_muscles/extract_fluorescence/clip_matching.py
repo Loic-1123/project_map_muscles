@@ -1,15 +1,16 @@
 from _root_path import add_root, get_root_path
 add_root()
+
+import map_muscles.path_utils as pu
 import map_muscles.extract_fluorescence.imaging_utils as imu
 import map_muscles.video_converter as vc
+
 
 from pathlib import Path
 import cv2
 
 import matplotlib
 matplotlib.use('TkAgg')
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,25 +18,13 @@ import tqdm
 
 ###
 
-root_path = Path(get_root_path())
-map_muscles_dir_path = root_path / 'map_muscles'    
+image_dir_path = pu.get_img_dir()
+output_folder = pu.get_video_dir()
+#video_name = 'kin_muscle_match3.mp4'
+video_name = 'test.mp4'
 
-
-data_dir = 'data'
-recording_dir = '20240213_muscle_recording'
-image_dir = '900_1440'
-
-image_dir_path = map_muscles_dir_path / data_dir / recording_dir / image_dir
-output_folder = map_muscles_dir_path/data_dir/recording_dir / 'videos'
-video_name = 'kin_muscle_match3.mp4'
-video_file = output_folder / video_name
-
-kin_path = image_dir_path / 'kin'
-muscle_path = image_dir_path / 'muscle'
-
-assert kin_path.exists(), f'Following kin_path does not exist: {kin_path}'
-assert muscle_path.exists(), f'Following muscle_path does not exist: {muscle_path}'
-
+kin_path = pu.get_kin_dir()
+muscle_path = pu.get_muscle_dir()
 
 # 24 - 29 sec on 30 fps video
 
@@ -63,12 +52,9 @@ muscle_ids = np.arange(start_muscle_index, end_muscle_index)
 muscle_img = cv2.imread(str(muscle_path / f'{muscle_ids[0]:06d}.tif'), -1)
 kin_img = imu.get_matching_kin_img(muscle_ids[0], muscle_min_id, ratio, min_id_kin_file=kin_min_index, kin_path=kin_path)
 
-width = 1000
-height = 500
-
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec to use for the video
+figsize = (10, 5)
 out_fps = 8
-out = cv2.VideoWriter(str(video_file), fourcc, out_fps, (width, height))  # Adjust width and height accordingly
+out = vc.get_video_writer(video_name, figsize, out_fps)
 
 if not out.isOpened():
     print("Error: Failed to open video writer.")
@@ -91,7 +77,7 @@ for muscle_id in tqdm_ids:
     # then rotate 90 degrees
     muscle_img = cv2.rotate(muscle_img, cv2.ROTATE_90_COUNTERCLOCKWISE)
     
-    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+    fig, ax = plt.subplots(1, 2, figsize=figsize)
     ax[0].imshow(muscle_img, cmap='gray')
     ax[0].set_title('Muscle Image')
     ax[1].imshow(kin_img, cmap='gray')

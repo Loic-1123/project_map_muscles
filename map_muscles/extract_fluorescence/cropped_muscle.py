@@ -67,7 +67,7 @@ half_width = 30
 margin = 20
 
 figzise = (25,10)
-video_dimensions = imu.get_video_dimensions(figzise)
+video_dimensions = vc.get_video_dimensions(figzise)
 
 def is_id_corresponding(kin_frame_id, muscle_frame_id, discrepancy, min_id_kin, min_id_muscle, ratio):
     """

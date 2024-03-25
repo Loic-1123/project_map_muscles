@@ -84,8 +84,9 @@ muscle_frames = vc.extract_muscle_frames(muscle_path, 'tif', start_index = muscl
 
 
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec to use for the video
-video_name = 'calibration_check_on_cropped_femur_fps_3.mp4'
-output_file = root_path / 'map_muscles' / 'data' / '20240213_muscle_recording' / 'videos' / video_name
+#video_name = 'calibration_check_on_cropped_femur_fps_3.mp4'
+video_name = 'test.mp4'
+output_file = vc.get_video_dir() / video_name
 fps =3
 out = cv2.VideoWriter(str(output_file), fourcc, fps, video_dimensions)  
 

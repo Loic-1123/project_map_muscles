@@ -36,9 +36,9 @@ def get_video_dimensions(figsize, factor=100):
 def get_video_writer(
         video_name,
         figsize,
+        fps,
         video_dir = get_video_dir(),
         fourcc=get_fourcc(), 
-        fps=6, 
         ):
     """Returns a cv2 VideoWriter object.
 
@@ -251,7 +251,6 @@ def write_the_two_complete_kin_videos(
     write_kin_video(img_folder, video_name, output_folder, fps=fps)
     write_kin_video(img_folder2, video_name2, output_folder, fps=fps)
 
-
 def save_frame_plt_film(out, fig):
     canvas = FigureCanvas(fig)
     canvas.draw()
@@ -259,6 +258,16 @@ def save_frame_plt_film(out, fig):
     mat = cv2.cvtColor(mat, cv2.COLOR_RGB2BGR)
     out.write(mat)
 
+def end_cv2_writing(out):
+    """Ends the cv2 video writing process.
+
+    Args:
+        out (cv2.VideoWriter): The video writer object.
+    """
+    out.release()
+    cv2.destroyAllWindows()
+    print('Video writing ended')
+    
 
 
 if __name__ == "__main__":
@@ -315,18 +324,7 @@ if __name__ == "__main__":
 
     print(kin_diff, muscle_diff)
 
-    
-def end_cv2_writing(out):
-    """Ends the cv2 video writing process.
-
-    Args:
-        out (cv2.VideoWriter): The video writer object.
-    """
-    out.release()
-    cv2.destroyAllWindows()
-    print('Video writing ended')
-    
-
+ 
 
 
 
