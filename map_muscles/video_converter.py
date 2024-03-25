@@ -12,8 +12,50 @@ import matplotlib as mpl
 mpl.use('TkAgg')
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
+video_path = Path(get_root_path()) / 'map_muscles' / 'data' / '20240213_muscle_recording' / 'videos'
+
+def get_video_dir():
+    assert video_path.exists(), f'video path {video_path} does not exist'
+    return video_path
+
 def get_fourcc(ext = 'mp4v'):
     return cv2.VideoWriter_fourcc(*ext)
+
+def get_video_dimensions(figsize, factor=100):
+    """Returns the video dimensions based on the figsize and factor.
+
+    Args:
+        figsize (tuple): The size of the figure (width, height).
+        factor (int, optional): The scaling factor. Defaults to 100.
+
+    Returns:
+        tuple: The video dimensions (width, height).
+    """
+    return (int(figsize[0]*factor), int(figsize[1]*factor))
+
+def get_video_writer(
+        video_name,
+        figsize,
+        video_dir = get_video_dir(),
+        fourcc=get_fourcc(), 
+        fps=6, 
+        ):
+    """Returns a cv2 VideoWriter object.
+
+    Args:
+        video_name (str): The name of the output video file.
+        figsize (tuple): The size of the figure (width, height).
+        video_dir (Path object, optional): The directory where the video will be saved. Defaults to get_video_dir().
+        fourcc (str, optional): The four character code of the video codec. Defaults to get_fourcc().
+        fps (int, optional): The frames per second of the video. Defaults to 6.
+
+    Returns:
+        cv2.VideoWriter: The video writer object.
+    """
+
+    output_file = str(video_dir/ video_name)
+    video_dimensions = get_video_dimensions(figsize)
+    return cv2.VideoWriter(output_file, fourcc, fps, video_dimensions)
 
 def frames_to_video(
         frames, 
@@ -274,7 +316,16 @@ if __name__ == "__main__":
     print(kin_diff, muscle_diff)
 
     
+def end_cv2_writing(out):
+    """Ends the cv2 video writing process.
 
+    Args:
+        out (cv2.VideoWriter): The video writer object.
+    """
+    out.release()
+    cv2.destroyAllWindows()
+    print('Video writing ended')
+    
 
 
 

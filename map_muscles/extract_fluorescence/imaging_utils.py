@@ -23,6 +23,21 @@ muscle_kin_ratio = np.array(calib['muscle_kin_ratio'])
 ref_kin_pts = np.array(calib['ref_kin_pts'])
 ref_muscle_pts = np.array(calib['ref_muscle_pts'])
 
+img_path = root_path / 'map_muscles' / 'data' / '20240213_muscle_recording'
+
+assert img_path.exists(), f"Following path for recorded images does not exist: {img_path}"
+
+
+def get_img_dir(number='900_1440'):
+    return img_path / number
+
+
+def get_kin_dir(number='900_1440'):
+    return get_img_dir(number) / 'kin'
+
+def get_muscle_folder(number='900_1440'):
+    return get_img_dir(number) / 'muscle'
+
 
 
 def get_biggest_files(files_path, n_files=100, extension='tif'):
@@ -403,15 +418,3 @@ def map_points(kin_pts, muscle_img_shape, ret_line_pts=False):
         return muscle_pts, muscle_line_pts
     else:
         return muscle_pts
-
-def get_video_dimensions(figsize, factor=100):
-    """Returns the video dimensions based on the figsize and factor.
-
-    Args:
-        figsize (tuple): The size of the figure (width, height).
-        factor (int, optional): The scaling factor. Defaults to 100.
-
-    Returns:
-        tuple: The video dimensions (width, height).
-    """
-    return (int(figsize[0]*factor), int(figsize[1]*factor))

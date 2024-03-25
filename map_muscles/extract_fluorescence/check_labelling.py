@@ -59,8 +59,7 @@ tibia_tarsus_locations = locations[:, TIBIA_TARSUS_ID, :, :]
 
 mpl.rcParams['figure.figsize'] = [15,6]
 
-images_path = root_path / 'map_muscles' / 'data' / '20240213_muscle_recording' / '900_1440'
-kin_path = images_path / 'kin'
+kin_path = imu.get_kin_folder()
 
 kin_frames = vc.extract_kin_frames(kin_path, 'jpg')
 
@@ -68,17 +67,15 @@ kin_min_id = imu.get_min_id(kin_path, 'jpg')
 
 len_max = min(len(kin_frames), len(trochanter_locations))
 
-out_path = root_path / 'map_muscles' / 'data' / '20240213_muscle_recording' / 'videos'
+out_path = vc.get_video_dir()
 assert out_path.exists(), f"Following out_path does not exist: {out_path}"
 
-width = 1000
-height = 500
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec to use for the video
+figsize = (10, 5)
 
-video_name = 'check_labelling_on_kinematic_fps6.mp4'
-output_file = out_path / video_name
-fps = 6
-out = cv2.VideoWriter(str(output_file), fourcc, fps, (width, height))  # Adjust width and height accordingly
+#video_name = 'check_labelling_on_kinematic_fps6.mp4'
+video_name = 'test2.mp4'
+fps = 12
+out = vc.get_video_writer(video_name, figsize, fps=fps)
 
 frame_start = 710
 frame_end = len_max
@@ -92,7 +89,7 @@ size = 5
 for i in tqdm.tqdm(r):
     frame = kin_frames[i]
 
-    fig, ax = plt.subplots(1,1, figsize=(10,5))
+    fig, ax = plt.subplots(1,1, figsize=figsize)
     ax.imshow(frame, cmap='gray')
     ax.scatter(trochanter_locations[i, 0, 0], trochanter_locations[i, 1, 0], c='r', s=size, label='trochanter')
     ax.scatter(femur_tibia_locations[i, 0, 0], femur_tibia_locations[i, 1, 0], c='g', s=size, label='femur-tibia')
@@ -108,8 +105,6 @@ for i in tqdm.tqdm(r):
     # close figure
     plt.close(fig)
 
-cv2.destroyAllWindows()
-out.release()
-
+vc.end_cv2_writing(out)
 
 print('Video created to ', out_path)
