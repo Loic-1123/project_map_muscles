@@ -35,6 +35,20 @@ def get_femur_muscles(data_dir=data_path, leg='LH', femur_id = 'Fe', segments=Tr
 
     return femur_muscles
 
+def get_points(df, A_key='pointA', B_key='pointB'):
+    """
+    Get the points from the dataframe
+    """
+
+    A = df[A_key]
+    B = df[B_key]
+    points = np.concatenate((A, B), axis=0)
+
+    # to array
+    points = np.array([eval(point) for point in points])
+    
+    return points
+
 # function to create a line from two points
 def create_line(p1, p2, str = True):
     if str:

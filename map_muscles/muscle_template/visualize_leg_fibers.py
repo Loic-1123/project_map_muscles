@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-
 def plot_lines(ax, lines, c):
        for line in lines:
               x, y, z = line
@@ -21,10 +20,9 @@ def plot_text_label(ax, lines, label, c):
        ax.text(x[-1], y[-1], z[-1], label, color=c)
 
 def set_xyz_labels(ax):
-       ax.set_xlabel('X Label')
-       ax.set_ylabel('Y Label')
-       ax.set_zlabel('Z Label')
-
+       ax.set_xlabel('X')
+       ax.set_ylabel('Y')
+       ax.set_zlabel('Z')
 
 def get_shuffled_color_ids(parts):
        color_ids = np.linspace(0, 1, len(parts))
@@ -52,6 +50,15 @@ def plot_fibers(parts, colors, plot_labels=False):
               if plot_labels:
                      plot_text_label(ax, lines, part['layer_name'].iloc[0], c)
 
+red = np.array([1, 0, 0])
+
+def plot_single_muscle(ax, muscle, color=red, plot_labels=False):
+       muscle.loc[:,'line'] = muscle.apply(lambda row: xu.create_line(row['pointA'], row['pointB']), axis=1)
+       lines = muscle['line']
+       plot_lines(ax, lines, color)
+
+       if plot_labels:
+              plot_text_label(ax, lines, muscle['layer_name'].iloc[0], color)
 
 if __name__ == "__main__":
        lh = xu.get_leg(leg='LH')
@@ -79,11 +86,23 @@ if __name__ == "__main__":
 
        # isolate fibers related to femur: layer names containing 'Fe'
        fe_ids = [layer for layer in layers_names if 'Fe' in layer]
+       
+       """
+       ['LH TrFe', 
+       'LH FeTi flexor', 
+       'LH FeTi anterior acc flexor', 
+       'LH FeTi posterior acc flexor', 
+       'LH FeTi extensor', 
+       'LH FeCl ltm2']
+       """
+
        femur_fibers = xu.get_femur_muscles()
+
+
 
        colors = get_random_color_map(femur_fibers)
 
-       plot_fibers(femur_fibers, colors)
+       plot_fibers(femur_fibers, colors, plot_labels=True)
 
        plt.show()
 

@@ -77,8 +77,6 @@ def check_fibers_same_nb_segments(segmented_fibers):
     assert np.all(segments_shapes == segments_shapes[0]), \
         "Fibers do not have the same number of segments"
     
-    
-
 def segment_muscle(muscle_fibers, n=3):
     segmented_fibers = divided_fibers(muscle_fibers, n=n+1)
     check_fibers_same_nb_segments(segmented_fibers)
@@ -93,7 +91,13 @@ def segment_muscle(muscle_fibers, n=3):
     segmented_muscle = np.array(segmented_muscle)
     return segmented_muscle
 
+def plot_segmented_muscle(ax, segmented_muscle, segmentation_colors, show_points=True):
+    assert len(segmentation_colors) == segmented_muscle.shape[0], \
+        "Number of colors must match the number of muscle segments"
     
+    for i, muscle_segment in enumerate(segmented_muscle):
+        for fiber_segment in muscle_segment:
+            plot_segments(ax, fiber_segment, fiber_color=segmentation_colors[i], show_points=show_points)
 
 
 muscles = xu.get_femur_muscles()
@@ -104,35 +108,13 @@ trfe.describe()
 fibers = trfe['line'].to_numpy()
 fibers.shape
 
-
-
 nb= 4
 segmented_muscle = segment_muscle(fibers, n=nb)
-
-
-
+segmented_muscle.shape
 """"
  (4, 2, 7, 2, 3): 
  4 muscle segments, 
  2 fiber segments per muscle segment, 
  7 fibers, 2 points per fiber, 3 coordinates per point
 """
-
-# plot the following muscle segments with different colors
-
-colors = ['r', 'g', 'b', 'y']
-
-fig = plt.figure()
-
-ax = fig.add_subplot(111, projection='3d')
-
-vf.set_xyz_labels(ax)
-
-for i, muscle_segment in enumerate(segmented_muscle):
-    for fiber_segment in muscle_segment:
-        plot_segments(ax, fiber_segment, fiber_color=colors[i], point_color=colors[i], show_points=False)
-    
-plt.show()
-
-
 
