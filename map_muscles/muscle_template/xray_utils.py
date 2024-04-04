@@ -24,11 +24,14 @@ def get_leg(data_dir=data_path, leg='LH'):
     leg = pd.read_csv(data_dir / f'{leg}.csv')
     return leg
 
-def get_femur_muscles(data_dir=data_path, leg='LH', femur_id = 'Fe', segments=True):
+def get_femur_muscles(data_dir=data_path, leg='LH', femur_id = 'Fe', segments=True, remove=False, to_remove=['LH TrFe']):
     lh = get_leg(data_dir, leg)
     layers_names = lh['layer_name'].unique()
     fe_ids = [layer for layer in layers_names if femur_id in layer]
     femur_muscles = [lh[lh['layer_name'] == fe] for fe in fe_ids]
+
+    if remove:
+        femur_muscles = [muscle for muscle in femur_muscles if muscle['layer_name'].iloc[0] not in to_remove]
 
     if segments:
         femur_muscles = [add_lines_to_df(muscle) for muscle in femur_muscles]
@@ -69,6 +72,7 @@ def add_lines_to_df(df, A_key='pointA', B_key='pointB'):
 
 
 if __name__ == "__main__":
+    np.random.seed(0)
     muscles = load_muscle_state()
     anno_layers = [layer for layer in muscles['layers'] if layer['type'] == 'annotation']
 

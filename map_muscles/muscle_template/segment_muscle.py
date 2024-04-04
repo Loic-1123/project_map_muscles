@@ -1,9 +1,8 @@
 from _root_path import add_root
 add_root()
 
-from scipy.spatial import ConvexHull
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 
 import map_muscles.muscle_template.visualize_leg_fibers as vf
 import map_muscles.muscle_template.xray_utils as xu
@@ -55,6 +54,18 @@ def divided_fibers(fibers, n=4):
     return divided_fibers
 
 def plot_segment(ax, segment, color='b'):
+    """
+    Plot a segment (two points linked together) in 3D space.
+
+    Parameters:
+    - ax: The matplotlib Axes object to plot on.
+    - segment: A tuple containing the coordinates of the two endpoints of the segment.
+    - color: The color of the segment (default is 'b' for blue).
+
+    Returns:
+    None
+    """
+
     p1, p2 = segment
     ax.plot([p1[0], p2[0]], [p1[1], p2[1]], [p1[2], p2[2]], color=color)
 
@@ -77,7 +88,7 @@ def check_fibers_same_nb_segments(segmented_fibers):
     assert np.all(segments_shapes == segments_shapes[0]), \
         "Fibers do not have the same number of segments"
     
-def segment_muscle(muscle_fibers, n=3):
+def segment_muscle_by_dividing_fibers(muscle_fibers, n=3):
     segmented_fibers = divided_fibers(muscle_fibers, n=n+1)
     check_fibers_same_nb_segments(segmented_fibers)
 
@@ -93,28 +104,42 @@ def segment_muscle(muscle_fibers, n=3):
 
 def plot_segmented_muscle(ax, segmented_muscle, segmentation_colors, show_points=True):
     assert len(segmentation_colors) == segmented_muscle.shape[0], \
-        "Number of colors must match the number of muscle segments"
+        "Number of colors must match the number of muscle segments, got {} colors for {} muscle segments".format(len(segmentation_colors), segmented_muscle.shape[0])
+    
     
     for i, muscle_segment in enumerate(segmented_muscle):
         for fiber_segment in muscle_segment:
             plot_segments(ax, fiber_segment, fiber_color=segmentation_colors[i], show_points=show_points)
 
 
-muscles = xu.get_femur_muscles()
-trfe = muscles[-1]
+if __name__ == "__main__":
+    np.random.seed(0)
+    muscles = xu.get_femur_muscles()
+    trfe = muscles[-1]
 
-trfe.describe()
-# fuse the sets of points A and B
-fibers = trfe['line'].to_numpy()
-fibers.shape
+    trfe.describe()
+    fibers = trfe['line'].to_numpy()
+    fibers.shape
 
-nb= 4
-segmented_muscle = segment_muscle(fibers, n=nb)
-segmented_muscle.shape
-""""
- (4, 2, 7, 2, 3): 
- 4 muscle segments, 
- 2 fiber segments per muscle segment, 
- 7 fibers, 2 points per fiber, 3 coordinates per point
-"""
+    nb= 4
+    segmented_muscle = segment_muscle_by_dividing_fibers(fibers, n=nb)
+    segmented_muscle.shape
+    """"
+    (4, 2, 7, 2, 3): 
+    4 muscle segments, 
+    2 fibers segments per muscle segment, 
+    7 fibers, 2 points per fiber, 3 coordinates per point
+    """
+
+    fig = plt.figure()
+
+    ax = fig.add_subplot(111, projection='3d')
+
+    vf.set_xyz_labels(ax)
+
+    colors = vf.get_random_color_map(segmented_muscle, palette=plt.cm.hsv)
+
+    plot_segmented_muscle(ax, segmented_muscle, colors, show_points=False)
+
+    plt.show()
 
