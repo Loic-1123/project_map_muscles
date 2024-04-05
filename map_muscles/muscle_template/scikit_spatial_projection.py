@@ -44,33 +44,67 @@ class Segment():
     def plot_segment(self, ax, **kwargs):
         ax.plot([self.A[0], self.B[0]], [self.A[1], self.B[1]], [self.A[2], self.B[2]], **kwargs)
 
+# class Fiber = Segment
+class Fiber(Segment):
+    pass
+
+class Fibers():
+    def __init__(self, fibers):
+        self.fibers = [Fiber(fiber) for fiber in fibers]
+
+    def get_plotters(self, **kwargs):
+        """
+        Returns a list of plotters for each fiber.
+
+        Args:
+            **kwargs: Additional keyword arguments to be passed to the fiber plotter.
+
+        Returns:
+            list: A list of plotters for each fiber.
+        """
+
+        plotters = [fiber.plotter(**kwargs) for fiber in self.fibers]
+
+        # as it is a list of tuples, we need to unpack it
+        return [point_plotter for fiber_plotter in plotters for point_plotter in fiber_plotter]
+
+    def plot_fibers(self, ax, **kwargs):
+        for fiber in self.fibers:
+            fiber.plot_segment(ax, **kwargs)
+
+
+    def project_on_plane(self, plane: Plane):
+        return Fibers([fiber.project_on_plane(plane) for fiber in self.fibers])
+
 @dataclass
 class SegmentedFiber():
-    segments: list
+    segments: list # of Segments
 
-def fibers_to_segments(fibers):
-    return [Segment(fiber) for fiber in fibers]
+def muscles_to_fibers(muscles):
+    return [Fibers(muscle['line'].to_numpy()) for muscle in muscles]
 
 
-v1 = np.array([1.0,.0,.0])
-v2 = np.array([.0,1.0,.0])
+if __name__ == "__main__":
 
-u1,u2 = pp.orthonormal_vectors(v1, v2)
+    v1 = np.array([1.0,.0,.0])
+    v2 = np.array([.0,1.0,.0])
 
-points = Points([[0, 0, 0], v1, v2])
+    u1,u2 = pp.orthonormal_vectors(v1, v2)
 
-plane = Plane.from_points(points[0], points[1], points[2])
-segment = Segment([[0, 0, 1], [1, 1, 3]])
+    points = Points([[0, 0, 0], v1, v2])
 
-projected_segment = segment.project_on_plane(plane)
+    plane = Plane.from_points(points[0], points[1], points[2])
+    segment = Segment([[0, 0, 1], [1, 1, 3]])
 
-fig, ax = plot_3d(
-    plane.plotter(alpha=0.2),
-    *segment.plotter(c='k'),
-    *projected_segment.plotter(c='r'),
-)
+    projected_segment = segment.project_on_plane(plane)
 
-segment.plot_segment(ax, c='k')
-projected_segment.plot_segment(ax, c='r')
+    fig, ax = plot_3d(
+        plane.plotter(alpha=0.2),
+        *segment.plotter(c='k'),
+        *projected_segment.plotter(c='r'),
+    )
 
-plt.show()
+    segment.plot_segment(ax, c='k')
+    projected_segment.plot_segment(ax, c='r')
+
+    plt.show()
