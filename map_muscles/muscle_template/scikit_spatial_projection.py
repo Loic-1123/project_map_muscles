@@ -49,8 +49,23 @@ class Fiber(Segment):
     pass
 
 class Fibers():
+    fibers: list # of Fiber
+
     def __init__(self, fibers):
-        self.fibers = [Fiber(fiber) for fiber in fibers]
+        """
+        Args:
+            fibers (list): A list of Fiber (Segment).
+        """
+        self.fibers = fibers
+
+    @classmethod
+    def fibers_from_points(cls, segments):
+        """_summary_
+
+        Args:
+            segments (list): A list of two points tuple
+        """
+        return cls([Fiber(segment) for segment in segments])
 
     def get_plotters(self, **kwargs):
         """
@@ -72,16 +87,89 @@ class Fibers():
         for fiber in self.fibers:
             fiber.plot_segment(ax, **kwargs)
 
-
     def project_on_plane(self, plane: Plane):
-        return Fibers([fiber.project_on_plane(plane) for fiber in self.fibers])
+
+        fibers = [fiber.project_on_plane(plane) for fiber in self.fibers]
+        
+        return Fibers(fibers)
+
+    def get_min_x(self):
+        return min([min(fiber.A[0], fiber.B[0]) for fiber in self.fibers])
+    
+    def get_max_x(self):
+        return max([max(fiber.A[0], fiber.B[0]) for fiber in self.fibers])
+    
+    def get_min_y(self):
+        return min([min(fiber.A[1], fiber.B[1]) for fiber in self.fibers])
+    
+    def get_max_y(self):
+        return max([max(fiber.A[1], fiber.B[1]) for fiber in self.fibers])
+    
+    def get_min_z(self):
+        return min([min(fiber.A[2], fiber.B[2]) for fiber in self.fibers])
+    
+    def get_max_z(self):
+        return max([max(fiber.A[2], fiber.B[2]) for fiber in self.fibers])
+    
+    def get_lims_x(self):
+        return [self.get_min_x(), self.get_max_x()]
+    
+    def get_lims_y(self):
+        return [self.get_min_y(), self.get_max_y()]
+    
+    def get_lims_z(self):
+        return [self.get_min_z(), self.get_max_z()]
+        
+    def get_lims(self):
+        return self.get_lims_x(), self.get_lims_y(), self.get_lims_z()
+    
+class Muscles():
+    muscles: list # of Fibers
+
+    def __init__(self, muscles):
+        """
+        Args:
+            muscles (list): A list of Fibers
+        """
+        self.muscles = muscles
+
+    @classmethod
+    def muscles_from_df(cls, muscles_df, line_key='line'):
+        return cls([Fibers.fibers_from_points(muscle['line'].to_numpy()) for muscle in muscles_df])
+
+#TODO
+
+
 
 @dataclass
 class SegmentedFiber():
     segments: list # of Segments
 
-def muscles_to_fibers(muscles):
-    return [Fibers(muscle['line'].to_numpy()) for muscle in muscles]
+def one_muscle_to_fibers(muscle, line_key='line'):
+    """
+    Convert a muscle df to a Fibers object.
+
+    Parameters:
+    muscle (dict): A dictionary representing a muscle.
+    line_key (str, optional): The key in the muscle dictionary that contains the fiber data. Defaults to 'line'.
+
+    Returns:
+    Fibers: A Fibers object representing the muscle's fibers.
+    """
+    return Fibers.fibers_from_points(muscle[line_key].to_numpy())
+
+def muscles_to_fibers(muscles, line_key='line'):
+    """
+    Convert a list of muscles dfs to a list of Fibers.
+
+    Parameters:
+    muscles (list): A list of dictionaries representing muscles.
+    line_key (str, optional): The key in each muscle dictionary that contains the fiber data. Defaults to 'line'.
+
+    Returns:
+    list: A list of Fibers objects, each representing a muscle's fibers.
+    """
+    return [Fibers.fibers_from_points(muscle[line_key].to_numpy()) for muscle in muscles]
 
 
 if __name__ == "__main__":
