@@ -88,14 +88,27 @@ def test_projection_of_one_muscle(index=0):
 
     plt.show()
 
+def test_segmentation():
+    muscles = xu.get_femur_muscles(remove=True)
+    muscle = muscles[0]
+    fibers = ssp.one_muscle_to_fibers(muscle)
+    fiber = fibers.segments[0]
+    n = 4 # number of segments
+    segmented_fiber = ssp.SegmentedFiber(fiber, n_segments=n)
+    
+    fig, ax = plot_3d(
+        *segmented_fiber.points_plotters(c='r')
+    )
+    segmented_fiber.plot_segments(ax, c='k')
 
-
-
-
+    plt.show()
 
 
 if __name__ == "__main__":
-    #test_femur_muscles_plotting()
+    test_femur_muscles_plotting()
     test_projection_of_one_muscle()
+    test_segmentation()
+
+    
     
 

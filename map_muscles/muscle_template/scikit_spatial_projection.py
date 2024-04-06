@@ -11,6 +11,10 @@ from skspatial.plotting import plot_3d
 from dataclasses import dataclass
 
 import map_muscles.muscle_template.projection_on_plane as pp
+import map_muscles.muscle_template.xray_utils as xu
+
+
+
 
 class Segment():
     def __init__(self, two_points):
@@ -48,23 +52,6 @@ class Segment():
 class Fiber(Segment):
     pass
 
-def get_segments_plotters(segments, flatten=True, **kwargs):
-    """
-    Returns a list of plotters for each segment.
-
-    Args:
-        segments (list): A list of Segment objects.
-        **kwargs: Additional keyword arguments to be passed to the segment plotter.
-
-    Returns:
-        list: A list of plotters for each segment.
-    """
-    plotters = np.array([segment.plotter(**kwargs) for segment in segments])
-
-    if flatten:
-        return plotters.flatten()
-    return plotters
-
 def get_segments_min_x(segments):
     return min([min(segment.A[0], segment.B[0]) for segment in segments])
 
@@ -93,14 +80,14 @@ def get_segments_lims_z(segments):
     return [get_segments_min_z(segments), get_segments_max_z(segments)]
 
 class Segments():
-    segments: list # of Segment
+    segments: np.array # of Segment
 
     def __init__(self, segments):
         """
         Args:
-            fibers (list): A list of Fiber (Segment).
+            fibers (list): A list of Segment.
         """
-        self.segments = segments
+        self.segments = np.array(segments)
 
     @classmethod
     def segments_from_points(cls, segments):
@@ -111,7 +98,7 @@ class Segments():
         """
         return cls([Segment(segment) for segment in segments])
 
-    def points_plotters(self, **kwargs):
+    def points_plotters(self, flatten=True, **kwargs):
         """
         Returns a list of plotters for each fiber.
 
@@ -121,8 +108,14 @@ class Segments():
         Returns:
             list: A list of plotters for each fiber.
         """
-        return get_segments_plotters(self.fibers, **kwargs)
 
+        plotters = np.array([segment.plotter(**kwargs) for segment in self.segments])
+
+        if flatten:
+            return plotters.flatten()
+        return plotters
+
+        
     def plot_segments(self, ax, **kwargs):
         for segment in self.segments:
             segment.plot_segment(ax, **kwargs)
@@ -178,55 +171,64 @@ class Muscles():
 
     @classmethod
     def muscles_from_df(cls, muscles_df, line_key='line'):
-        return cls([Fibers.fibers_from_points(muscle['line'].to_numpy()) for muscle in muscles_df])
+        return cls([Fibers.segments_from_points(muscle['line'].to_numpy()) for muscle in muscles_df])
 
 #TODO
 
+def segments_to_points(segment: Segment, n:int=3):
+    """
+    Convert a line (represented by two points) to a set of n evenly spaced points 
+    between the two points.
+    """
 
+    p1, p2 = segment.A, segment.B
+    x = np.linspace(p1[0], p2[0], n)
+    y = np.linspace(p1[1], p2[1], n)
+    z = np.linspace(p1[2], p2[2], n)
+
+    return x,y,z
+
+def divide_segment(segment, n):
+    """
+    Divide a segment into n_segments segments (Segment) of equal length.
+
+    Args:
+        segment (Segment): A segment to be divided.
+        n_segments (int): The number of segments to divide the segment into.
+
+    Returns:
+        list: np.array of n_segments segments.
+    """
+
+    segments = []
+
+    x,y,z = segments_to_points(segment, n=n+1)
+
+    for i in range(n):
+        segment = np.array(
+            [
+            [x[i], y[i], z[i]],
+            [x[i+1], y[i+1], z[i+1]],
+            ]
+        )
+
+        segments.append(Segment(segment))
+    # to array
+    segments = np.array(segments)
+    
+    return segments
 
 class SegmentedFiber(Fibers):
-    segments: list # of Segment
+    def __init__(self, segment:Segment, n_segments:int):
 
-    def __init__(self, segments):
         """
         Args:
             segments (list): A list of Segment
+            n_segments (int): The number of segments to divide the fiber into.
         """
-        self.segments = segments
-
-    def points_plotters(self, **kwargs):
-        """
-        Returns a list of plotters for each segment.
-
-        Args:
-            **kwargs: Additional keyword arguments to be passed to the segment plotter.
-
-        Returns:
-            list: A list of plotters for each segment.
-        """
-        return get_segments_plotters(self.segments, **kwargs)
-
-    def plot_segments(self, ax, **kwargs):
-        for segment in self.segments:
-            segment.plot_segment(ax, **kwargs)
-    
-    def project_on_plane(self, plane: Plane):
-        segments = [segment.project_on_plane(plane) for segment in self.segments]
-        return SegmentedFiber(segments)
-    
-    def get_min_x(self):
-        return get_segments_min_x(self.segments)
-    
-    def get_max_x(self):
-        return get_segments_max_x(self.segments)
-    
-    def get_min_y(self):
-        return get_segments_min_y(self.segments)
-    
-    def get_max_y(self):
-        return get_segments_max_y(self.segments)
-    
         
+        Fibers.__init__(self, divide_segment(segment, n_segments))
+
     
 def one_muscle_to_fibers(muscle, line_key='line'):
     """
@@ -257,25 +259,21 @@ def muscles_to_fibers(muscles, line_key='line'):
 
 if __name__ == "__main__":
 
-    v1 = np.array([1.0,.0,.0])
-    v2 = np.array([.0,1.0,.0])
-
-    u1,u2 = pp.orthonormal_vectors(v1, v2)
-
-    points = Points([[0, 0, 0], v1, v2])
-
-    plane = Plane.from_points(points[0], points[1], points[2])
-    segment = Segment([[0, 0, 1], [1, 1, 3]])
-
-    projected_segment = segment.project_on_plane(plane)
-
+    muscles = xu.get_femur_muscles(remove=True)
+    muscle = muscles[0]
+    fibers = one_muscle_to_fibers(muscle)
+    type(fibers)
+    type(fibers.segments)
+    fiber = fibers.segments[0]
+    n = 4 # number of segments
+    segmented_fiber = SegmentedFiber(fiber, n=n)
+    type(segmented_fiber)
+    type(segmented_fiber.segments)
+    type(segmented_fiber.segments[0])
+    
     fig, ax = plot_3d(
-        plane.plotter(alpha=0.2),
-        *segment.plotter(c='k'),
-        *projected_segment.plotter(c='r'),
+        segmented_fiber.points_plotters()
     )
-
-    segment.plot_segment(ax, c='k')
-    projected_segment.plot_segment(ax, c='r')
+    segmented_fiber.plot_segments(ax, c='k')
 
     plt.show()
