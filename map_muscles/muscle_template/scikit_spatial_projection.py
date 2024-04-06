@@ -48,7 +48,9 @@ class Segment():
     def plot_segment(self, ax, **kwargs):
         ax.plot([self.A[0], self.B[0]], [self.A[1], self.B[1]], [self.A[2], self.B[2]], **kwargs)
 
-# class Fiber = Segment
+    def get_points(self):
+        return self.A, self.B
+    
 class Fiber(Segment):
     pass
 
@@ -79,6 +81,11 @@ def get_segments_lims_y(segments):
 def get_segments_lims_z(segments):
     return [get_segments_min_z(segments), get_segments_max_z(segments)]
 
+def get_unique_points(segments):
+    points = np.array([segment.get_points() for segment in segments]).reshape(-1, 3)
+    return Points(points).unique()
+    
+
 class Segments():
     segments: np.array # of Segment
 
@@ -98,7 +105,15 @@ class Segments():
         """
         return cls([Segment(segment) for segment in segments])
 
-    def points_plotters(self, flatten=True, **kwargs):
+    def get_points(self, unique=True):
+        if unique:
+            points = get_unique_points(self.segments)
+        else:
+            points = np.array([segment.get_points() for segment in self.segments]).reshape(-1, 3)
+            points = Points(points)
+        return points
+
+    def points_plotters(self, **kwargs):
         """
         Returns a list of plotters for each fiber.
 
@@ -108,13 +123,15 @@ class Segments():
         Returns:
             list: A list of plotters for each fiber.
         """
+        
+        points = np.array([segment.get_points() for segment in self.segments])
+        points = points.reshape(-1, 3)
+        points = Points(points)
+        
+        points = points.unique()
+        plotters = points.plotter(**kwargs)
 
-        plotters = np.array([segment.plotter(**kwargs) for segment in self.segments])
-
-        if flatten:
-            return plotters.flatten()
         return plotters
-
         
     def plot_segments(self, ax, **kwargs):
         for segment in self.segments:
@@ -128,52 +145,27 @@ class Segments():
 
     def get_min_x(self):
         return get_segments_min_x(self.segments)
-    
     def get_max_x(self):
         return get_segments_max_x(self.segments)
-    
     def get_min_y(self):
         return get_segments_min_y(self.segments)
-    
     def get_max_y(self):
         return get_segments_max_y(self.segments)    
     def get_min_z(self):
         return get_segments_min_z(self.segments)
-    
     def get_max_z(self):
         return get_segments_max_z(self.segments)
-    
     def get_lims_x(self):
         return get_segments_lims_x(self.segments)
-    
     def get_lims_y(self):
         return get_segments_lims_y(self.segments)
-    
     def get_lims_z(self):
         return get_segments_lims_z(self.segments)
-        
     def get_lims(self):
         return self.get_lims_x(), self.get_lims_y(), self.get_lims_z()
-    
 
 class Fibers(Segments):
     pass
-
-class Muscles():
-    muscles: list # of Fibers
-
-    def __init__(self, muscles):
-        """
-        Args:
-            muscles (list): A list of Fibers
-        """
-        self.muscles = muscles
-
-    @classmethod
-    def muscles_from_df(cls, muscles_df, line_key='line'):
-        return cls([Fibers.segments_from_points(muscle['line'].to_numpy()) for muscle in muscles_df])
-
-#TODO
 
 def segments_to_points(segment: Segment, n:int=3):
     """
@@ -218,7 +210,9 @@ def divide_segment(segment, n):
     
     return segments
 
-class SegmentedFiber(Fibers):
+class SegmentedFiber(Segments):
+    n_segments: int # number of segments
+
     def __init__(self, segment:Segment, n_segments:int):
 
         """
@@ -226,10 +220,115 @@ class SegmentedFiber(Fibers):
             segments (list): A list of Segment
             n_segments (int): The number of segments to divide the fiber into.
         """
-        
-        Fibers.__init__(self, divide_segment(segment, n_segments))
+        Segments.__init__(self, divide_segment(segment, n_segments))
+        self.n_segments = n_segments
 
-    
+class SegmentedFibers():
+    n_segments: int
+    segmented_fibers: np.array # of SegmentedFiber
+
+    def __init__(self, segmented_fibers):
+        """
+        Args:
+            segmented_fibers (list): A list of SegmentedFiber
+        """
+        self.segmented_fibers = segmented_fibers
+
+        assert all([segmented_fiber.n_segments == segmented_fibers[0].n_segments for segmented_fiber in segmented_fibers]), \
+            "SegmentedFibers.__init__(): All segmented fibers must have the same number of segments."
+
+        self.n_segments = segmented_fibers[0].n_segments
+
+    @classmethod
+    def from_fibers(cls, fibers:Fibers, n_segments: int):
+        """
+        Args:
+            fibers (Fibers): A Fibers object.
+            n_segments (int): The number of segments to divide each fiber into.
+        """
+        segmented_fibers = np.array([SegmentedFiber(segment, n_segments) for segment in fibers.segments])
+        return cls(segmented_fibers)
+
+
+class FiberSegmentedMuscle(): 
+
+    sections: list # of Fibers
+
+    #TODO
+
+    def __init__(self, sections):
+        """
+        Args:
+            sections (list): Array of SegmentedFibers
+        """
+        self.sections = sections
+
+    @classmethod
+    def from_segmented_fibers(cls, segmented_fibers:np.array):
+
+        n_segments = segmented_fibers[0].n_segments
+
+        assert all([segmented_fiber.n_segments == n_segments for segmented_fiber in segmented_fibers])
+
+        sections = []
+        for i in range(n_segments):
+            sections.append(Fibers([segmented_fiber.segments[i] for segmented_fiber in segmented_fibers]))
+
+        sections = np.array(sections)
+
+        return cls(sections)
+        
+
+
+        
+
+
+
+
+        sections = [Fibers(segmented_fibers[:, i]) for i in range(n_segments)]
+        return cls(sections)
+
+    @classmethod
+    def from_fibers(cls, fibers:Fibers, n_segments: int):
+        """
+        Args:
+            fibers (Fibers): A Fibers object.
+            n_segments (int): The number of segments to divide each fiber into.
+        """
+        #TODO
+        ...
+
+        
+
+        
+        
+        
+
+
+    """
+    for point_plotters, create list (np.array) of plotters for each segmented fiber
+    then flatten it
+
+    def points_plotters(self, flatten=True, **kwargs):
+    """
+
+
+class Muscles():
+    muscles: list # of Fibers
+
+    def __init__(self, muscles):
+        """
+        Args:
+            muscles (list): A list of Fibers
+        """
+        self.muscles = muscles
+
+    @classmethod
+    def muscles_from_df(cls, muscles_df, line_key='line'):
+        return cls([Fibers.segments_from_points(muscle['line'].to_numpy()) for muscle in muscles_df])
+
+#TODO
+
 def one_muscle_to_fibers(muscle, line_key='line'):
     """
     Convert a muscle df to a Fibers object.
