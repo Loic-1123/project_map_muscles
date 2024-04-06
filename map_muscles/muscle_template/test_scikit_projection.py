@@ -23,7 +23,7 @@ def test_femur_muscles_plotting():
     colors = vf.get_random_color_map(muscles)
 
     for muscle_fibers, c in zip(muscles_fibers, colors):
-        muscle_fibers.plot_fibers(ax, c=c)
+        muscle_fibers.plot_segments(ax, c=c)
 
     plt.show()
     plt.close()
@@ -34,22 +34,57 @@ def test_projection_of_one_muscle(index=0):
     muscle = muscles[index]
     fibers = ssp.one_muscle_to_fibers(muscle)
 
-    points = [
+    points1 = [
+        [0, 0, 1],
+        [1, 0, 0],
+        [0, 1, 0],
+    ]
+    plane1 = Plane.from_points(points1[0], points1[1], points1[2])
+    projected_fibers1 = fibers.project_on_plane(plane1)
+
+    points2 = [
         [0, 0, 0],
         [1, 0, 0],
         [0, 1, 0],
     ]
+    plane2 = Plane.from_points(points2[0], points2[1], points2[2])
+    projected_fibers2 = fibers.project_on_plane(plane2)
 
-    plane = Plane.from_points(points[0], points[1], points[2])
+    points3 = [
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1],
+    ]
+    plane3 = Plane.from_points(points3[0], points3[1], points3[2])
+    projected_fibers3 = fibers.project_on_plane(plane3)
 
-    projected_fibers = fibers.project_on_plane(plane)
 
     fig, ax = plot_3d(
-        plane.plotter(alpha=0.5, lims_x=projected_fibers.get_lims_x(), lims_y=projected_fibers.get_lims_y()),
+        
+        plane1.plotter(
+            alpha=0.5, 
+            lims_x=projected_fibers1.get_lims_x(), 
+            lims_y=projected_fibers1.get_lims_y()
+            ),
+
+        plane2.plotter(
+            alpha=0.5,
+
+            lims_x=projected_fibers2.get_lims_x(), 
+            lims_y=projected_fibers2.get_lims_y()
+            ),
+
+        plane3.plotter(
+            alpha=0.5, 
+            lims_x=projected_fibers3.get_lims_y(), 
+            lims_y=projected_fibers3.get_lims_z()
+            )
     )
 
-    fibers.plot_fibers(ax, c='b')
-    projected_fibers.plot_fibers(ax, c='r')
+    fibers.plot_segments(ax, c='k')
+    projected_fibers1.plot_segments(ax, c='r')
+    projected_fibers2.plot_segments(ax, c='b')
+    projected_fibers3.plot_segments(ax, c='y')
 
     plt.show()
 
@@ -61,6 +96,6 @@ def test_projection_of_one_muscle(index=0):
 
 if __name__ == "__main__":
     #test_femur_muscles_plotting()
-    #test_projection_of_one_muscle()
+    test_projection_of_one_muscle()
     
 

@@ -48,26 +48,70 @@ class Segment():
 class Fiber(Segment):
     pass
 
-class Fibers():
-    fibers: list # of Fiber
+def get_segments_plotters(segments, flatten=True, **kwargs):
+    """
+    Returns a list of plotters for each segment.
 
-    def __init__(self, fibers):
+    Args:
+        segments (list): A list of Segment objects.
+        **kwargs: Additional keyword arguments to be passed to the segment plotter.
+
+    Returns:
+        list: A list of plotters for each segment.
+    """
+    plotters = np.array([segment.plotter(**kwargs) for segment in segments])
+
+    if flatten:
+        return plotters.flatten()
+    return plotters
+
+def get_segments_min_x(segments):
+    return min([min(segment.A[0], segment.B[0]) for segment in segments])
+
+def get_segments_max_x(segments):
+    return max([max(segment.A[0], segment.B[0]) for segment in segments])
+
+def get_segments_min_y(segments):
+    return min([min(segment.A[1], segment.B[1]) for segment in segments])
+
+def get_segments_max_y(segments):
+    return max([max(segment.A[1], segment.B[1]) for segment in segments])
+
+def get_segments_min_z(segments):
+    return min([min(segment.A[2], segment.B[2]) for segment in segments])
+
+def get_segments_max_z(segments):
+    return max([max(segment.A[2], segment.B[2]) for segment in segments])
+
+def get_segments_lims_x(segments):
+    return [get_segments_min_x(segments), get_segments_max_x(segments)]
+
+def get_segments_lims_y(segments):
+    return [get_segments_min_y(segments), get_segments_max_y(segments)]
+
+def get_segments_lims_z(segments):
+    return [get_segments_min_z(segments), get_segments_max_z(segments)]
+
+class Segments():
+    segments: list # of Segment
+
+    def __init__(self, segments):
         """
         Args:
             fibers (list): A list of Fiber (Segment).
         """
-        self.fibers = fibers
+        self.segments = segments
 
     @classmethod
-    def fibers_from_points(cls, segments):
+    def segments_from_points(cls, segments):
         """_summary_
 
         Args:
             segments (list): A list of two points tuple
         """
-        return cls([Fiber(segment) for segment in segments])
+        return cls([Segment(segment) for segment in segments])
 
-    def get_plotters(self, **kwargs):
+    def points_plotters(self, **kwargs):
         """
         Returns a list of plotters for each fiber.
 
@@ -77,52 +121,51 @@ class Fibers():
         Returns:
             list: A list of plotters for each fiber.
         """
+        return get_segments_plotters(self.fibers, **kwargs)
 
-        plotters = [fiber.plotter(**kwargs) for fiber in self.fibers]
-
-        # as it is a list of tuples, we need to unpack it
-        return [point_plotter for fiber_plotter in plotters for point_plotter in fiber_plotter]
-
-    def plot_fibers(self, ax, **kwargs):
-        for fiber in self.fibers:
-            fiber.plot_segment(ax, **kwargs)
+    def plot_segments(self, ax, **kwargs):
+        for segment in self.segments:
+            segment.plot_segment(ax, **kwargs)
 
     def project_on_plane(self, plane: Plane):
 
-        fibers = [fiber.project_on_plane(plane) for fiber in self.fibers]
+        segments = [segment.project_on_plane(plane) for segment in self.segments]
         
-        return Fibers(fibers)
+        return Segments(segments)
 
     def get_min_x(self):
-        return min([min(fiber.A[0], fiber.B[0]) for fiber in self.fibers])
+        return get_segments_min_x(self.segments)
     
     def get_max_x(self):
-        return max([max(fiber.A[0], fiber.B[0]) for fiber in self.fibers])
+        return get_segments_max_x(self.segments)
     
     def get_min_y(self):
-        return min([min(fiber.A[1], fiber.B[1]) for fiber in self.fibers])
+        return get_segments_min_y(self.segments)
     
     def get_max_y(self):
-        return max([max(fiber.A[1], fiber.B[1]) for fiber in self.fibers])
-    
+        return get_segments_max_y(self.segments)    
     def get_min_z(self):
-        return min([min(fiber.A[2], fiber.B[2]) for fiber in self.fibers])
+        return get_segments_min_z(self.segments)
     
     def get_max_z(self):
-        return max([max(fiber.A[2], fiber.B[2]) for fiber in self.fibers])
+        return get_segments_max_z(self.segments)
     
     def get_lims_x(self):
-        return [self.get_min_x(), self.get_max_x()]
+        return get_segments_lims_x(self.segments)
     
     def get_lims_y(self):
-        return [self.get_min_y(), self.get_max_y()]
+        return get_segments_lims_y(self.segments)
     
     def get_lims_z(self):
-        return [self.get_min_z(), self.get_max_z()]
+        return get_segments_lims_z(self.segments)
         
     def get_lims(self):
         return self.get_lims_x(), self.get_lims_y(), self.get_lims_z()
     
+
+class Fibers(Segments):
+    pass
+
 class Muscles():
     muscles: list # of Fibers
 
@@ -141,10 +184,50 @@ class Muscles():
 
 
 
-@dataclass
-class SegmentedFiber():
-    segments: list # of Segments
+class SegmentedFiber(Fibers):
+    segments: list # of Segment
 
+    def __init__(self, segments):
+        """
+        Args:
+            segments (list): A list of Segment
+        """
+        self.segments = segments
+
+    def points_plotters(self, **kwargs):
+        """
+        Returns a list of plotters for each segment.
+
+        Args:
+            **kwargs: Additional keyword arguments to be passed to the segment plotter.
+
+        Returns:
+            list: A list of plotters for each segment.
+        """
+        return get_segments_plotters(self.segments, **kwargs)
+
+    def plot_segments(self, ax, **kwargs):
+        for segment in self.segments:
+            segment.plot_segment(ax, **kwargs)
+    
+    def project_on_plane(self, plane: Plane):
+        segments = [segment.project_on_plane(plane) for segment in self.segments]
+        return SegmentedFiber(segments)
+    
+    def get_min_x(self):
+        return get_segments_min_x(self.segments)
+    
+    def get_max_x(self):
+        return get_segments_max_x(self.segments)
+    
+    def get_min_y(self):
+        return get_segments_min_y(self.segments)
+    
+    def get_max_y(self):
+        return get_segments_max_y(self.segments)
+    
+        
+    
 def one_muscle_to_fibers(muscle, line_key='line'):
     """
     Convert a muscle df to a Fibers object.
@@ -156,7 +239,7 @@ def one_muscle_to_fibers(muscle, line_key='line'):
     Returns:
     Fibers: A Fibers object representing the muscle's fibers.
     """
-    return Fibers.fibers_from_points(muscle[line_key].to_numpy())
+    return Fibers.segments_from_points(muscle[line_key].to_numpy())
 
 def muscles_to_fibers(muscles, line_key='line'):
     """
@@ -169,7 +252,7 @@ def muscles_to_fibers(muscles, line_key='line'):
     Returns:
     list: A list of Fibers objects, each representing a muscle's fibers.
     """
-    return [Fibers.fibers_from_points(muscle[line_key].to_numpy()) for muscle in muscles]
+    return [Fibers.segments_from_points(muscle[line_key].to_numpy()) for muscle in muscles]
 
 
 if __name__ == "__main__":
