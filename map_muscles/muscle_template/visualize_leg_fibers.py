@@ -29,9 +29,14 @@ def get_shuffled_color_ids(parts):
        np.random.shuffle(color_ids)
        return color_ids
 
-def get_random_color_map(parts, palette=plt.cm.hsv):
+def get_random_color_map(parts, rgb_only=False, palette=plt.cm.hsv):
        color_ids = get_shuffled_color_ids(parts)
-       return palette(color_ids)
+       colors = palette(color_ids)
+
+       if rgb_only:
+              colors = colors[:, :-1]
+
+       return colors
 
 def get_linear_color_map(parts, palette=plt.cm.hsv):
        color_ids = np.linspace(0, 1, len(parts))
