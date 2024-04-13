@@ -4,14 +4,34 @@ add_root()
 import numpy as np
 import matplotlib.pyplot as plt
 
-from skspatial.objects import Point, Points, Plane, LineSegment
-from skspatial.transformation import transform_coordinates
+from skspatial.objects import Point, Points, Plane
 from skspatial.plotting import plot_3d
-
-from dataclasses import dataclass
-
-import map_muscles.muscle_template.projection_on_plane as pp
 import map_muscles.muscle_template.xray_utils as xu
+from scipy.spatial.distance import cdist
+
+def generate_segment_points(A:Point, B:Point, distance=1.0):
+    """
+    Generates a Points along the line segment between points A and B.
+
+    Args:
+        A (Point): The starting point of the line segment.
+        B (Point): The ending point of the line segment.
+        distance (float): The distance between each generated point. Default is 1.0.
+
+    Returns:
+        Points: An instance of the Points class containing the generated points.
+    """
+
+    vector = B - A
+
+    magnitude = np.linalg.norm(vector)
+    unit_vector = vector / magnitude
+
+    n_points = int(magnitude / distance)
+
+    points = [A + unit_vector * i * distance for i in range(n_points)]
+    
+    return Points(points)
 
 
 
@@ -49,6 +69,22 @@ class Segment():
 
     def get_points(self):
         return self.A, self.B
+    
+    def generate_segment_points(self, distance=1.0):
+        """
+        Generates a Points along the line segment between points A and B.
+
+        Args:
+            distance (float): The distance between each generated point. Default is 1.0.
+
+        Returns:
+            Points: An instance of the Points class containing the generated points.
+        """
+
+        return generate_segment_points(self.A, self.B, distance=distance)
+
+
+        
     
 class Fiber(Segment):
     pass
@@ -111,6 +147,68 @@ class Segments():
     def get_points(self):
         points = get_unique_points(self.segments)
         return points
+
+    def generate_segment_points(self, distance=1.0):
+        """
+        Generates a Points along the line segments.
+
+        Args:
+            distance (float): The distance between each generated point. Default is 1.0.
+
+        Returns:
+            Points: An instance of the Points class containing the generated points.
+        """
+        points = []
+        for segment in self.segments:
+            points.extend(segment.generate_segment_points(distance=distance))
+        
+        return get_unique_points_from_set_of_points(points)
+
+
+    def get_min_distance(self):
+        """
+        Get the minimum distance between all the points in the fibers.
+
+        Returns:
+            float: The minimum distance between all the points in the fibers.
+        """
+        points = self.get_points()
+
+        distances = cdist(points, points)
+        np.fill_diagonal(distances, np.inf)
+
+        return np.min(distances)
+
+    def generate_all_linked_segment_points(self, distance=1.0):
+        min_distance = self.get_min_distance()
+        assert distance <= min_distance, \
+            f"distance must be greater than min distance between points of the fibers; \n \
+                min distance = {min_distance}."
+
+        points = self.get_points()
+        
+        def unique_pairs(n):
+            indices = np.arange(n)
+            return np.array(list(zip(*np.triu_indices(n, k=1))))
+        
+        pairs = unique_pairs(len(points))
+
+        linked_points = []
+        for pair in pairs:
+            A = Point(points[pair[0]])
+            B = Point(points[pair[1]])
+            segment_points = generate_segment_points(A, B, distance=distance)
+            linked_points.extend(segment_points)
+
+        return Points(linked_points).unique()
+
+            
+            
+
+            
+        
+
+
 
     def points_plotters(self, **kwargs):
         """
@@ -365,7 +463,48 @@ class Muscles():
     @classmethod
     def muscles_from_df(cls, muscles_df, line_key='line'):
         return cls([Fibers.segments_from_points(muscle['line'].to_numpy()) for muscle in muscles_df])
+    
+    def get_points(self):
+        points = []
+        for muscle in self.muscles:
+            points.extend(muscle.get_points())
+        return get_unique_points_from_set_of_points(points)
+    
+    def points_plotter(self, **kwargs):
+        """
+        Returns a plotter for the muscles, representing the endpoints of the fibers.
 
+        Args:
+            **kwargs: Additional keyword arguments to be passed to the muscle plotter.
+
+        Returns:
+            list: A list of plotters for each muscle.
+        """
+
+        points = self.get_points()
+        plotter = points.plotter(**kwargs)
+
+        return plotter
+    
+    def plot_segments(self, ax, **kwargs):
+        for muscle in self.muscles:
+            muscle.plot_segments(ax, **kwargs)
+
+    def generate_segment_points(self, distance=1.0):
+        """
+        Generates a Points along the line segments.
+
+        Args:
+            distance (float): The distance between each generated point. Default is 1.0.
+
+        Returns:
+            Points: An instance of the Points class containing the generated points.
+        """
+        points = []
+        for muscle in self.muscles:
+            points.extend(muscle.generate_segment_points(distance=distance))
+        
+        return get_unique_points_from_set_of_points(points)
 
 def one_muscle_to_fibers(muscle, line_key='line'):
     """
