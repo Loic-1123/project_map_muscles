@@ -7,7 +7,7 @@ import open3d as o3d
 import map_muscles.muscle_template.xray_utils as xu
 import map_muscles.muscle_template.fibers_object as fo
 import map_muscles.muscle_template.visualize_leg_fibers as vf
-import map_muscles.muscle_template.voxelization as vx
+import map_muscles.muscle_template.open3d_voxelization as vx
 
 np.random.seed(0)
 
@@ -169,9 +169,9 @@ if __name__ == "__main__":
 
     #test_voxel_grid_to_pcd()
 
-    #test_muscles_hull_pcds()
+    test_muscles_hull_pcds()
 
-    pass
+
 
 
 
