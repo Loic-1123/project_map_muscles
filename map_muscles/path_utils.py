@@ -20,6 +20,10 @@ xray_dir = data_dir / 'xray'
 
 sleap_dir = map_muscles_dir / 'sleap'
 
+map_dir = data_dir / 'muscles_maps'
+
+basic_map_dir = map_dir / 'basic_map'
+
 directories = [
     map_muscles_dir,
     data_dir, 
@@ -28,7 +32,9 @@ directories = [
     img_dir2, 
     video_dir,
     xray_dir,
-    sleap_dir,]
+    sleap_dir,
+    map_dir,
+    basic_map_dir]
 
 for directory in directories:
     assert directory.exists(), f'Following directory does not exist: {directory}'
@@ -88,3 +94,9 @@ def get_xray_dir():
 
 def get_sleap_dir():
     return sleap_dir
+
+def get_map_dir():
+    return map_dir
+
+def get_basic_map_dir():
+    return basic_map_dir

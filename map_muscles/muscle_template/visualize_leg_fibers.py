@@ -101,7 +101,7 @@ if __name__ == "__main__":
        'LH FeCl ltm2']
        """
 
-       femur_fibers = xu.get_femur_muscles()
+       femur_fibers = xu.get_femur_muscles(remove=True)
 
 
 
