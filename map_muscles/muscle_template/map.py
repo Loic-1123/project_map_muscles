@@ -7,7 +7,6 @@ import numpy as np
 import numpy.linalg as linalg
 import scipy.spatial as spatial
 import open3d as o3d
-import matplotlib.pyplot as plt
 import tqdm
 
 import map_muscles.muscle_template.xray_utils as xu
@@ -46,6 +45,8 @@ class Muscle():
 
     axis_vector: np.ndarray # Vector representing the axis of the muscle, shape: (3,)
 
+    pcd: o3d.geometry.PointCloud # Open3D point cloud object for visualization
+
     def __init__(self, points: np.ndarray, name:str,  axis_points:np.ndarray=None, roll:float=None):
         self.points = points
         self.name = name
@@ -60,6 +61,7 @@ class Muscle():
             self.pitch = None
 
         self.roll = roll
+        self.pcd = None
 
     @classmethod
     def from_array_file(cls, file_path: Path, name=None):
@@ -118,41 +120,34 @@ class Muscle():
         rotated_points = rotation.apply(self.points)
 
         return Muscle(rotated_points, name=self.name, axis_points=self.axis_points, roll=self.roll + theta)
-        
-    def plot_axis_points(self, ax=None, **kwargs):
-        if ax is None:
-            fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
+    
+    def init_pcd(self):
+        if self.pcd is not None:
+            return
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(self.points)
+        self.pcd = pcd
 
-        ax.scatter(self.axis_points[:,0], self.axis_points[:,1], self.axis_points[:,2], **kwargs)
-        return ax
-    
-    def plot_axis(self, ax=None, **kwargs):
-        if ax is None:
-            fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
+    def draw_points(self, vis: o3d.visualization.Visualizer, color: np.ndarray = np.array([0,0,0])):
+        self.init_pcd()
+        self.pcd.paint_uniform_color(color)
+        vis.add_geometry(self.pcd)
 
-        ax.quiver(self.axis_points[0,0], self.axis_points[0,1], self.axis_points[0,2], self.axis_vector[0], self.axis_vector[1], self.axis_vector[2], **kwargs)
-        ax.plot([self.axis_points[0,0], self.axis_points[1,0]], [self.axis_points[0,1], self.axis_points[1,1]], [self.axis_points[0,2], self.axis_points[1,2]], **kwargs)
-        return ax
-    
-    def plot_points(self, ax=None, **kwargs):
-        if ax is None:
-            fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(self.points[:,0], self.points[:,1], self.points[:,2], **kwargs)
-        return ax
-    
-    def default_plot(self, ax=None):
-        if ax is None:
-            fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
+    def draw_axis(self, vis: o3d.visualization.Visualizer, color: np.ndarray = np.array([1,0,0])):
+        assert self.axis_points is not None, "Axis points must be set before drawing axis."
+
+        axis = o3d.geometry.LineSet()
+        axis.points = o3d.utility.Vector3dVector(self.axis_points)
+        axis.lines = o3d.utility.Vector2iVector([[0,1]])
+        axis.paint_uniform_color(color)
         
-        # plot points little bit transparent
-        ax = self.plot_points(ax, s=1, alpha=0.5, color='k')
-        ax = self.plot_axis_points(ax, color='r')
-        ax = self.plot_axis(ax, color='r')
-        return ax
+        vis.add_geometry(axis)
+
+    def draw_default(self, vis: o3d.visualization.Visualizer):
+        self.draw_points(vis)
+        self.draw_axis(vis)
+    
+
     
 
 

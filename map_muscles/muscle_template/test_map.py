@@ -4,9 +4,8 @@ add_root()
 import map_muscles.muscle_template.map as mp
 import map_muscles.path_utils as pu
 
-import matplotlib.pyplot as plt
-
 import numpy as np
+import open3d as o3d
 from pathlib import Path
 
 basic_muscle_name = "id_1_basic_d1.0_v1.0_LH_FeTi_flexor.pcd.npy"
@@ -174,44 +173,41 @@ def test_Muscle_from_array_file(
 
     assert_all_none(m)
 
-def test_rotate():
-    # TODO
-    pass
-
-def test_plots_on_elementary_pcd():
-    m = mp.Muscle(np.array([[0,0,0],[1,0,0],[1,1,0],[0,1,0]]), "test")
-
-    m.set_axis_points(np.array([[0,0,0],[1,1,1]]))
-
-    ax = m.plot_axis_points()
-    m.plot_axis(ax)
-    m.plot_points(ax)
-
-    ax = m.plot_axis_points(color='b', s=100, alpha=0.1)
-    m.plot_axis(ax, color='r', lw=2, alpha=0.5)
-    m.plot_points(ax, color='g', s=1, alpha=0.2)
-
-    m.default_plot()
-    plt.show()
-    plt.close()
+muscle = mp.Muscle.from_array_file(pu.get_basic_map_dir()/basic_muscle_name)
 
 
-def test_plot_default_basic_muscle():
-    m = mp.Muscle.from_array_file(pu.get_basic_map_dir() / basic_muscle_name)
+def test_visualization(m=muscle):
     points = m.points
     # compute center of mass
     com = np.mean(points, axis=0)
 
     # compute axis points
-    direction = np.array([1,0,0])
-    axis_points = np.array([com, com + direction])
+    direction = np.array([0.5,0.5,-0.3])
+    axis_points = np.array([com-500*direction, com + 500*direction])
 
     m.set_axis_points(axis_points)
-    
-    m.default_plot()
-    plt.show()
-    plt.close()
 
+    vis = o3d.visualization.Visualizer()
+
+    vis.create_window()
+    m.draw_axis(vis)
+    m.draw_points(vis, color=np.array([0,0,0]))
+
+    frame_center = com - 600*direction - 200*np.array([1,1,1])
+
+    frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=200, origin=frame_center)
+    vis.add_geometry(frame)
+
+    vis.run(); vis.destroy_window()
+    
+
+def test_rotation(m=muscle):
+    
+    
+
+    
+    
+    
 
 def test_visualize_rotation():
     # TODO
@@ -223,8 +219,7 @@ if __name__ == "__main__":
     #test_Muscle_basic_constructor()
     #test_Muscle_from_array_file()
     
-    #test_plots_on_elementary_pcd()
-    test_plot_default_basic_muscle()
+    test_visualization()
 
     print("All tests passed.")
     
