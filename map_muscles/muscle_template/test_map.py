@@ -13,8 +13,12 @@ basic_muscle_name = "id_1_basic_d1.0_v1.0_LH_FeTi_flexor.pcd.npy"
 # colors 
 k = np.array([0,0,0])
 r = np.array([1,0,0])
+g = np.array([0,1,0])
 b = np.array([0,0,1])
+w = np.array([1,1,1])
 reddish = np.array([1,0.5,0.5])
+
+### Muscle tests ###
 
 def test_compute_yaw_and_compute_pitch():
     v = np.array([1,0,0])
@@ -218,7 +222,6 @@ def test_visualization(m=muscle):
 
     vis.run(); vis.destroy_window()
     
-
 def test_visualize_rotation(m=muscle):
     rotvec = np.array([0,0,1])
     theta = np.pi/2
@@ -248,7 +251,6 @@ def test_visualize_rotation(m=muscle):
 
     vis.run(); vis.destroy_window()
 
-
 def test_visualize_gradient_of_rotation(m=muscle, n=6):
     rotvec=np.array([0,0,1])
     vis = o3d.visualization.Visualizer()
@@ -258,7 +260,7 @@ def test_visualize_gradient_of_rotation(m=muscle, n=6):
     rotaxis_points = o3d.utility.Vector3dVector(rotaxis_points)
     rotaxis_lines = o3d.utility.Vector2iVector([[0,1]])
     rotaxis = o3d.geometry.LineSet(rotaxis_points, rotaxis_lines)
-    rotaxis.paint_uniform_color(b)
+    rotaxis.paint_uniform_color(g)
     vis.add_geometry(rotaxis)
 
     vis.add_geometry(frame)
@@ -274,9 +276,135 @@ def test_visualize_gradient_of_rotation(m=muscle, n=6):
     vis.run(); vis.destroy_window()
 
 
+### MuscleMap tests ###
 
+dir_path = pu.get_basic_map_dir()
+
+def test_load_MuscleMap(path:str=dir_path):
+    mmap = mp.MuscleMap.from_directory(path)
+
+    assert mmap.name == "basic_map"
+
+    assert mmap.axis_points == None
+    assert mmap.axis_vector == None
+
+    for muscle in mmap.muscles:
+        assert_all_none(muscle)
+
+    
+def test_MuscleMap_draw_points(path:str=dir_path):
+    mmap = mp.MuscleMap.from_directory(path)
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    # all blue
+    colors = np.tile(b, (len(mmap.muscles),1))
+
+    mmap.draw_points(vis, colors=colors)
+    
+    vis.run(); vis.destroy_window()
+
+def test_MuscleMap_draw_axis(path:str=dir_path):
+    mmap = mp.MuscleMap.from_directory(path)
+    mmap.set_axis_points(axis_points)
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    mmap.draw_points(vis)
+    mmap.draw_axis(vis)
+
+    vis.run(); vis.destroy_window()
 
         
+def test_MuscleMap_draw_default():
+    mmap = mp.MuscleMap.from_directory(dir_path)
+    mmap.set_axis_points(axis_points)
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    mmap.draw_default(vis)
+
+    vis.run(); vis.destroy_window()
+
+def test_MuscleMap_visualize_rotate():
+    mmap=mp.MuscleMap.from_directory(dir_path)
+    mmap.set_axis_points(axis_points)
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    ks = np.tile(k, (len(mmap.muscles), 1))
+
+    reddishs = np.tile(reddish, (len(mmap.muscles), 1))
+
+    mmap.draw_points(vis, colors=ks)
+    mmap.draw_axis(vis, color=k, length=1500)
+
+    rotvec = np.array([0,0,1])
+
+    mmap_rotated = mmap.rotate(rotvec, np.pi/2)
+
+    mmap_rotated.draw_points(vis, colors=reddishs)
+    mmap_rotated.draw_axis(vis, color=reddish)
+
+    center = mmap.get_axis_centre()
+    rotaxis = mp.generate_line(center, rotvec, length=1000)
+    rotaxis.paint_uniform_color(g)
+
+    vis.add_geometry(rotaxis)
+
+    vis.run(); vis.destroy_window()
+
+def test_MuscleMap_visualize_gradient_of_rotation(n=6):
+    mmap = mp.MuscleMap.from_directory(dir_path)
+    mmap.set_axis_points(axis_points)
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+
+    rotvec = np.array([0,0,1])
+    rotaxis = mp.generate_line(axis_center, rotvec, length=1000)
+    rotaxis.paint_uniform_color(g)
+    vis.add_geometry(rotaxis)
+
+    for i in range(n):
+        theta = i*(2*np.pi)/n
+        red = r/(n)*i
+        reds = np.tile(red, (len(mmap.muscles), 1))
+
+        mmap_rotated = mmap.rotate(rotvec, theta)
+        mmap_rotated.draw_points(vis, colors=reds)
+        mmap_rotated.draw_axis(vis, color=red)
+
+    vis.run(); vis.destroy_window()
+
+def test_MuscleMap_visualize_roll_by_rotate_on_axis(n=2):
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()    
+
+    mmap = mp.MuscleMap.from_directory(dir_path)
+    mmap.set_axis_points(axis_points)
+
+    rotvec = mmap.axis_vector
+    rotaxis = mp.generate_line(axis_center, rotvec, length=2000)
+    rotaxis.paint_uniform_color(g)
+    vis.add_geometry(rotaxis)
+
+    for i in range(n):
+        theta = i*(2*np.pi)/n
+        red = r/(n)*i
+        reds = np.tile(red, (len(mmap.muscles), 1))
+
+        mmap_rotated = mmap.rotate(rotvec, theta)
+        mmap_rotated.draw_points(vis, colors=reds)
+        mmap_rotated.draw_axis(vis, color=red, length=1000)
+
+    vis.run(); vis.destroy_window()
 
 
 
@@ -295,17 +423,31 @@ def test_visualize_gradient_of_rotation(m=muscle, n=6):
     
 
 if __name__ == "__main__":
-    #test_compute_yaw_and_compute_pitch()
-    #test_compute_axis_vector()
-    #test_Muscle_basic_constructor()
-    #test_get_axis_center()
-    #test_Muscle_from_array_file()
+    test_compute_yaw_and_compute_pitch()
+    test_compute_axis_vector()
+    test_Muscle_basic_constructor()
+    test_get_axis_center()
+    test_Muscle_from_array_file()
     
-    #test_visualization()
+    test_visualization()
 
-    #test_visualize_rotation()
+    test_visualize_rotation()
 
     test_visualize_gradient_of_rotation()
+
+    test_load_MuscleMap()
+
+    test_MuscleMap_draw_points()
+
+    test_MuscleMap_draw_axis()
+
+    test_MuscleMap_draw_default()
+
+    test_MuscleMap_visualize_rotate()
+
+    test_MuscleMap_visualize_gradient_of_rotation()
+
+    test_MuscleMap_visualize_roll_by_rotate_on_axis()
 
     print("All tests passed.")
     

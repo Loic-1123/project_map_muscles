@@ -4,14 +4,16 @@ add_root()
 from pathlib import Path
 
 import numpy as np
+np.random.seed(0)
 import numpy.linalg as linalg
 import scipy.spatial as spatial
 import open3d as o3d
-import tqdm
+import matplotlib.pyplot as plt
 
 import map_muscles.muscle_template.xray_utils as xu
 import map_muscles.muscle_template.visualize_leg_fibers as vf
 import map_muscles.muscle_template.fibers_object as fo
+
 
 # Tait-Bryan angles convention: https://en.wikipedia.org/wiki/Euler_angles#Conventions
 # z-y'-x'' (intrinsic rotations)
@@ -29,6 +31,44 @@ def compute_pitch(vec: np.ndarray) -> float:
     pitch = np.arctan2(vec[2], vec[0])
 
     return pitch
+
+def compute_vector_from_points(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
+    vec = p2 - p1
+    vec = vec / linalg.norm(vec)
+    return vec
+
+def generate_line(center: np.ndarray, vector:np.ndarray, length: float) -> o3d.geometry.LineSet:
+    assert center.shape == (3,), "Center must be a 3D point."
+    assert vector.shape == (3,), "Vector must be a 3D vector."
+
+    start = center - 0.5*length*vector
+    end = center + 0.5*length*vector
+
+    points = o3d.utility.Vector3dVector([start, end])
+    lines_idx = o3d.utility.Vector2iVector([[0,1]])
+
+    return o3d.geometry.LineSet(points, lines_idx)
+
+def get_equally_spaced_colors(n:int, cmap='hsv', rm_alpha_channel=True):
+    """
+    Generate n equally spaced colors.
+
+    Parameters:
+    - n (int): The number of colors to generate.
+
+    Returns:
+    - colors (np.ndarray): The array of colors.
+    """
+
+    cmap = plt.get_cmap(cmap)
+
+    colors = np.array([cmap(i/n) for i in range(n)])
+
+    # remove alpha channel
+    if rm_alpha_channel:
+        colors = colors[:, :-1]
+
+    return colors
 
 class Muscle():
     points: np.ndarray # 3D points representing the muscle surface, shape: (n, 3)
@@ -84,9 +124,7 @@ class Muscle():
         return cls(points, name)
 
     def compute_axis_vector(self) -> np.ndarray:
-        axis = (self.axis_points[1] - self.axis_points[0])
-        axis = axis / linalg.norm(axis)
-        return axis
+        return compute_vector_from_points(self.axis_points[0], self.axis_points[1])
     
     def compute_self_yaw(self) -> float:
         return compute_yaw(self.axis_vector)
@@ -125,8 +163,6 @@ class Muscle():
             name = self.name + "_translated"
 
         return Muscle(translated_points, name=name, axis_points=self.axis_points, roll=self.roll)
-
-
 
     def rotate(self, rotvec: np.ndarray, theta: float, new_name=None):
         """
@@ -204,14 +240,11 @@ class Muscle():
         vis.add_geometry(self.pcd)
 
     def draw_axis(self, vis: o3d.visualization.Visualizer, length=1000, color: np.ndarray = np.array([1,0,0])):
-        assert self.axis_points is not None, "Axis points must be set before drawing axis."
+        assert self.axis_points is not None, "Axis points must be et before drawing axis."
 
-        axis = o3d.geometry.LineSet()
+        center = self.get_axis_centre()
 
-        axis_points = [self.axis_points[0]-0.5*length*self.axis_vector, self.axis_points[0] + 0.5*length*self.axis_vector]
-
-        axis.points = o3d.utility.Vector3dVector(self.axis_points)
-        axis.lines = o3d.utility.Vector2iVector([[0,1]])
+        axis = generate_line(center, self.axis_vector, length)
         axis.paint_uniform_color(color)
         
         vis.add_geometry(axis)
@@ -219,7 +252,169 @@ class Muscle():
     def draw_default(self, vis: o3d.visualization.Visualizer):
         self.draw_points(vis)
         self.draw_axis(vis)
+
+
+class MuscleMap():
     
+    name: str # Name of the muscle map
+
+    muscles: list # List of Muscle objects
+    
+    axis_points: np.ndarray # Axis points of the muscle map, shape: (n, 3)
+
+    axis_vector: np.ndarray # Axis vector of the muscle map, shape: (3,)
+
+    def __init__(self, muscles: list, axis_points: np.ndarray=None, name=None, roll=None, compute_dependend_attributes=True):
+        self.muscles = muscles
+
+        if np.any(axis_points, None):
+            self.set_axis_points(axis_points, compute_dependend_attributes=compute_dependend_attributes)
+
+        else:
+            self.axis_points = None
+            self.axis_vector = None
+
+        if name is None:
+            name = "MuscleMap"
+
+        self.name = name
+
+        self.roll = roll
+
+    @classmethod
+    def from_directory(cls, dir_path: Path, nb_muscles:int=5, axis_points: np.ndarray=None, name=None, roll=None):
+        """
+        Create a new instance of the class from a directory containing .npy files.
+
+        Args:
+            directory (Path): The path to the directory containing the .npy files.
+            axis_points (np.ndarray, optional): The axis points of the muscle map. If not provided, the axis points will be set to the mean of the muscle axis points.
+            name (str, optional): The name of the instance. If not provided, the name will be set to the stem of the directory path.
+            roll (float, optional): The roll of the muscle map around the axis.
+
+        Returns:
+            cls: A new instance of the class.
+
+        """
+
+        files = list(dir_path.glob('*.npy'))
+
+        assert len(files)==nb_muscles, f'Expected {nb_muscles} muscle files, got {len(files)}'
+
+        muscles = [Muscle.from_array_file(file) for file in files[:nb_muscles]]
+
+        if name is None:
+            name = dir_path.stem
+
+        return cls(muscles, axis_points=axis_points, name=name, roll=roll)
+
+    def set_axis_points(self, axis_points: np.ndarray, compute_dependend_attributes=True):
+        self.axis_points = axis_points
+
+        if compute_dependend_attributes:
+            self.axis_vector = self.compute_axis_vector()
+            self.yaw = self.compute_self_yaw()
+            self.pitch = self.compute_self_pitch()
+
+            for muscle in self.muscles:
+                muscle.set_axis_points(axis_points, compute_dependend_attributes=compute_dependend_attributes)
+        
+    def compute_axis_vector(self) -> np.ndarray:
+        return compute_vector_from_points(self.axis_points[0], self.axis_points[1])
+    
+    def compute_self_yaw(self) -> float:
+        return compute_yaw(self.axis_vector)
+    
+    def compute_self_pitch(self) -> float:
+        return compute_pitch(self.axis_vector)
+    
+    def compute_set_yaw_pitch(self):
+        self.yaw = self.compute_self_yaw()
+        self.pitch = self.compute_self_pitch()
+
+    def get_axis_centre(self) -> np.ndarray:
+        """
+        Calculate the center point of the axis.
+
+        Returns:
+            np.ndarray: The center point of the axis.
+        """
+        assert self.axis_points is not None,\
+              "Axis points must be set before getting the center."
+        return np.mean(self.axis_points, axis=0)
+
+    def get_com(self) -> np.ndarray:
+        """
+        Calculate the center of mass of the muscle map.
+
+        Returns:
+            np.ndarray: The center of mass of the muscle map.
+        """
+        
+        points = []
+
+        for muscle in self.muscles:
+            points.extend(muscle.points)
+
+        points = np.array(points)
+
+        com = np.mean(points, axis=0)
+
+        return com
+
+    def translate(self, translation: np.ndarray, new_name=None):
+        translated_muscles = [muscle.translate(translation) for muscle in self.muscles]
+
+        if new_name:
+            name = new_name
+        else:
+            name = self.name + "_translated"
+
+        return MuscleMap(translated_muscles, self.axis_points, name=name)
+    
+    def rotate(self, rotvec: np.ndarray, theta: float, new_name=None):
+        
+        assert self.axis_points is not None, "Axis points must be set before rotating."
+
+        rotated_muscles = [muscle.rotate(rotvec, theta) for muscle in self.muscles]
+
+        new_axis_points = rotated_muscles[0].axis_points
+
+        #TODO: compute roll that occured during rotation
+        new_roll=None
+
+        if new_name:
+            name = new_name
+        else:
+            name = self.name + "_rotated"
+        
+        return MuscleMap(rotated_muscles, axis_points=new_axis_points, name=name)
+    
+    def draw_points(self, vis: o3d.visualization.Visualizer, colors: np.ndarray = None):
+
+        if colors is None:
+            colors = np.zeros((len(self.muscles), 3))
+
+        for muscle, color in zip(self.muscles, colors):
+            muscle.draw_points(vis, color)
+
+    def draw_axis(self, vis: o3d.visualization.Visualizer, length=2000, color: np.ndarray = np.array([1,0,0])):
+        
+        assert self.axis_points is not None, "Axis points must be set before drawing axis."
+
+        axis = generate_line(self.get_axis_centre(), self.axis_vector, length)
+        axis.paint_uniform_color(color)
+        
+        vis.add_geometry(axis)
+
+    def draw_default(self, vis: o3d.visualization.Visualizer):
+        colors = get_equally_spaced_colors(len(self.muscles))
+        self.draw_points(vis, colors=colors)
+        self.draw_axis(vis, color=np.array([0,0,0]))
+
+
+    
+
 
     
 
