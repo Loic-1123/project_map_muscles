@@ -10,6 +10,12 @@ from pathlib import Path
 
 basic_muscle_name = "id_1_basic_d1.0_v1.0_LH_FeTi_flexor.pcd.npy"
 
+# colors 
+k = np.array([0,0,0])
+r = np.array([1,0,0])
+b = np.array([0,0,1])
+reddish = np.array([1,0.5,0.5])
+
 def test_compute_yaw_and_compute_pitch():
     v = np.array([1,0,0])
 
@@ -150,6 +156,20 @@ def test_Muscle_basic_constructor():
     assert_roll_none(m)
     assert_yaw_pitch_none(m)
     
+def test_get_axis_center():
+    points = np.array([[0,0,0],[1,0,0],[1,1,0],[0,1,0]])
+    m = mp.Muscle(points, "test")
+
+
+    axis_points = np.array([[0,0,0],[1,1,1]])
+    m.set_axis_points(axis_points)
+    centre = [0.5,0.5,0.5]
+    assert np.allclose(centre, m.get_axis_centre())
+
+    axis_points = np.array([[0,0,0],[0,0,1]])
+    m.set_axis_points(axis_points)
+    centre = [0,0,0.5]
+    assert np.allclose(centre, m.get_axis_centre())
 
 def test_Muscle_from_array_file(
     file_name:str=basic_muscle_name,
@@ -174,19 +194,17 @@ def test_Muscle_from_array_file(
     assert_all_none(m)
 
 muscle = mp.Muscle.from_array_file(pu.get_basic_map_dir()/basic_muscle_name)
+points = muscle.points
+com = np.mean(points, axis=0)
+direction = np.array([0.5,0.5,-0.3])
+axis_points = np.array([com-500*direction, com + 500*direction])
+muscle.set_axis_points(axis_points)
+axis_center = muscle.get_axis_centre()
 
+frame_center = com - 600*direction - 200*np.array([1,1,1])
+frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=200, origin=frame_center)
 
 def test_visualization(m=muscle):
-    points = m.points
-    # compute center of mass
-    com = np.mean(points, axis=0)
-
-    # compute axis points
-    direction = np.array([0.5,0.5,-0.3])
-    axis_points = np.array([com-500*direction, com + 500*direction])
-
-    m.set_axis_points(axis_points)
-
     vis = o3d.visualization.Visualizer()
 
     vis.create_window()
@@ -201,25 +219,93 @@ def test_visualization(m=muscle):
     vis.run(); vis.destroy_window()
     
 
-def test_rotation(m=muscle):
+def test_visualize_rotation(m=muscle):
+    rotvec = np.array([0,0,1])
+    theta = np.pi/2
+
+    m_rotated = m.rotate(rotvec, theta)
+
+    vis = o3d.visualization.Visualizer()
+
+    vis.create_window()
     
     
+    m.draw_axis(vis, color=k)
+    m.draw_points(vis, color=k)
+
+    m_rotated.draw_axis(vis, color=reddish)
+    m_rotated.draw_points(vis, color=reddish)
+
+    rotaxis_points = [axis_center-500*rotvec, axis_center+500*rotvec]
+    rotaxis_points = o3d.utility.Vector3dVector(rotaxis_points)
+    rotaxis_lines = o3d.utility.Vector2iVector([[0,1]])
+    rotaxis = o3d.geometry.LineSet(rotaxis_points, rotaxis_lines)
+
+    rotaxis.paint_uniform_color(b)
+    vis.add_geometry(rotaxis)
+
+    vis.add_geometry(frame)
+
+    vis.run(); vis.destroy_window()
+
+
+def test_visualize_gradient_of_rotation(m=muscle, n=6):
+    rotvec=np.array([0,0,1])
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    rotaxis_points = [axis_center-500*rotvec, axis_center+500*rotvec]
+    rotaxis_points = o3d.utility.Vector3dVector(rotaxis_points)
+    rotaxis_lines = o3d.utility.Vector2iVector([[0,1]])
+    rotaxis = o3d.geometry.LineSet(rotaxis_points, rotaxis_lines)
+    rotaxis.paint_uniform_color(b)
+    vis.add_geometry(rotaxis)
+
+    vis.add_geometry(frame)
+
+    for i in range(n-1):
+        theta = i*(2*np.pi)/n
+        red = r/(n-1)*i
+        blue = b/(n-1)*i        
+        m_rotated = m.rotate(rotvec, theta)
+        m_rotated.draw_axis(vis, color=blue)
+        m_rotated.draw_points(vis, color=red)
+
+    vis.run(); vis.destroy_window()
+
+
+
+
+        
+
+
 
     
-    
-    
 
-def test_visualize_rotation():
-    # TODO
-    pass
+
+
+
+
+
+
+
+
+
+
+    
 
 if __name__ == "__main__":
     #test_compute_yaw_and_compute_pitch()
     #test_compute_axis_vector()
     #test_Muscle_basic_constructor()
+    #test_get_axis_center()
     #test_Muscle_from_array_file()
     
-    test_visualization()
+    #test_visualization()
+
+    #test_visualize_rotation()
+
+    test_visualize_gradient_of_rotation()
 
     print("All tests passed.")
     

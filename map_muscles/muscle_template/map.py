@@ -65,13 +65,23 @@ class Muscle():
 
     @classmethod
     def from_array_file(cls, file_path: Path, name=None):
+        """
+        Create a new instance of the class from an .npy array file.
 
+        Args:
+            file_path (Path): The path to the array file representing the points.
+            name (str, optional): The name of the instance. If not provided, the name will be set to the stem of the file path.
+
+        Returns:
+            cls: A new instance of the class.
+
+        """
         points = np.load(file_path)
 
         if name is None:
             name = file_path.stem 
-            
-        return cls(points, name)    
+
+        return cls(points, name)
 
     def compute_axis_vector(self) -> np.ndarray:
         axis = (self.axis_points[1] - self.axis_points[0])
@@ -95,31 +105,77 @@ class Muscle():
             self.axis_vector = self.compute_axis_vector()
             self.compute_set_yaw_pitch()
 
-    def rotate(self, axis: np.ndarray, theta: float):
+    def get_axis_centre(self) -> np.ndarray:
+        """
+        Calculate the center point of the axis.
 
-        assert self.axis_vector is not None, "Axis vector must be set before rotating."
+        Returns:
+            np.ndarray: The center point of the axis.
+        """
+        assert self.axis_points is not None,\
+              "Axis points must be set before getting the center."
+        return np.mean(self.axis_points, axis=0)
 
-        assert np.isclose(linalg.norm(axis), 1), "Axis must be a unit vector."
+    def translate(self, translation: np.ndarray, new_name=None):
+        translated_points = self.points + translation
 
-        rotation = spatial.transform.Rotation.from_rotvec(axis * theta)
+        if new_name:
+            name = new_name 
+        else:
+            name = self.name + "_translated"
 
-        rotated_points = rotation.apply(self.points)
+        return Muscle(translated_points, name=name, axis_points=self.axis_points, roll=self.roll)
 
-        new_axis_points = rotation.apply(self.axis_points)
 
-        return Muscle(rotated_points, self.name, new_axis_points)  
+
+    def rotate(self, rotvec: np.ndarray, theta: float, new_name=None):
+        """
+        Rotate the muscle around the centre of its axis.
+
+        Parameters:
+            rotvec (np.ndarray): The rotation axis vector. Must be a unit vector.
+            theta (float): The angle of rotation in radians.
+            new_name (str, optional): The name of the rotated muscle. If not provided, the original name with "_rotated" appended will be used.
+
+        Returns:
+            Muscle: A new Muscle object representing the rotated muscle.
+
+        Raises:
+            AssertionError: If the muscle axis vector is not set or if the rotational axis is not a unit vector.
+        """
+        assert self.axis_vector is not None, "Muscle axis vector must be set before rotating."
+        assert np.isclose(linalg.norm(rotvec), 1), "Rotational axis must be a unit vector."
+
+        current_centre = self.get_axis_centre()
+
+        # translation to origin
+        translated_points = self.points - current_centre
+        # rotation
+        rotation = spatial.transform.Rotation.from_rotvec(rotvec * theta)
+        rotated_points = rotation.apply(translated_points)
+        # translation back
+        rotated_points = rotated_points + current_centre
+
+        # same with axis points
+        axis_points = self.axis_points - current_centre
+        rotated_axis_points = rotation.apply(axis_points)
+        rotated_axis_points = rotated_axis_points + current_centre
+        
+        #TODO: compute roll that occured during rotation
+        roll=None
+        
+        if new_name:
+            name = new_name
+        else:
+            name = self.name + "_rotated"
+
+        return Muscle(rotated_points, name=name, axis_points=rotated_axis_points, roll=roll)
     
     def roll_points(self, theta:float):
+        #TODO
+        pass
 
-        assert self.roll is not None, "Roll must be set before rolling."
-
-        axis = self.get_axis_vector()
-
-        rotation = spatial.transform.Rotation.from_rotvec(axis * theta)
-
-        rotated_points = rotation.apply(self.points)
-
-        return Muscle(rotated_points, name=self.name, axis_points=self.axis_points, roll=self.roll + theta)
+        
     
     def init_pcd(self):
         if self.pcd is not None:
@@ -128,15 +184,32 @@ class Muscle():
         pcd.points = o3d.utility.Vector3dVector(self.points)
         self.pcd = pcd
 
+    def paint_uniform_color(self, color: np.ndarray):
+        """
+        Sets the color of the point cloud data (PCD).
+
+        Parameters:
+        color (np.ndarray): (r,g,b), the color to be applied to the PCD,
+        values ranging between 0 and 1.
+
+        Returns:
+        None
+        """
+        self.init_pcd()
+        self.pcd.paint_uniform_color(color)
+
     def draw_points(self, vis: o3d.visualization.Visualizer, color: np.ndarray = np.array([0,0,0])):
         self.init_pcd()
         self.pcd.paint_uniform_color(color)
         vis.add_geometry(self.pcd)
 
-    def draw_axis(self, vis: o3d.visualization.Visualizer, color: np.ndarray = np.array([1,0,0])):
+    def draw_axis(self, vis: o3d.visualization.Visualizer, length=1000, color: np.ndarray = np.array([1,0,0])):
         assert self.axis_points is not None, "Axis points must be set before drawing axis."
 
         axis = o3d.geometry.LineSet()
+
+        axis_points = [self.axis_points[0]-0.5*length*self.axis_vector, self.axis_points[0] + 0.5*length*self.axis_vector]
+
         axis.points = o3d.utility.Vector3dVector(self.axis_points)
         axis.lines = o3d.utility.Vector2iVector([[0,1]])
         axis.paint_uniform_color(color)
