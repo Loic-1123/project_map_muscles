@@ -406,21 +406,124 @@ def test_MuscleMap_visualize_roll_by_rotate_on_axis(n=2):
 
     vis.run(); vis.destroy_window()
 
+def test_MuscleMap_to_yaw():
+    muscles = [mp.Muscle(np.array([[0,0,0],[1,0,0],[1,1,0],[0,1,0]]), "test")]
+    axis_points = np.array([[0,0,0],[1,1,1]])
 
+    mmap = mp.MuscleMap(muscles, axis_points)
+
+    yaw = np.pi / 2
+    rotated_mmap = mmap.to_yaw(yaw)
+    assert np.isclose(rotated_mmap.yaw, yaw)
+
+    yaw = np.pi / 4
+    rotated_mmap = mmap.to_yaw(yaw)
+    assert np.isclose(rotated_mmap.yaw, yaw)
+
+    yaw = 0
+    rotated_mmap = mmap.to_yaw(yaw)
+    assert np.isclose(rotated_mmap.yaw, yaw)
+
+    yaw = mmap.yaw
+    rotated_mmap = mmap.to_yaw(yaw)
+    assert np.isclose(rotated_mmap.yaw, yaw)
+
+    yaw = -np.pi / 4
+    rotated_mmap = mmap.to_yaw(yaw)
+    assert np.isclose(rotated_mmap.yaw, yaw)
+
+    yaw = -np.pi / 2
+    rotated_mmap = mmap.to_yaw(yaw)
+    assert np.isclose(rotated_mmap.yaw, yaw) 
+
+    yaw = 5783.2345735
+    rotated_mmap = mmap.to_yaw(yaw)
+    assert np.isclose(rotated_mmap.yaw, yaw%(2*np.pi))
+
+def test_MuscleMap_to_pitch():
+    muscles = [mp.Muscle(np.array([[0,0,0],[1,0,0],[1,1,0],[0,1,0]]), "test")]
+    axis_points = np.array([[0,0,0],[1,1,1]])
+    mmap = mp.MuscleMap(muscles, axis_points)
+
+    pitch = np.pi / 2
+    rotated_mmap = mmap.to_pitch(pitch)
+    assert np.isclose(rotated_mmap.pitch, pitch)
+
+    pitch = np.pi / 4
+    rotated_mmap = mmap.to_pitch(pitch)
+    assert np.isclose(rotated_mmap.pitch, pitch)
+
+    pitch = 0
+    rotated_mmap = mmap.to_pitch(pitch)
+    assert np.isclose(rotated_mmap.pitch, pitch)
+
+    pitch = mmap.pitch
+    rotated_mmap = mmap.to_pitch(pitch)
+
+    pitch = -np.pi / 4
+    rotated_mmap = mmap.to_pitch(pitch)
+
+    pitch = -np.pi / 2
+    rotated_mmap = mmap.to_pitch(pitch)
+
+    pitch = 5783.2345735
+    rotated_mmap = mmap.to_pitch(pitch)
+    assert np.isclose(rotated_mmap.pitch, pitch%(2*np.pi))
+
+def test_MuscleMap_roll_points():
+    mmap = mp.MuscleMap.from_directory(dir_path)
+    mmap.set_axis_points(axis_points)
+
+    mmap.init_roll()
+
+    rolls = np.linspace(0, 2*np.pi, 10)
+
+    yaw = mmap.yaw
+    pitch = mmap.pitch
+
+    for roll in rolls:
+
+        rolled_map = mmap.roll_points(roll)
+
+        assert np.isclose(rolled_map.roll, roll)
+
+        # assert no change in yaw and pitch
+        assert np.isclose(rolled_map.yaw, yaw)
+        assert np.isclose(rolled_map.pitch, pitch)
+
+def test_MuscleMap_visualize_roll_points():
+    mmap = mp.MuscleMap.from_directory(dir_path)
+    mmap.set_axis_points(axis_points)
+
+    mmap.init_roll()
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    mmap.draw_points(vis)
+    mmap.draw_axis(vis)
+
+    rolls = np.linspace(0, 2*np.pi, 4)
+
+    for roll in rolls:
+
+        c = r*(roll/(2*np.pi))
+        colors = np.tile(c, (len(mmap.muscles), 1))
+
+        rolled_map = mmap.roll_points(roll)
+
+        rolled_map.draw_points(vis, colors=colors)
+        rolled_map.draw_axis(vis, color=c)
+
+    vis.run(); vis.destroy_window()
+
+
+    
 
     
 
 
 
-
-
-
-
-
-
-
-
-    
 
 if __name__ == "__main__":
     test_compute_yaw_and_compute_pitch()
@@ -429,25 +532,32 @@ if __name__ == "__main__":
     test_get_axis_center()
     test_Muscle_from_array_file()
     
-    test_visualization()
+    #test_visualization()
 
-    test_visualize_rotation()
+    #test_visualize_rotation()
 
-    test_visualize_gradient_of_rotation()
+    #test_visualize_gradient_of_rotation()
 
     test_load_MuscleMap()
 
-    test_MuscleMap_draw_points()
+    #test_MuscleMap_draw_points()
+    #test_MuscleMap_draw_axis()
 
-    test_MuscleMap_draw_axis()
+    #test_MuscleMap_draw_default()
 
-    test_MuscleMap_draw_default()
+    #test_MuscleMap_visualize_rotate()
 
-    test_MuscleMap_visualize_rotate()
+    #test_MuscleMap_visualize_gradient_of_rotation()
 
-    test_MuscleMap_visualize_gradient_of_rotation()
+    #test_MuscleMap_visualize_roll_by_rotate_on_axis()
 
-    test_MuscleMap_visualize_roll_by_rotate_on_axis()
+    test_MuscleMap_to_yaw()
+
+    test_MuscleMap_to_pitch()
+
+    test_MuscleMap_roll_points()
+
+    #test_MuscleMap_visualize_roll_points()
 
     print("All tests passed.")
     
