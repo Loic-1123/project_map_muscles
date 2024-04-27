@@ -2,6 +2,7 @@ from _root_path import add_root, get_root_path
 add_root()
 
 from pathlib import Path
+import functools
 
 root_path = Path(get_root_path())
 
@@ -24,6 +25,9 @@ map_dir = data_dir / 'muscles_maps'
 
 basic_map_dir = map_dir / 'basic_map'
 
+map_matching_dir = map_dir / 'map_matching'
+
+"""
 directories = [
     map_muscles_dir,
     data_dir, 
@@ -34,10 +38,30 @@ directories = [
     xray_dir,
     sleap_dir,
     map_dir,
-    basic_map_dir]
+    basic_map_dir, 
+    map_matching_dir]
 
 for directory in directories:
     assert directory.exists(), f'Following directory does not exist: {directory}'
+"""
+def assert_directory(dir_path):
+    assert dir_path.exists(), f'Following directory does not exist: {dir_path}'
+
+def create_directory(dir_path, parents=True, exist_ok=True):
+    dir_path.mkdir(parents=parents, exist_ok=exist_ok)
+    print(f'Created directory: {dir_path}')
+
+def assert_create_return_dir(dir_path):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(assert_dir=True, create_dir=True):
+            if assert_dir:
+                assert_directory(dir_path)
+            if create_dir:
+                create_directory(dir_path)
+            return dir_path
+        return wrapper
+    return decorator
 
 def get_map_muscles_dir():
     """
@@ -100,3 +124,7 @@ def get_map_dir():
 
 def get_basic_map_dir():
     return basic_map_dir
+
+@assert_create_return_dir(map_matching_dir)
+def get_map_matching_dir():
+    pass
