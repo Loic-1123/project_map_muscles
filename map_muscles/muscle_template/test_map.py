@@ -517,7 +517,23 @@ def test_MuscleMap_visualize_roll_points():
 
     vis.run(); vis.destroy_window()
 
+def test_MuscleMap_translate():
+    mmap = mp.MuscleMap.from_directory(dir_path)
+    mmap.set_axis_points(axis_points)
 
+    translation = np.array([101,99,100])
+
+    translated_map = mmap.translate(translation)
+
+    assert np.allclose(translated_map.get_com(), mmap.get_com() + translation)
+
+def test_MuscleMap_get_map2d():
+    mmap = mp.MuscleMap.from_directory(dir_path)
+    mmap.set_axis_points(axis_points)
+
+    map2d = mmap.get_map2d()
+
+    assert np.allclose(map2d.axis_points, axis_points[:,:2])
     
 
     
@@ -558,6 +574,10 @@ if __name__ == "__main__":
     test_MuscleMap_roll_points()
 
     #test_MuscleMap_visualize_roll_points()
+
+    test_MuscleMap_translate()
+
+    test_MuscleMap_get_map2d()
 
     print("All tests passed.")
     

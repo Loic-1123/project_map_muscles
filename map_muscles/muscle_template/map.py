@@ -195,7 +195,7 @@ class Muscle():
         if new_name:
             name = new_name 
         else:
-            name = self.name + "_translated"
+            name = self.name
 
         return Muscle(translated_points, name=name, axis_points=self.axis_points, roll=self.roll)
 
@@ -303,6 +303,9 @@ class Muscle():
             name=self.name
             )
 
+    def centered_on_axis_point(self):
+        return self.translate(-self.axis_points[0])
+    
 class MuscleMap():
     
     name: str # Name of the muscle map
@@ -422,13 +425,14 @@ class MuscleMap():
 
     def translate(self, translation: np.ndarray, new_name=None):
         translated_muscles = [muscle.translate(translation) for muscle in self.muscles]
+        translated_axis_points = self.axis_points + translation
 
         if new_name:
             name = new_name
         else:
-            name = self.name + "_translated"
+            name = self.name
 
-        return MuscleMap(translated_muscles, self.axis_points, name=name)
+        return MuscleMap(translated_muscles, translated_axis_points, name=name)
     
     def rotate(self, rotvec: np.ndarray, theta: float, new_name=None):
         
@@ -525,7 +529,15 @@ class MuscleMap():
     
     def get_map2d(self):
         individual_maps = [muscle.get_map2d() for muscle in self.muscles]
-        return Map2d(individual_maps, axis_points=self.axis_points)
+        return Map2d(individual_maps, axis_points=self.axis_points[:, :2])
+    
+    def get_points(self):
+        return np.vstack([muscle.points for muscle in self.muscles])
+    
+    def centered_on_axis_point(self):
+        return self.translate(-self.axis_points[0])
+    
+
 
 
 
@@ -550,12 +562,30 @@ class IndividualMap2d():
     def set_name(self, name: str):
         self.name = name
 
+    def translate(self, translation_vec: np.ndarray):
+        translated_points = self.points + translation_vec
+        translated_axis_points = self.axis_points + translation_vec
+        return IndividualMap2d(translated_points, axis_points=translated_axis_points, name=self.name)
+    
+    def get_points(self):
+        return self.points
+    
+    def scale(self, scale_factor: float, warning=True): 
+        if not np.allclose(self.axis_points[0], np.zeros(2)) and warning:
+            print("Map: axis_points[0] not at origin, scaling might not be accurate.")
+
+        scaled_points = self.points * scale_factor
+        scaled_axis_points = self.axis_points * scale_factor
+        return IndividualMap2d(scaled_points, axis_points=scaled_axis_points, name=self.name)
+
 class Map2d():
     individual_maps: list # List of IndividualMap2d objects
     axis_points: np.ndarray # Axis points of the map, shape: (n, 2)
 
     def __init__(self, individual_maps: list, axis_points: np.ndarray=None):
         self.individual_maps = individual_maps
+
+        assert axis_points.shape == (2, 2), "Axis points must be a 2x2 array."
 
         if np.any(axis_points, None):
             self.set_axis_points(axis_points)
@@ -567,11 +597,18 @@ class Map2d():
         for map in self.individual_maps:
             map.set_axis_points(axis_points)
 
+    def get_axis_points(self):
+        return self.axis_points
     
+    def get_points(self):
+        return np.vstack([map.points for map in self.individual_maps])
     
-
+    def translate(self, translation_vec: np.ndarray):
+        translated_maps = [mmap.translate(translation_vec) for mmap in self.individual_maps]
+        translated_axis_points = self.axis_points + translation_vec
+        return Map2d(translated_maps, axis_points=translated_axis_points)
     
-    
-
-
-
+    def scale(self, scale_factor: float, warning=True):
+        scaled_maps = [mmap.scale(scale_factor, warning=warning) for mmap in self.individual_maps]
+        scaled_axis_points = self.axis_points * scale_factor
+        return Map2d(scaled_maps, axis_points=scaled_axis_points)

@@ -91,7 +91,7 @@ for muscle_id in tqdm_ids:
 
     plt.close(fig)
 
-print("Video writing complete to ", video_file)
+print("Video writing complete to ", output_folder / video_name)
 # close video writer
 cv2.destroyAllWindows()
 out.release()

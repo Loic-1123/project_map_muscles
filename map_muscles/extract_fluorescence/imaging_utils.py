@@ -66,8 +66,8 @@ def get_matching_kin_frame_channel(kin_frame_id, min_id_kin_file):
 
 def get_matching_kin_image_id(
         min_id_kin_file,
-        kin_frame_id, 
-        kin_frame_channel):
+        kin_frame_id
+        ):
     
     kin_frame_channel = get_matching_kin_frame_channel(kin_frame_id, min_id_kin_file)
     kin_image_id = kin_frame_id - kin_frame_channel
