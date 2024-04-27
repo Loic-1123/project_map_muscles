@@ -398,6 +398,9 @@ class MuscleMap():
               "Axis points must be set before getting the center."
         return np.mean(self.axis_points, axis=0)
 
+    def get_axis_points(self) -> np.ndarray:
+        return self.axis_points
+
     def get_com(self) -> np.ndarray:
         """
         Calculate the center of mass of the muscle map.
@@ -504,10 +507,21 @@ class MuscleMap():
         
         vis.add_geometry(axis)
 
+    def draw_axis_points(self, vis: o3d.visualization.Visualizer, radius=10.0, color: np.ndarray = np.array([1,0,0])):
+        assert self.axis_points is not None, "Axis points must be set before drawing axis."
+
+        for point in self.axis_points:
+            sphere = o3d.geometry.TriangleMesh.create_sphere(radius=radius)
+            sphere.translate(point)
+            sphere.paint_uniform_color(color)
+            vis.add_geometry(sphere)
+
+
     def draw_default(self, vis: o3d.visualization.Visualizer):
         colors = get_equally_spaced_colors(len(self.muscles))
         self.draw_points(vis, colors=colors)
         self.draw_axis(vis, color=np.array([0,0,0]))
+        self.draw_axis_points(vis, color=np.array([0,0,0]))
     
     def get_map2d(self):
         individual_maps = [muscle.get_map2d() for muscle in self.muscles]
