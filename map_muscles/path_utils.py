@@ -15,6 +15,8 @@ recording_dir = data_dir / '20240213_muscle_recording'
 img_dir1 = recording_dir / '900_1440'
 img_dir2 = recording_dir / '5760-6210'
 
+kin_frames_dir = img_dir1/ 'kin_frames'
+
 video_dir = recording_dir / 'videos'
 
 xray_dir = data_dir / 'xray'
@@ -55,10 +57,11 @@ def assert_create_return_dir(dir_path):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(assert_dir=True, create_dir=True):
-            if assert_dir:
-                assert_directory(dir_path)
             if create_dir:
                 create_directory(dir_path)
+            if assert_dir:
+             assert_directory(dir_path)
+        
             return dir_path
         return wrapper
     return decorator
@@ -127,4 +130,8 @@ def get_basic_map_dir():
 
 @assert_create_return_dir(map_matching_dir)
 def get_map_matching_dir():
+    pass
+
+@assert_create_return_dir(kin_frames_dir)
+def get_kin_frames_dir():
     pass
