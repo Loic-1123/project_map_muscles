@@ -626,8 +626,11 @@ class IndividualMap2d():
         translated_axis_points = self.axis_points + translation_vec
         return IndividualMap2d(translated_points, axis_points=translated_axis_points, name=self.name)
     
-    def get_points(self):
-        return self.points
+    def get_points(self, d3=False):
+        if d3:
+            return np.hstack((self.points, np.zeros((self.points.shape[0], 1))))
+        else:
+            return self.points
     
     def get_name(self):
         return self.name
@@ -656,14 +659,17 @@ class Map2d():
 
     def set_axis_points(self, axis_points: np.ndarray):
         self.axis_points = axis_points
-        for map in self.individual_maps:
-            map.set_axis_points(axis_points)
+        for m in self.individual_maps:
+            m.set_axis_points(axis_points)
 
     def get_axis_points(self):
         return self.axis_points
     
-    def get_points(self):
-        return np.vstack([map.points for map in self.individual_maps])
+    def get_points(self, d3=False):
+        points = [m.get_points(d3=d3) for m in self.individual_maps]
+        return np.vstack(points)
+        
+            
     
     def translate(self, translation_vec: np.ndarray):
         translated_maps = [mmap.translate(translation_vec) for mmap in self.individual_maps]

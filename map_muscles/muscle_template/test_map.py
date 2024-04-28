@@ -535,20 +535,20 @@ def test_MuscleMap_get_map2d():
 
     assert np.allclose(map2d.axis_points, axis_points[:,:2])
     
-def generate_xy_plane_points(dim:int, n:int):
+def generate_xy_plane_points(dim:int, n:int, z=0):
     x = np.linspace(-dim, dim, n)
     y = np.linspace(-dim, dim, n)
     
     xx, yy = np.meshgrid(x, y)
 
-    zz = np.zeros_like(xx)
+    zz = np.ones_like(xx)*z
 
     points = np.stack([xx, yy, zz], axis=-1).reshape(-1,3)
 
     return points
 
-def pcd_xy_plane(dim:int, n:int):
-    points = generate_xy_plane_points(dim, n)
+def pcd_xy_plane(dim:int, n:int, z=0):
+    points = generate_xy_plane_points(dim, n, z)
 
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(points)
@@ -600,7 +600,7 @@ def test_MuscleMap_visualize_axis_to_yaw():
 
 def test_MuscleMap_visualize_axis_to_pitch():
     mmap = mp.MuscleMap.from_directory(dir_path)
-    axis_points = np.array([[0,0,0],[1,1,1]])
+    axis_points = np.array([[100,30,58],[1,1,1]])
     mmap.set_axis_points(axis_points)
 
     mmap = mmap.to_yaw(0)
@@ -638,8 +638,32 @@ def test_MuscleMap_visualize_axis_to_pitch():
     vis.add_geometry(frame)
 
     # x-y plane: create pcd of points in x-y plane
-    vis.add_geometry(pcd_xy_plane(1000, 1000))
+    vis.add_geometry(pcd_xy_plane(1000, 1000, z = axis_points[0,2]))
 
+    vis.run(); vis.destroy_window()
+
+def test_MuscleMap_visualize_map2d():
+    mmap = mp.MuscleMap.from_directory(dir_path)
+    mmap.set_default_axis_points()
+
+    mmap = mmap.centered_on_axis_point()
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    mmap.draw_default(vis)
+
+    map2d = mmap.get_map2d()
+
+    points = map2d.get_points(d3=True)
+
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(points)
+
+    vis.add_geometry(pcd)
+
+    vis.add_geometry(pcd_xy_plane(1000, 20))
+    
     vis.run(); vis.destroy_window()
 
 
@@ -684,6 +708,8 @@ if __name__ == "__main__":
     #test_MuscleMap_visualize_axis_to_yaw()
 
     #test_MuscleMap_visualize_axis_to_pitch()
+
+    test_MuscleMap_visualize_map2d()
 
     print("All tests passed.")
     
