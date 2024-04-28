@@ -303,8 +303,37 @@ class Muscle():
             name=self.name
             )
 
+    def get_points(self):
+        return self.points
+    
+    def get_axis_points(self):
+        return self.axis_points
+
     def centered_on_axis_point(self):
         return self.translate(-self.axis_points[0])
+    
+    def scale(self, scale_factor: float):
+            """
+            Scales the muscle by the given scale factor.
+            Relative to the axis point: Position of the first axis point is preserved.
+
+            Args:
+                scale_factor (float): The factor by which to scale the muscle.
+
+            Returns:
+                Muscle: The scaled muscle.
+            """
+
+            centered_Muscle = self.centered_on_axis_point()
+
+            scaled_points = centered_Muscle.get_points() * scale_factor
+            scaled_axis_points = centered_Muscle.axis_points * scale_factor
+
+            # translate back
+            scaled_points = scaled_points + self.axis_points[0]
+            scaled_axis_points = scaled_axis_points + self.axis_points[0]
+
+            return Muscle(scaled_points, name=self.name, axis_points=scaled_axis_points, roll=self.roll)
     
 class MuscleMap():
     
@@ -537,6 +566,39 @@ class MuscleMap():
     def centered_on_axis_point(self):
         return self.translate(-self.axis_points[0])
     
+    def set_default_axis_points(
+            self, 
+            direction: np.ndarray=np.array([0.4,0.6,-0.3]), 
+            dist: float=700
+            ):
+        com = self.get_com()
+        axis_points = np.array([
+            com - dist*direction,
+            com + dist*direction
+        ])
+        self.set_axis_points(axis_points)
+
+    def get_muscles(self):
+        return self.muscles
+
+    def scale(self, scale_factor: float):
+            """
+            Scales the muscles in the MuscleMap by the given scale factor.
+
+            Args:
+                scale_factor (float): The factor by which to scale the muscles.
+
+            Returns:
+                MuscleMap: A new MuscleMap object with scaled muscles.
+            """
+            scaled_muscles = [muscle.scale(scale_factor) for muscle in self.muscles]
+            scaled_axis_points = scaled_muscles[0].get_axis_points()
+            
+            return MuscleMap(scaled_muscles, axis_points=scaled_axis_points, name=self.name)
+
+
+
+    
 
 
 
@@ -569,6 +631,9 @@ class IndividualMap2d():
     
     def get_points(self):
         return self.points
+    
+    def get_name(self):
+        return self.name
     
     def scale(self, scale_factor: float, warning=True): 
         if not np.allclose(self.axis_points[0], np.zeros(2)) and warning:
@@ -612,3 +677,10 @@ class Map2d():
         scaled_maps = [mmap.scale(scale_factor, warning=warning) for mmap in self.individual_maps]
         scaled_axis_points = self.axis_points * scale_factor
         return Map2d(scaled_maps, axis_points=scaled_axis_points)
+
+    def get_maps(self):
+        return self.individual_maps
+    
+
+    
+    
