@@ -50,8 +50,13 @@ def assert_directory(dir_path):
     assert dir_path.exists(), f'Following directory does not exist: {dir_path}'
 
 def create_directory(dir_path, parents=True, exist_ok=True):
-    dir_path.mkdir(parents=parents, exist_ok=exist_ok)
-    print(f'Created directory: {dir_path}')
+
+    if not dir_path.exists():
+        dir_path.mkdir(parents=parents, exist_ok=exist_ok)
+        print(f'Created directory: {dir_path}')
+    
+
+
 
 def assert_create_return_dir(dir_path):
     def decorator(func):
