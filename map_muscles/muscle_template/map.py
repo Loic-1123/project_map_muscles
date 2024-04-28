@@ -219,20 +219,20 @@ class Muscle():
         assert self.axis_vector is not None, "Muscle axis vector must be set before rotating."
         assert np.isclose(linalg.norm(rotvec), 1), "Rotational axis must be a unit vector."
 
-        current_centre = self.get_axis_centre()
+        ref_point = self.axis_points[0]
 
         # translation to origin
-        translated_points = self.points - current_centre
+        translated_points = self.points - ref_point
         # rotation
         rotation = spatial.transform.Rotation.from_rotvec(rotvec * theta)
         rotated_points = rotation.apply(translated_points)
         # translation back
-        rotated_points = rotated_points + current_centre
+        rotated_points = rotated_points + ref_point
 
         # same with axis points
-        axis_points = self.axis_points - current_centre
+        axis_points = self.axis_points - ref_point
         rotated_axis_points = rotation.apply(axis_points)
-        rotated_axis_points = rotated_axis_points + current_centre
+        rotated_axis_points = rotated_axis_points + ref_point
         
         if new_name:
             name = new_name
@@ -470,9 +470,6 @@ class MuscleMap():
         rotated_muscles = [muscle.rotate(rotvec, theta) for muscle in self.muscles]
 
         new_axis_points = rotated_muscles[0].axis_points
-
-        #TODO: compute roll that occured during rotation
-        new_roll=None
 
         if new_name:
             name = new_name

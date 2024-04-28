@@ -535,10 +535,112 @@ def test_MuscleMap_get_map2d():
 
     assert np.allclose(map2d.axis_points, axis_points[:,:2])
     
-
+def generate_xy_plane_points(dim:int, n:int):
+    x = np.linspace(-dim, dim, n)
+    y = np.linspace(-dim, dim, n)
     
+    xx, yy = np.meshgrid(x, y)
 
+    zz = np.zeros_like(xx)
 
+    points = np.stack([xx, yy, zz], axis=-1).reshape(-1,3)
+
+    return points
+
+def pcd_xy_plane(dim:int, n:int):
+    points = generate_xy_plane_points(dim, n)
+
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(points)
+
+    return pcd
+
+def test_MuscleMap_visualize_axis_to_yaw():
+    mmap = mp.MuscleMap.from_directory(dir_path)
+    axis_points = np.array([[0,0,0],[1,1,1]])
+    mmap.set_axis_points(axis_points)
+
+    mmap = mmap.to_pitch(0)
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    mmap.draw_axis(vis, color=k)
+
+    delta = 0.01
+
+    angles = [
+        0,
+        np.pi/4,
+        np.pi/2,
+        np.pi+delta,
+        np.pi*3/2+delta,
+        np.pi*2+2*delta,
+    ]
+
+    colors = np.array([
+        [1,0,0], #red
+        [0,1,0], #green
+        [0,0,1], #blue
+        [1,1,0], #yellow
+        [1,0,1], #magenta
+        [0,1,1] #cyan
+    ])
+
+    for angle, c in zip(angles, colors):
+        rotated_map = mmap.to_yaw(angle)
+        rotated_map.draw_axis(vis, color=c)
+
+    frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=200, origin=axis_points[0])
+    vis.add_geometry(frame)
+
+    vis.add_geometry(pcd_xy_plane(1000, 20))
+
+    vis.run(); vis.destroy_window()
+
+def test_MuscleMap_visualize_axis_to_pitch():
+    mmap = mp.MuscleMap.from_directory(dir_path)
+    axis_points = np.array([[0,0,0],[1,1,1]])
+    mmap.set_axis_points(axis_points)
+
+    mmap = mmap.to_yaw(0)
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    mmap.draw_axis(vis, color=k)
+
+    delta = 0.01
+
+    angles = [
+        0,
+        np.pi/4,
+        np.pi/2,
+        np.pi+delta,
+        np.pi*3/2+delta,
+        np.pi*2+2*delta,
+    ]
+
+    colors = np.array([
+        [1,0,0], #red
+        [0,1,0], #green
+        [0,0,1], #blue
+        [1,1,0], #yellow
+        [1,0,1], #magenta
+        [0,1,1] #cyan
+    ])
+
+    for angle, c in zip(angles, colors):
+        rotated_map = mmap.to_pitch(angle)
+        rotated_map.draw_axis(vis, color=c)
+
+    frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=200, origin=axis_points[0])
+    vis.add_geometry(frame)
+
+    # x-y plane: create pcd of points in x-y plane
+    vis.add_geometry(pcd_xy_plane(1000, 1000))
+
+    vis.run(); vis.destroy_window()
 
 
 if __name__ == "__main__":
@@ -578,6 +680,10 @@ if __name__ == "__main__":
     test_MuscleMap_translate()
 
     test_MuscleMap_get_map2d()
+
+    #test_MuscleMap_visualize_axis_to_yaw()
+
+    #test_MuscleMap_visualize_axis_to_pitch()
 
     print("All tests passed.")
     
