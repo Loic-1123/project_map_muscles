@@ -656,20 +656,6 @@ class Map2d():
             self.set_axis_points(axis_points)
         else:
             self.axis_points = None
-
-    def set_axis_points(self, axis_points: np.ndarray):
-        self.axis_points = axis_points
-        for m in self.individual_maps:
-            m.set_axis_points(axis_points)
-
-    def get_axis_points(self):
-        return self.axis_points
-    
-    def get_points(self, d3=False):
-        points = [m.get_points(d3=d3) for m in self.individual_maps]
-        return np.vstack(points)
-        
-            
     
     def translate(self, translation_vec: np.ndarray):
         translated_maps = [mmap.translate(translation_vec) for mmap in self.individual_maps]
@@ -681,9 +667,40 @@ class Map2d():
         scaled_axis_points = self.axis_points * scale_factor
         return Map2d(scaled_maps, axis_points=scaled_axis_points)
 
+    # Plotting
+
+    def plot_axis(self, ax, **kwargs):
+        ax.plot(self.axis_points[:, 0], self.axis_points[:, 1], **kwargs)
+        return ax
+    
+    def plot_maps(self, ax, colors=None, **kwargs):
+        if colors is None:
+            colors = get_equally_spaced_colors(len(self.individual_maps))
+
+        for mmap, color in zip(self.individual_maps, colors):
+            ax.scatter(mmap.get_points()[:, 0], mmap.get_points()[:, 1], color=color, **kwargs)
+        return ax
+
+    # Getters
+
     def get_maps(self):
         return self.individual_maps
     
+    def get_axis_points(self):
+        return self.axis_points
+    
+    def get_points(self, d3=False):
+        points = [m.get_points(d3=d3) for m in self.individual_maps]
+        return np.vstack(points)
+
+    
+    # Setters
+
+    def set_axis_points(self, axis_points: np.ndarray):
+        self.axis_points = axis_points
+        for m in self.individual_maps:
+            m.set_axis_points(axis_points)        
+
 
     
     

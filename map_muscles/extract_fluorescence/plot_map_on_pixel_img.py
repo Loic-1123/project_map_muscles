@@ -65,7 +65,7 @@ def save_2d_map_on_kin_frame_by_map2d(
     centered_map2d = centered_mmap.get_map2d()
     scaled_map = centered_map2d.scale(ratio)
 
-    translated_map = scaled_map.translate(img_axis_points_2d[0])
+    translated_map = scaled_map.translate(img_axis_points_2d[1])
 
     translated_points = translated_map.get_points()
     translated_axis = translated_map.get_axis_points()
@@ -100,7 +100,7 @@ def save_2d_map_on_kin_frame_by_3dmap(
     scaled_map = centered_mmap.scale(ratio)
 
     # 0 as 3th dimension
-    img_axis_3d_point = np.array([img_axis_points_2d[0][0], img_axis_points_2d[0][1], 0])
+    img_axis_3d_point = np.array([img_axis_points_2d[1][0], img_axis_points_2d[1][1], 0])
     translated_map = scaled_map.translate(img_axis_3d_point)
 
     fig, ax = plt.subplots(1,1, figsize=figsize)
@@ -127,7 +127,7 @@ def save_2d_map_on_kin_frame_muscle_maps(
     scaled_map = centered_mmap.scale(ratio)
 
     # 0 as 3th dimension
-    img_axis_3d_point = np.array([img_axis_points_2d[0][0], img_axis_points_2d[0][1], 0])
+    img_axis_3d_point = np.array([img_axis_points_2d[1][0], img_axis_points_2d[1][1], 0])
     translated_map = scaled_map.translate(img_axis_3d_point)
 
     map2d = translated_map.get_map2d()
@@ -163,7 +163,7 @@ def save_individual_maps_on_kin_frames(
     scaled_map = centered_mmap.scale(ratio)
 
     # 0 as 3th dimension
-    img_axis_3d_point = np.array([img_axis_points_2d[0][0], img_axis_points_2d[0][1], 0])
+    img_axis_3d_point = np.array([img_axis_points_2d[1][0], img_axis_points_2d[1][1], 0])
     translated_map = scaled_map.translate(img_axis_3d_point)
 
     map2d = translated_map.get_map2d()
@@ -187,6 +187,90 @@ def save_individual_maps_on_kin_frames(
 
         fig.savefig(out_path)
 
+def scaled_translate_map(mmap, img_axis_points_2d, ratio):
+    centered_mmap = mmap.centered_on_axis_point()
+    scaled_map = centered_mmap.scale(ratio)
+
+    # 0 as 3th dimension
+    img_axis_3d_point = np.array([img_axis_points_2d[1][0], img_axis_points_2d[1][1], 0])
+    translated_map = scaled_map.translate(img_axis_3d_point)
+
+    return translated_map
+
+def save_map_with_yaw_pitch(
+        mmap,
+        yaw,
+        pitch,
+        img_axis_points_2d,
+        labeled_kin_frame,
+        out_path= pu.get_map_matching_dir() / 'map_on_kin_frame_yaw_pitch.png',
+        figsize=(10,5)
+        ):
+    
+    ratio = compute_ratio_between_map_and_kin_frame(mmap, img_axis_points_2d[0], img_axis_points_2d[1])
+
+    mmap = mmap.to_yaw(yaw).to_pitch(pitch)
+
+    translated_map = scaled_translate_map(mmap, img_axis_points_2d, ratio)
+
+    map2d = translated_map.get_map2d()
+
+    fig, ax = plt.subplots(1,1, figsize=figsize)
+
+    ax.imshow(labeled_kin_frame, cmap='gray')
+
+    pts = map2d.get_points()
+
+    ax.scatter(pts[:,0], pts[:,1], s=1, label='Map points')
+
+    ax.legend()
+    ax.axis('off')
+
+    fig.savefig(out_path)
+
+    
+def save_map_yaw_pitch_maps(
+        mmap,
+        yaw,
+        pitch,
+        img_axis_points_2d,
+        labeled_kin_frame,
+        out_path= pu.get_map_matching_dir() / 'maps_on_kin_frame_yaw_pitch.png',
+        figsize=(10,5)
+        ):
+    
+    ratio = compute_ratio_between_map_and_kin_frame(mmap, img_axis_points_2d[0], img_axis_points_2d[1])
+
+    mmap = mmap.to_yaw(yaw).to_pitch(pitch)
+
+    translated_map = scaled_translate_map(mmap, img_axis_points_2d, ratio)
+
+    map2d = translated_map.get_map2d()
+
+    maps = map2d.get_maps()
+
+    fig, ax = plt.subplots(1,1, figsize=figsize)
+
+    ax.imshow(labeled_kin_frame, cmap='gray')
+
+    for m in maps:
+        pts = m.get_points()
+        ax.scatter(pts[:,0], pts[:,1], s=1, label=m.get_name())
+
+    axis = map2d.get_axis_points()
+    ax.plot(axis[:,0], axis[:,1], c='g', label='Axis')
+
+    ax.legend()
+    ax.axis('off')
+
+    fig.savefig(out_path)
+
+
+
+
+
+    
+    
 
 if __name__ == "__main__":
 
@@ -207,6 +291,7 @@ if __name__ == "__main__":
     idx = len(tro) - 100
 
     labeled_kin_frame = get_labeled_kin_frame(kin_file_path, idx)
+
 
     tro_point = tro[idx]
     fem_tib_point =ft[idx]
@@ -229,8 +314,23 @@ if __name__ == "__main__":
 
     #set pitch and yaw
 
-    pitch = (np.pi/4)*1.3
-    yaw = (np.pi/2)*1.1
+    
+
+    #save_map_with_yaw_pitch(mmap, yaw, pitch, img_axis, labeled_kin_frame)
+
+
+    """
+    pitch = (np.pi/2)*0.8
+    yaw = (np.pi)
+
+    save_map_yaw_pitch_maps(mmap, yaw, pitch, img_axis, labeled_kin_frame)
+    # -> pitch is yaw and yaw is pitch: correction needed
+    """
+
+    pitch = np.pi * 1
+    yaw = np.pi * 0.
+    #save_map_yaw_pitch_maps(mmap, yaw, pitch, img_axis, labeled_kin_frame)
+
 
 
 
