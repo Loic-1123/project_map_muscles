@@ -19,10 +19,10 @@ import map_muscles.muscle_template.fibers_object as fo
 
 def assert_unit_vector(vector: np.ndarray, string=None):
     if not np.isclose(linalg.norm(vector), 1):
-        raise AssertionError(f"Vector must be a unit vector. {string}")
+        raise AssertionError(f"Vector must be a unit vector. Got {vector}. {string}")
     
 def assert_not_aligned_with_z(vector: np.ndarray, string=None):
-    if np.abs(vector[2]) == 1:
+    if np.allclose([vector[0], vector[1]],  0):
         raise AssertionError(f"Vector must not be aligned with the z-axis. {string}")
 
 def compute_alpha(z_vector: np.ndarray) -> float:
@@ -49,15 +49,12 @@ def compute_alpha(z_vector: np.ndarray) -> float:
     elif np.isclose(equa, -1, atol=1e-07):
         equa = -1
         alpha = np.pi
-    else:
-        alpha = np.arccos(-z2/np.sqrt(1-z3**2))
+    #else:
+    #    alpha = np.arccos(-z2/np.sqrt(1-z3**2))
 
-    if z1 < 0:
-        alpha = 2*np.pi - alpha
-
-    if alpha == np.nan:
-        raise AssertionError("Alpha is nan")
-
+    #if z1 < 0:
+    #    alpha = 2*np.pi - alpha
+    alpha = np.arctan2(z1, -z2)
 
     return alpha
 
@@ -79,7 +76,7 @@ def compute_beta(z_vector: np.ndarray) -> float:
 
     return beta
 
-def compute_gamma(z_vector: np.ndarray, y_vector:np.ndarray) -> float:
+def compute_gamma(x_vector:np.ndarray, y_vector:np.ndarray) -> float:
     """
     Compute the gamma angle of a vector in 3D space. 
     Assuming the vector was aligned with the z-axis before rotation.
@@ -91,14 +88,19 @@ def compute_gamma(z_vector: np.ndarray, y_vector:np.ndarray) -> float:
     float: The gamma angle in radians.
 
     """
-    assert_unit_vector(z_vector, " In compute_gamma()")
+    assert_unit_vector(x_vector, " In compute_gamma()")
     assert_unit_vector(y_vector, " In compute_gamma()")
 
-    assert_not_aligned_with_z(z_vector, " In compute_gamma()")
+    x1, x2, x3 = x_vector[0], x_vector[1], x_vector[2]
+    y1, y2, y3 = y_vector[0], y_vector[1], y_vector[2]
+
+    if np.isclose(y3, 0):
+        raise ValueError("y3 must not be 0 in compute_gamma(). alpha and gamma are confounded, beta = 0")
+    
 
     # formula from https://en.wikipedia.org/wiki/Euler_angles#Proper_Euler_angles
-    gamma = np.arccos(y_vector[2]/np.sqrt(1-z_vector[2]**2))
-
+    
+    gamma = np.arctan2(x3, y3)
     return gamma
 
 def compute_pitch(vec: np.ndarray) -> float:
