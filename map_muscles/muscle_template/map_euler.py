@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 np.random.seed(0)
 import numpy.linalg as linalg
-import scipy.spatial as spatial
+from scipy.spatial.transform import Rotation as Rot
 import open3d as o3d
 import matplotlib.pyplot as plt
 
@@ -17,6 +17,9 @@ import map_muscles.muscle_template.fibers_object as fo
 
 # Using Euler angles: https://en.wikipedia.org/wiki/Euler_angles#Classic_Euler_angles
 
+R, G, B = np.array([1,0,0]), np.array([0,1,0]), np.array([0,0,1])
+K, W = np.array([0,0,0]), np.array([1,1,1])
+
 def assert_unit_vector(vector: np.ndarray, string=None):
     if not np.isclose(linalg.norm(vector), 1):
         raise AssertionError(f"Vector must be a unit vector. Got {vector}. {string}")
@@ -25,7 +28,7 @@ def assert_not_aligned_with_z(vector: np.ndarray, string=None):
     if np.allclose([vector[0], vector[1]],  0):
         raise AssertionError(f"Vector must not be aligned with the z-axis. {string}")
 
-def compute_alpha(z_vector: np.ndarray) -> float:
+def compute_alpha(z_vector: np.ndarray, print_warning=True, raise_warning=False) -> float:
     """
     Compute the alpha angle of a vector in 3D space. 
     Assuming the vector was aligned with the z-axis before rotation.
@@ -38,23 +41,28 @@ def compute_alpha(z_vector: np.ndarray) -> float:
 
     """
     assert_unit_vector(z_vector, " In compute_alpha()")
-    assert_not_aligned_with_z(z_vector, " In compute_alpha()")
     # formula from https://en.wikipedia.org/wiki/Euler_angles#Proper_Euler_angles
     z1, z2, z3 = z_vector[0], z_vector[1], z_vector[2]
 
-    equa = -z2/np.sqrt(1-z3**2)
-    
-    if np.isclose(equa, 1, atol=1e-07):
-        alpha = 0
-    elif np.isclose(equa, -1, atol=1e-07):
-        equa = -1
-        alpha = np.pi
-    #else:
-    #    alpha = np.arccos(-z2/np.sqrt(1-z3**2))
+    if np.isclose(np.abs(z3), 1, atol=1e-07):
+        if z3 > 0:
+            alpha = 0
+        else:
+            alpha = np.pi
 
-    #if z1 < 0:
-    #    alpha = 2*np.pi - alpha
-    alpha = np.arctan2(z1, -z2)
+        warning_str = "In compute_alpha(): If z3 is 1 or -1, beta=0 or pi, Alpha is confounded with Gamma. Returns alpha=0."
+        if print_warning: print(warning_str)
+        if raise_warning: raise Warning(warning_str)    
+    else:
+        equa = -z2/np.sqrt(1-z3**2)
+        
+        if np.isclose(equa, 1, atol=1e-07):
+            alpha = 0
+        elif np.isclose(equa, -1, atol=1e-07):
+            equa = -1
+            alpha = np.pi
+
+        alpha = np.arctan2(z1, -z2)
 
     return alpha
 
@@ -76,49 +84,42 @@ def compute_beta(z_vector: np.ndarray) -> float:
 
     return beta
 
-def compute_gamma(x_vector:np.ndarray, y_vector:np.ndarray) -> float:
+def compute_gamma(x_vector:np.ndarray, y_vector:np.ndarray, print_warning=True, raise_warning=False) -> float:
     """
     Compute the gamma angle of a vector in 3D space. 
-    Assuming the vector was aligned with the z-axis before rotation.
+    Assuming the vectos were aligned with the x and y axes before rotation.
 
     Parameters:
-    z_vector (np.ndarray): The input vector in the form of a numpy array with shape (3,).
+    x_vector (np.ndarray): The input vector in the form of a numpy array with shape (3,). Rotated x-axis.
+    y_vector (np.ndarray): The input vector in the form of a numpy array with shape (3,). Rotated y-axis.
 
     Returns:
     float: The gamma angle in radians.
+
+    Raises:
+    ValueError: If y3 is close to 0, indicating that alpha and gamma are confounded and beta is 0.
 
     """
     assert_unit_vector(x_vector, " In compute_gamma()")
     assert_unit_vector(y_vector, " In compute_gamma()")
 
-    x1, x2, x3 = x_vector[0], x_vector[1], x_vector[2]
-    y1, y2, y3 = y_vector[0], y_vector[1], y_vector[2]
+    x3 =x_vector[2]
+    y3 =y_vector[2]
 
     if np.isclose(y3, 0):
-        raise ValueError("y3 must not be 0 in compute_gamma(). alpha and gamma are confounded, beta = 0")
-    
+        warning_str = "In compute_gamma(): If y3 is 0,\
+              Beta = 0, hence, alpha and gamma angles are confounded. Returns angle between absolute x-axis given x_vector."
+        if raise_warning: raise Warning(warning_str)
+        elif print_warning: print(warning_str)
 
-    # formula from https://en.wikipedia.org/wiki/Euler_angles#Proper_Euler_angles
-    
-    gamma = np.arctan2(x3, y3)
+        gamma = np.arctan2(x_vector[1], x_vector[0])
+
+    else:
+        # formula from https://en.wikipedia.org/wiki/Euler_angles#Proper_Euler_angles
+        gamma = np.arctan2(x3, y3)
     return gamma
 
-def compute_pitch(vec: np.ndarray) -> float:
-    """
-    Compute the pitch angle of a vector in 3D space.
-
-    Parameters:
-    vec (np.ndarray): The input vector in the form of a numpy array with shape (3,).
-
-    Returns:
-    float: The pitch angle in radians.
-
-    """
-    pitch = np.arctan2(vec[2], vec[0])
-
-    return pitch
-
-def compute_vector_from_points(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
+def compute_normal_vector_from_points(p1: np.ndarray, p2: np.ndarray) -> np.ndarray:
     vec = p2 - p1
     vec = vec / linalg.norm(vec)
     return vec
@@ -176,34 +177,36 @@ class Muscle():
 
     name: str # Name of the muscle
 
-    yaw: float # Yaw of the muscle to absolute coordinates
-
-    pitch: float # Pitch of the muscle to absolute coordinates
-
-    roll: float # Roll of the muscle around the muscle axis
-
     axis_points: np.ndarray # Axis of the muscle, represented by two points, shape: (2, 3)
 
-    axis_vector: np.ndarray # Vector representing the axis of the muscle, shape: (3,)
+    alpha: float # Alpha angle of the muscle, in radians
+
+    beta: float # Beta angle of the muscle, in radians
+
+    gamma: float # Gamma angle of the muscle, in radians
+
+    x_vector: np.ndarray # x-axis of the relative coordinate system of the muscle
+
+    y_vector: np.ndarray # y-axis of the relative coordinate system of the muscle
+
+    z_vector: np.ndarray # z-axis of the relative coordinate system of the muscle. 
+    #Also axis vector. The muscle axis is assumed to be the z-axis of the relative coordinate system.
 
     pcd: o3d.geometry.PointCloud # Open3D point cloud object for visualization
 
-    def __init__(self, points: np.ndarray, name:str,  axis_points:np.ndarray=None, roll:float=None):
+    def __init__(self, points: np.ndarray, name:str=None,  axis_points:np.ndarray=None, gamma:float=0):
         self.points = points
         self.name = name
+        self.pcd = None
 
         if np.any(axis_points, None):
-            self.set_axis_points(axis_points, compute_dependend_attributes=True)
+            self.set_axis_points(axis_points, gamma=gamma, compute_dependend_attributes=True)
 
         else:
             self.axis_points = None
-            self.axis_vector = None
-            self.yaw = None
-            self.pitch = None
-
-        self.roll = roll
-        self.pcd = None
-
+            self.set_xyz_vectors_to_None()
+            self.set_angles_to_None()
+            
     @classmethod
     def from_array_file(cls, file_path: Path, name=None):
         """
@@ -223,37 +226,6 @@ class Muscle():
             name = file_path.stem 
 
         return cls(points, name)
-
-    def compute_axis_vector(self) -> np.ndarray:
-        return compute_vector_from_points(self.axis_points[0], self.axis_points[1])
-    
-    def compute_self_yaw(self) -> float:
-        return compute_yaw(self.axis_vector)
-        
-    def compute_self_pitch(self) -> float:
-        return compute_pitch(self.axis_vector)
-    
-    def compute_set_yaw_pitch(self):
-        self.yaw = self.compute_self_yaw()
-        self.pitch = self.compute_self_pitch()
-  
-    def set_axis_points(self, axis_points: np.ndarray, compute_dependend_attributes=True):
-        self.axis_points = axis_points
-
-        if compute_dependend_attributes:
-            self.axis_vector = self.compute_axis_vector()
-            self.compute_set_yaw_pitch()
-
-    def get_axis_centre(self) -> np.ndarray:
-        """
-        Calculate the center point of the axis.
-
-        Returns:
-            np.ndarray: The center point of the axis.
-        """
-        assert self.axis_points is not None,\
-              "Axis points must be set before getting the center."
-        return np.mean(self.axis_points, axis=0)
 
     def translate(self, translation: np.ndarray, new_name=None):
         translated_points = self.points + translation
@@ -291,7 +263,7 @@ class Muscle():
         translated_points = self.points - ref_point
         
         # rotation
-        rotation = spatial.transform.Rotation.from_rotvec(rotvec * theta)
+        rotation = R.from_rotvec(rotvec * theta)
         rotated_points = rotation.apply(translated_points)
         # translation back
         rotated_points = rotated_points + ref_point
@@ -307,52 +279,6 @@ class Muscle():
             name = self.name + "_rotated"
 
         return Muscle(rotated_points, name=name, axis_points=rotated_axis_points)
-    
-    def roll_points(self, theta:float):
-        rotational_axis = self.axis_vector
-        rotated_muscle = self.rotate(rotational_axis, theta)
-
-        return rotated_muscle
-        
-    def init_pcd(self):
-        if self.pcd is not None:
-            return
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(self.points)
-        self.pcd = pcd
-
-    def paint_uniform_color(self, color: np.ndarray):
-        """
-        Sets the color of the point cloud data (PCD).
-
-        Parameters:
-        color (np.ndarray): (r,g,b), the color to be applied to the PCD,
-        values ranging between 0 and 1.
-
-        Returns:
-        None
-        """
-        self.init_pcd()
-        self.pcd.paint_uniform_color(color)
-
-    def draw_points(self, vis: o3d.visualization.Visualizer, color: np.ndarray = np.array([0,0,0])):
-        self.init_pcd()
-        self.pcd.paint_uniform_color(color)
-        vis.add_geometry(self.pcd)
-
-    def draw_axis(self, vis: o3d.visualization.Visualizer, length=1000, color: np.ndarray = np.array([1,0,0])):
-        assert self.axis_points is not None, "Axis points must be et before drawing axis."
-
-        center = self.get_axis_centre()
-
-        axis = generate_line(center, self.axis_vector, length)
-        axis.paint_uniform_color(color)
-        
-        vis.add_geometry(axis)
-
-    def draw_default(self, vis: o3d.visualization.Visualizer):
-        self.draw_points(vis)
-        self.draw_axis(vis)
 
     def project_points_on_xy_plane(self, remove_z_axis=False):
 
@@ -362,20 +288,6 @@ class Muscle():
             return points
         else:
             return np.hstack((points, np.zeros((points.shape[0], 1))))
-    
-    def get_map2d(self):
-        return IndividualMap2d(
-            self.project_points_on_xy_plane(remove_z_axis=True), 
-            axis_points=self.axis_points,
-            name=self.name
-            )
-
-    def get_points(self):
-        return self.points
-    
-    def get_axis_points(self):
-        return self.axis_points
-
     def centered_on_axis_point(self):
         return self.translate(-self.axis_points[0])
     
@@ -401,6 +313,223 @@ class Muscle():
             scaled_axis_points = scaled_axis_points + self.axis_points[0]
 
             return Muscle(scaled_points, name=self.name, axis_points=scaled_axis_points, roll=self.roll)
+    def generate_map2d(self):
+        return IndividualMap2d(
+            self.project_points_on_xy_plane(remove_z_axis=True), 
+            axis_points=self.axis_points,
+            name=self.name
+            )
+    
+    # Getters
+    def get_points(self):
+        return self.points
+    
+    def get_name(self):
+        return self.name
+    
+    def get_axis_points(self):
+        return self.axis_points
+    
+    def get_x_vector(self):
+        return self.x_vector
+    
+    def get_y_vector(self):
+        return self.y_vector
+    
+    def get_z_vector(self):
+        return self.z_vector
+    
+    def get_alpha(self):
+        return self.alpha
+    
+    def get_beta(self):
+        return self.beta
+    
+    def get_gamma(self):
+        return self.gamma
+    
+    def get_pcd(self):
+        assert self.pcd is not None, "Point cloud data not initialized."
+        return self.pcd
+
+    
+    # Setters / Initializers
+      
+    def set_axis_points(self, axis_points: np.ndarray, gamma=0, compute_dependend_attributes=True):
+        self.axis_points = axis_points
+
+        if compute_dependend_attributes:
+            self.init_z_vector()
+            self.init_aplha()
+            self.init_beta()
+            self.init_default_gamma_and_x_y_vectors(gamma=gamma)
+
+    def set_name(self, name: str):
+        self.name = name
+
+    def set_xyz_vectors_to_None(self):
+        self.x_vector = None
+        self.y_vector = None
+        self.z_vector = None
+
+    def set_angles_to_None(self):
+        self.alpha = None
+        self.beta = None
+        self.gamma = None
+
+    def init_z_vector(self):
+        self.assert_axis_points("In init_z_vector()")
+        self.z_vector= self.compute_z_vector()
+
+    def init_aplha(self):
+        self.assert_z_vector("In init_alpha()")
+        self.alpha = compute_alpha(self.z_vector)
+
+    def init_beta(self):
+        self.assert_z_vector("In init_beta()")
+        self.beta = compute_beta(self.z_vector)
+
+    def init_gamma(self):
+        self.assert_x_vector("In init_gamma()")
+        self.assert_y_vector("In init_gamma()")
+        self.gamma = compute_gamma(self.x_vector, self.y_vector)
+
+    def init_default_gamma_and_x_y_vectors(self, gamma=0):
+        self.assert_alpha("In init_default_gamma_and_x_y_vectors()")
+        self.assert_beta("In init_default_gamma_and_x_y_vectors()")
+        self.assert_z_vector("In init_default_gamma_and_x_y_vectors()")
+
+        self.gamma = gamma
+
+        r = Rot.from_euler('ZXZ', [self.alpha, self.beta, self.gamma])
+        self.x_vector = r.apply(np.array([1,0,0]))
+        self.y_vector = r.apply(np.array([0,1,0]))
+                    
+    def init_pcd(self):
+        if self.pcd is not None:
+            return
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(self.points)
+        self.pcd = pcd
+
+
+    # Computations
+
+    def compute_z_vector(self) -> np.ndarray:
+        z_vec = compute_normal_vector_from_points(self.axis_points[0], self.axis_points[1])
+        return z_vec
+    
+    def compute_angles_axis_vector(self):
+        self.alpha = compute_alpha(self.axis_vector)
+        self.beta = compute_beta(self.axis_vector)
+        self.gamma = compute_gamma(self.x_vector, self.y_vector)
+
+    def compute_axis_centre(self) -> np.ndarray:
+        """
+        Calculate the center point of the axis.
+
+        Returns:
+            np.ndarray: The center point of the axis.
+        """
+        assert self.axis_points is not None,\
+              "Axis points must be set before getting the center."
+        return np.mean(self.axis_points, axis=0)
+
+
+    # Asserters
+
+    def assert_axis_points(self, string=None):
+        if self.axis_points is None:
+            raise AssertionError("Axis points must be set. " + string)
+            
+    def assert_z_vector(self, string=None):
+        if self.z_vector is None:
+            raise AssertionError("z vector must be set. " + string)
+
+    def assert_x_vector(self, string=None):
+        if self.x_vector is None:
+            raise AssertionError("x vector must be set. " + string)
+    
+    def assert_y_vector(self, string=None):
+        if self.y_vector is None:
+            raise AssertionError("y vector must be set. " + string)
+        
+    def assert_xyz_vectors(self, string=None):
+        self.assert_x_vector(string)
+        self.assert_y_vector(string)
+        self.assert_z_vector(string)
+        
+    def assert_alpha(self, string=None):
+        if self.alpha is None:
+            raise AssertionError("Alpha must be set. " + string)
+        
+    def assert_beta(self, string=None):
+        if self.beta is None:
+            raise AssertionError("Beta must be set. " + string)
+        
+    def assert_gamma(self, string=None):
+        if self.gamma is None:
+            raise AssertionError("Gamma must be set. " + string)
+        
+    # Open3d Visualization
+    def draw_points(self, vis: o3d.visualization.Visualizer, color: np.ndarray = K):
+        self.init_pcd()
+        self.pcd.paint_uniform_color(color)
+        vis.add_geometry(self.pcd)
+
+    def draw_axis(self, vis: o3d.visualization.Visualizer, length=2000, color: np.ndarray = K):
+        self.assert_axis_points("In draw_axis()")
+
+        center = self.get_axis_centre()
+
+        axis = generate_line(center, self.axis_vector, length)
+        axis.paint_uniform_color(color)
+        
+        vis.add_geometry(axis)
+
+    def draw_xyz_vectors(self, vis: o3d.visualization.Visualizer, length=1000, colors= [G, B, R]):
+        self.assert_xyz_vectors("In draw_xyz_vectors()")
+
+        center = self.get_axis_centre()
+
+        x_axis = generate_line(center, self.x_vector, length)
+        x_axis.paint_uniform_color(colors[0])
+        
+        y_axis = generate_line(center, self.y_vector, length)
+        y_axis.paint_uniform_color(colors[1])
+
+        z_axis = generate_line(center, self.z_vector, length)
+        z_axis.paint_uniform_color(colors[2])
+
+        vis.add_geometry(x_axis)
+        vis.add_geometry(y_axis)
+        vis.add_geometry(z_axis)
+
+    def draw_default(self, vis: o3d.visualization.Visualizer):
+        self.draw_points(vis)
+        self.draw_axis(vis)
+
+    def paint_uniform_color(self, color: np.ndarray):
+        """
+        Sets the color of the point cloud data (PCD).
+
+        Parameters:
+        color (np.ndarray): (r,g,b), the color to be applied to the PCD,
+        values ranging between 0 and 1.
+
+        Returns:
+        None
+        """
+        self.init_pcd()
+        self.pcd.paint_uniform_color(color)
+
+        
+
+        
+
+
+
+
     
 class MuscleMap():
     
