@@ -3,10 +3,12 @@ add_root()
 
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+import open3d as o3d
 
 
 
 import map_muscles.muscle_template.map_euler as mp
+import map_muscles.path_utils as pu
 
 pi = np.pi
 
@@ -171,14 +173,15 @@ def test_compute_gamma():
                 else:
                     assert_gamma(xr, yr, expected)
 
+def assert_none(*args):
+    for arg in args:
+        assert arg is None, f"Expected None, got {arg}"
+
 def test_init_Muscle():
     points = np.array([[0,0,0], [1,0,0], [1,1,0], [0,1,0]])
     muscle = mp.Muscle(points)
 
-    def assert_none(*args):
-        for arg in args:
-            assert arg is None, f"Expected None, got {arg}"
-
+ 
     nones = [
         muscle.get_name(),
         muscle.get_axis_points(),
@@ -231,18 +234,106 @@ def test_set_axis_points_and_dependant_attributes(delta=1e-6+3.7):
         assert np.allclose(rot.apply([1,0,0]), xr), f"Expected x = {rot.apply([1,0,0])}, got {xr}"
         assert np.allclose(rot.apply([0,1,0]), yr), f"Expected y = {rot.apply([0,1,0])}, got {yr}"
 
+def test_load_from_array_file():
+    dir_path = pu.get_basic_map_dir()
+    file_path = list(dir_path.glob("*.npy"))[0]
+
+    muscle = mp.Muscle.from_array_file(file_path)
+
+    nones = [
+        muscle.get_axis_points(),
+        muscle.get_alpha(),
+        muscle.get_beta(),
+        muscle.get_gamma(),
+        muscle.get_x_vector(),
+        muscle.get_y_vector(),
+        muscle.get_z_vector(),
+    ]
+
+    assert_none(*nones)
+
+def get_muscle(idx=0):
+    dir_path = pu.get_basic_map_dir()
+    file_path = list(dir_path.glob("*.npy"))[idx]
+
+    return mp.Muscle.from_array_file(file_path)
+
+def add_coor_frame(vis, origin, size=200):
+
+    frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=size, origin=origin)
+    
+    vis.add_geometry(frame)
+def generate_xy_plane_points(dim:int, n:int, z=0, center=(0,0)):
+    x = np.linspace(-dim, dim, n) + center[0]
+    y = np.linspace(-dim, dim, n) + center[1]
+    
+    xx, yy = np.meshgrid(x, y)
+
+    zz = np.ones_like(xx)*z
+
+    points = np.stack([xx, yy, zz], axis=-1).reshape(-1,3)
+
+    return points
+
+def add_pcd_xy_plane(vis, dim:int, n:int, z=0, center=(0,0)):
+    points = generate_xy_plane_points(dim, n, z, center)
+
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(points)
+
+    vis.add_geometry(pcd)
 
 
+def test_muscle_visualization():
+
+    m = get_muscle()
+    m.init_default_axis_points()
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    m.draw_points(vis)
+    m.draw_axis(vis)
+    m.draw_xyz_vectors(vis)
+
+    center = m.get_axis_points()[0]
+
+    add_coor_frame(vis, center, size=200)
+
+    add_pcd_xy_plane(vis, 1000, 100, z=center[2], center=(center[0], center[1]))
+
+    vis.run(); vis.destroy_window()
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    m.draw_default(vis)
+
+    vis.run(); vis.destroy_window()
+
+
+
+
+
+
+
+
+    
+
+    
 
 
 if __name__ == '__main__':
-    test_compute_alpha()
-    test_compute_beta()
-    test_compute_gamma()
+    #test_compute_alpha()
+    #test_compute_beta()
+    #test_compute_gamma()
 
-    test_init_Muscle()
-    test_set_axis_points_and_dependant_attributes()
+    #test_init_Muscle()
+    #test_set_axis_points_and_dependant_attributes()
+    #test_load_from_array_file()
+
+    test_muscle_visualization()
     
-    print("test_map_euler.py: All tests passed!")
+    print("All tests passed! (test_map_euler.py)")
 
     
