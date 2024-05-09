@@ -16,7 +16,7 @@ import map_muscles.muscle_template.fibers_object as fo
 
 
 # Using Euler angles: https://en.wikipedia.org/wiki/Euler_angles#Classic_Euler_angles
-
+pi = np.pi
 R, G, B = np.array([1,0,0]), np.array([0,1,0]), np.array([0,0,1])
 K, W = np.array([0,0,0]), np.array([1,1,1])
 
@@ -27,6 +27,13 @@ def assert_unit_vector(vector: np.ndarray, string=None):
 def assert_not_aligned_with_z(vector: np.ndarray, string=None):
     if np.allclose([vector[0], vector[1]],  0):
         raise AssertionError(f"Vector must not be aligned with the z-axis. {string}")
+
+def assert_angle(truth, angle, tol=1e-7, assert_str=None):
+    assert np.isclose(truth, angle, atol=tol)\
+        or np.isclose(truth, angle%(2*pi), atol=tol)\
+        or np.isclose(truth%(2*pi), angle%(2*pi), atol=tol)\
+        or np.isclose(truth, angle+2*pi, atol=tol)\
+        or np.isclose(truth, angle-2*pi, atol=tol), assert_str
 
 def compute_alpha(z_vector: np.ndarray, print_warning=True, raise_warning=False) -> float:
     """
@@ -80,7 +87,16 @@ def compute_beta(z_vector: np.ndarray) -> float:
     """
     assert_unit_vector(z_vector, " In compute_beta()")
     # formula from https://en.wikipedia.org/wiki/Euler_angles#Proper_Euler_angles
-    beta = np.arccos(z_vector[2])
+
+    z3 = z_vector[2]
+
+    if np.isclose(z3, 1, atol=1e-07):
+        beta = 0
+
+    elif np.isclose(z3, -1, atol=1e-07):
+        beta = np.pi
+    else:
+        beta = np.arccos(z_vector[2])
 
     return beta
 
@@ -238,7 +254,7 @@ class Muscle():
     
     # Rotation: rotation occurs around the first axis point
 
-    def reset_rotation(self, raise_assertions=False):
+    def reset_rotation(self, print_warning=False, raise_assertions=False, translate_back=True):
         """
         Resets the rotation of the muscle (alpha=beta=gamma = 0).
 
@@ -265,9 +281,9 @@ class Muscle():
         if raise_assertions:
             rx, ry, rz = r.apply(x), r.apply(y), r.apply(z)
 
-            ralpha = compute_alpha(rz)
+            ralpha = compute_alpha(rz, print_warning)
             rbeta = compute_beta(rz)
-            rgamma = compute_gamma(rx, ry)
+            rgamma = compute_gamma(rx, ry, print_warning)
 
             assert np.isclose(ralpha, 0), f"Alpha not 0 after reset_rotation. Got {ralpha}."
             assert np.isclose(rbeta, 0), f"Beta not 0 after reset_rotation. Got {rbeta}."
@@ -279,19 +295,87 @@ class Muscle():
 
 
         # translate back
-        r_points = r_points + self.axis_points[0]
-        r_axis_points = r_axis_points + self.axis_points[0]
+        if translate_back:
+            r_points = r_points + self.axis_points[0]
+            r_axis_points = r_axis_points + self.axis_points[0]
 
         return Muscle(r_points, name=self.name, axis_points=r_axis_points, gamma=0)
 
+    def rotate_to_angles(self, angles: np.ndarray, raise_assertions=False, translate_back=True, print_warning=False, print_debug_info=False):
+        """
+        Rotate the muscle to the specified angles.
 
+        Args:
+            angles (np.ndarray): Array of three angles [alpha, beta, gamma] in radians.
+            raise_assertions (bool, optional): Whether to raise assertions to check the correctness of the rotation. Defaults to False.
+            translate_back (bool, optional): Whether to translate the muscle back to its original position after rotation. Defaults to True.
 
+        Returns:
+            Muscle: The rotated muscle.
 
+        Raises:
+            AssertionError: If raise_assertions is True and the resulting angles after rotation do not match the specified angles.
 
+        """
+        rm = self.reset_rotation(translate_back=False, raise_assertions=True)
 
+        r = Rot.from_euler('ZXZ', angles)
 
+        rpoints = r.apply(rm.get_points())
+        raxis = r.apply(rm.get_axis_points())
 
+        if raise_assertions:
+            x, y, z = np.array([1,0,0]), np.array([0,1,0]), np.array([0,0,1])
+            rx, ry, rz = r.apply(x), r.apply(y), r.apply(z)
 
+            axis_vector_expecte_str = f'Expected axis after rotation vector to be rx: {rx}, ry: {ry}, rz: {rz}'\
+            + '\n' + f'Check if standard unit vector basis: reset_vectors = {rm.get_vectors()}'
+
+            alpha, beta, gamma = angles
+            
+            ralpha = compute_alpha(rz, print_warning)
+            rbeta = compute_beta(rz)
+            rgamma = compute_gamma(rx, ry, print_warning)
+
+            angles_expected_str = f'Expected angles to be alpha: {alpha}, beta: {beta}, gamma: {gamma} but got {ralpha, rbeta, rgamma}, '\
+            + '\n'+ f'computed from rotated unit vectors: rx: {rx}, ry: {ry}, rz: {rz}'
+
+            if print_debug_info:
+                print(f'alpha: {alpha}', f'beta: {beta}', f'gamma: {gamma}', \
+                       f'After rotation: alpha: {ralpha}, beta: {rbeta}, gamma: {rgamma}')
+            
+            added_str = '\n' + axis_vector_expecte_str + '\n' + angles_expected_str
+
+            assert_alpha_str = f"Alpha not {alpha} after rotate_to_angles(). Got {ralpha}." + added_str
+            assert_gamma_str = f"Gamma not {gamma} after rotate_to_angles(). Got {rgamma}." + added_str
+            
+            if np.isclose(beta, 0) or np.isclose(beta, pi):
+                assert_angle(ralpha, 0, assert_str=assert_alpha_str)
+                assert_angle(rgamma, gamma+alpha, assert_str=assert_gamma_str)
+            else: 
+                assert_angle(ralpha, alpha, assert_str=assert_alpha_str)
+                assert_angle(rgamma, gamma, assert_str=assert_gamma_str)
+
+            assert np.isclose(rbeta, beta), f"Beta not {beta} after rotate_to_angles(). Got beta={rbeta}."\
+            + added_str
+            
+
+            
+
+        if translate_back:
+            axis_points = self.get_axis_points()[0]
+            rpoints = rpoints + axis_points
+            raxis = raxis + axis_points
+
+        # if confounded alpha and gamma (beta = 0 or pi), set gamma to alpha + gamma, alpha = 0
+
+        new_gamma = angles[2]
+        if np.isclose(angles[1], 0):
+            new_gamma = angles[2] + angles[0]
+        if np.isclose(angles[1], pi):
+            new_gamma = angles[2] - angles[0]
+        
+        return Muscle(rpoints, name=self.name, axis_points=raxis, gamma=new_gamma)
 
     def project_points_on_xy_plane(self, remove_z_axis=False):
 
@@ -413,9 +497,9 @@ class Muscle():
         self.assert_axis_points("In init_z_vector()")
         self.z_vector= self.compute_z_vector()
 
-    def init_aplha_from_z_vector(self):
+    def init_aplha_from_z_vector(self, print_warning=False, raise_warning=False):
         self.assert_z_vector("In init_alpha()")
-        self.alpha = compute_alpha(self.z_vector)
+        self.alpha = compute_alpha(self.z_vector, print_warning, raise_warning)
 
     def init_beta_from_z_vector(self):
         self.assert_z_vector("In init_beta()")
