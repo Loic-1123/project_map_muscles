@@ -1,6 +1,11 @@
 from _root_path import add_root, get_root_path
 add_root()
 
+
+"""
+This file was used to explore the muscle state from the xray data and report the findings.
+"""
+
 import pandas as pd
 from caveclient import CAVEclient
 from pathlib import Path
@@ -21,7 +26,6 @@ muscles = client.state.get_state_json(5920404218576896)
 
 # save the state to a file
 save_path = Path(get_root_path()) / 'map_muscles' / 'data' / 'Xray' / 'muscles_state.json'
-
 os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
 print('Saving state to:', save_path)
@@ -32,7 +36,6 @@ print('State saved')
 
 
 # exploring muscle state
-
 type(muscles) # <class 'dict'>
 muscles.keys() 
 """
@@ -95,8 +98,10 @@ len(layer_sources) # 81
 
 #333 START layer sources str 333#
 layer_sources_str = [layer['source'] for layer in muscles['layers'] if type(layer['source']) == str]
-# 2: ['precomputed://gs://blanke-ramdya-flyct/PSI-synchrotron/Dmel_white_stitched-v1.jpeg.ng', 
-#'precomputed://gs://blanke-ramdya-flyct/PSI-synchrotron/Dmel_white_stitched-v1.jpeg.ng/meshes']
+"""
+2: ['precomputed://gs://blanke-ramdya-flyct/PSI-synchrotron/Dmel_white_stitched-v1.jpeg.ng', 
+'precomputed://gs://blanke-ramdya-flyct/PSI-synchrotron/Dmel_white_stitched-v1.jpeg.ng/meshes']
+"""
 #333 END layer str 333#
 
 #333 START layer sources dict 333#
