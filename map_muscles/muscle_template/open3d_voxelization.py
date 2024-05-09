@@ -3,11 +3,12 @@ add_root()
 
 import numpy as np
 import open3d as o3d
+import matplotlib.pyplot as plt
+import pandas as pd
+from pathlib import Path
 
 import map_muscles.muscle_template.xray_utils as xu
-import map_muscles.muscle_template.fibers_object as fo
-import matplotlib.pyplot as plt
-from pathlib import Path
+
 
 import tqdm 
 
@@ -32,13 +33,12 @@ def get_equally_spaced_colors(n:int, cmap='hsv', rm_alpha_channel=True):
 
     return colors
 
-def basic_hull_voxel_grid(points, distance=1.0, voxel_size=1.0):
+def basic_hull_voxel_grid(points, voxel_size=1.0):
     """
     Create a voxel grid from the convex hull of the muscle.
 
     Parameters:
     - muscle (Muscle): The muscle object.
-    - distance (float): The distance between the generated segment points.
     - voxel_size (float): The size of the voxel grid.
 
     Returns:
@@ -62,13 +62,12 @@ def voxel_grid_to_pcd(voxelgrid:o3d.geometry.VoxelGrid):
 
     return pcd
 
-def muscles_hulls_pcds(muscles:list, color=True, distance=1.0, voxel_size=1.0):
+def muscles_hulls_pcds(muscles:list, color=True, voxel_size=1.0):
     """
     Create a list of point clouds from the convex hulls of the muscles.
 
     Parameters:
     - muscles (list): The list of muscle points.
-    - distance (float): The distance between the generated segment points.
     - voxel_size (float): The size of the voxel grid.
 
     Returns:
@@ -77,8 +76,9 @@ def muscles_hulls_pcds(muscles:list, color=True, distance=1.0, voxel_size=1.0):
 
     pcds = []
     tqdm_muscles = tqdm.tqdm(muscles, desc='Creating point clouds from muscle hulls')
-    for muscle_points in tqdm_muscles:
-        voxel_grid = basic_hull_voxel_grid(muscle_points, distance=distance, voxel_size=voxel_size)
+    for muscle in tqdm_muscles:
+        muscle_points = points_from_muscle_df(muscle)
+        voxel_grid = basic_hull_voxel_grid(muscle_points, voxel_size=voxel_size)
         pcd = voxel_grid_to_pcd(voxel_grid)
         pcds.append(pcd)
 
@@ -101,8 +101,16 @@ MUSCLE_NAMES = [
 
 ORDER_IDX = [f'id_{i}' for i in range(1, 6)]
 
+def points_from_muscle_df(muscle:pd.DataFrame):
+
+    pointsA = muscle['pointA'].to_numpy()
+    pointsB = muscle['pointB'].to_numpy()
+    points = np.concatenate((np.array(pointsA), np.array(pointsB)), axis=0)
+    points = np.array([eval(point) for point in points])
+    return points
+
 def generate_and_save_3d_muscles_map(
-    dir_path: Path, root_name:str, muscles:list, distance=1.0, voxel_size=1.0, 
+    dir_path: Path, root_name:str, muscles:list, voxel_size=1.0, 
     muscle_names:list=MUSCLE_NAMES, idx=ORDER_IDX
     ):
     
@@ -111,15 +119,10 @@ def generate_and_save_3d_muscles_map(
     muscles_points = []
 
     for muscle in muscles:
-        pointsA = muscle['pointA'].to_numpy()
-        pointsB = muscle['pointB'].to_numpy()
-        points = np.concatenate((np.array(pointsA), np.array(pointsB)), axis=0)
-        points = np.array([eval(point) for point in points])
-        print(points)
-        print(points.shape)
+        points = points_from_muscle_df(muscle)
         muscles_points.append(points)
     
-    pcds = muscles_hulls_pcds(muscles_points, distance=distance, voxel_size=voxel_size)
+    pcds = muscles_hulls_pcds(muscles_points, voxel_size=voxel_size)
 
     for pcds, muscle_name, indice in zip(pcds, muscle_names, idx):
         file_name = f'{indice}_{root_name}_{muscle_name}'
@@ -181,16 +184,11 @@ if __name__ == "__main__":
     save_dir_path = data_dir_path / dir_name
     save_dir_path.mkdir(exist_ok=True, parents=True)
 
-    root_name = 'basic_d1.0_v2.0'
+    root_name = 'basic_vsize_1.0'
 
-    generate_and_save_3d_muscles_map(save_dir_path, root_name,muscles=df, distance=1.0, voxel_size=1.0)
+    generate_and_save_3d_muscles_map(save_dir_path, root_name,muscles=df, voxel_size=1.0)
 
     pcds = load_muscles_map_pcds(save_dir_path)
-    print(type(pcds))
-    print(len(pcds))
-    print(pcds)
-
-    print(type(pcds[0]))
 
     pcds = color_pcds(pcds)
 
