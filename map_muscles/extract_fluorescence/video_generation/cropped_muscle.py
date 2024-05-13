@@ -43,7 +43,7 @@ def write_cropped_muscle_frame(
         kin_min_id, kin_to_muscle_div_factor,
         muscle_frames, muscle_min_id, discrepancy,
         video_writer,
-        show_labels=False,
+        show_labels=False, size_cropped=100,
     ):
 
     fig, ax = plt.subplots(1, 1, figsize=figsize)
@@ -75,14 +75,13 @@ def write_cropped_muscle_frame(
 
     if show_labels:
         pts = imu.get_points_coor_for_cropped_img(muscle_pts, half_width, margin)
-        ax.plot(pts[0][0], pts[0][1], 'go', label='Trochanter')
-        ax.plot(pts[1][0], pts[1][1], 'ro', label='Femur-Tibia')
+        ax.scatter(pts[0][0], pts[0][1], c='g', s=size_cropped, label='Trochanter')
+        ax.scatter(pts[1][0], pts[1][1], c='r', s=size_cropped, label='Femur-Tibia')
 
     ax.axis('off')
 
     vc.save_frame_plt_film(video_writer, fig)
     plt.close(fig)
-
 
 def write_cropped_muscle_video(
     label_start_id,
@@ -91,7 +90,7 @@ def write_cropped_muscle_video(
     kin_frames, kin_min_id, kin_to_muscle_div_factor,
     muscle_frames, muscle_min_id,
     count_factor,
-    video_name, fps, video_dir,
+    video_name, fps, output_dir,
     figsize, discrepancy, n =1,
     show_labels=False,
     ):
@@ -100,7 +99,7 @@ def write_cropped_muscle_video(
     r = range(0, length, n)
 
     print("===START: Creating video===")
-    video_writer = vc.get_video_writer(video_name, figsize, fps, video_dir=video_dir)
+    video_writer = vc.get_video_writer(video_name, figsize, fps, video_dir=output_dir)
 
     count = 0
     tqdm_r = tqdm.tqdm(r)
@@ -123,8 +122,64 @@ def write_cropped_muscle_video(
     vc.end_cv2_writing(video_writer)
     print("===END: Creating video===")
 
+def write_kin_and_cropped_kin_video(
+        kin_frames,
+        trochanter_locations, femur_tibia_locations,
+        figsize, fps, 
+        half_width, margin,
+        video_name, output_dir,
+        n=1, s=5, s_cropped=100,
+        ):
+    
+    video_writer= vc.get_video_writer(video_name, figsize, fps, video_dir=output_dir)
+
+    length = min(len(kin_frames), len(trochanter_locations))
+
+    r = range(0, length, n)
+    print("===START: Creating video===")
+    tqdm_r = tqdm.tqdm(r)
+    for i in tqdm_r:
+
+        fig, axs = plt.subplots(1, 2, figsize=figsize)
+    
+        label_id = i + label_start_id
+
+        trochanter_pts = trochanter_locations[label_id, :, 0]
+        femur_tibia_pts = femur_tibia_locations[label_id, :, 0]
+        pts = np.array([trochanter_pts, femur_tibia_pts])
+
+        img_rect = imu.draw_rectangle(pts, kin_frames[i], half_width, margin)
+        axs[0].imshow(img_rect, cmap='gray')
+
+        axs[0].scatter(trochanter_pts[0], trochanter_pts[1], s=s, c='r', label='trochanter')
+        axs[0].scatter(femur_tibia_pts[0], femur_tibia_pts[1], s=s, c='g', label='femur-tibia')    
+        
+        axs[0].set_title(f'Frame {i+kin_label_start_id}')
+
+        # cropped image 
+        rectangle = imu.get_rectangle(pts, half_width, margin)
+        cropped_img = imu.get_cropped_rectangle(kin_frames[i],rectangle)
+        axs[1].imshow(cropped_img, cmap='gray')
+        axs[1].set_title(f'Cropped frame {i+kin_label_start_id}')
+
+        # plot points on the cropped image
+        cropped_tro, cropped_ft  = imu.get_points_coor_for_cropped_img(pts, half_width, margin)
+        axs[1].scatter(cropped_tro[0], cropped_tro[1], s=s_cropped, c='r', label='trochanter')
+        axs[1].scatter(cropped_ft[0], cropped_ft[1], s=s_cropped, c='g', label='femur-tibia')
+
+        for ax in axs:
+            ax.legend()
+            ax.axis('off')
+
+        vc.save_frame_plt_film(video_writer, fig)
+
+        plt.close(fig)
+
+    vc.end_cv2_writing(video_writer)
+    print("===END: Creating video===")
+
+
 if __name__ == "__main__":
-    root_path = Path(get_root_path())
 
     filename = 'label_femur_V1.000_900_1440_kin.analysis.h5'
     sleap_folder = pu.get_sleap_dir()
@@ -162,24 +217,18 @@ if __name__ == "__main__":
         )
 
     # plot cropped femur for calibration check
-    size = 4
-    size_cropped = 100
     half_width = 30
     margin = 30
 
     figsize = (10,15)
-    factor = 100
-
-    video_dimensions = vc.get_video_dimensions(figsize)
 
     muscle_min_id = imu.get_min_id(muscle_dir_path, 'tif', id_format='{:06d}')
     muscle_frames = vc.extract_muscle_frames(muscle_dir_path, 'tif', start_index = muscle_min_id, gain=1)
 
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec to use for the video
-    video_dir = pu.get_video_dir()
+    output_dir = pu.get_video_dir()
     video_name = 'cropped_femur_muscle_fps2.mp4'
 
-    fps =2
 
     write_cropped_muscle_video(
         label_start_id,
@@ -190,15 +239,13 @@ if __name__ == "__main__":
         kin_frames, kin_min_id, 4,
         muscle_frames, muscle_min_id,
         count_factor=4,
-        video_name=video_name, fps=fps, video_dir=video_dir,
+        video_name=video_name, fps=2, output_dir=output_dir,
         figsize=figsize, discrepancy=discrepancy, n =1,
         show_labels=False,
         )
-
-    print("Video created to ", video_dir / video_name)
+    print("Video created to ", output_dir / video_name)
 
     video_name = 'cropped_femur_muscle_fps2_with_labels.mp4'
-
     write_cropped_muscle_video(
         label_start_id,
         trochanter_locations,
@@ -208,12 +255,21 @@ if __name__ == "__main__":
         kin_frames, kin_min_id, 4,
         muscle_frames, muscle_min_id,
         count_factor=4,
-        video_name=video_name, fps=fps, video_dir=video_dir,
-        figsize=figsize, discrepancy=discrepancy, n =1,
+        video_name=video_name, fps=2, output_dir=output_dir,
+        figsize=figsize, discrepancy=discrepancy, n=1,
         show_labels=True,
         )
-    
-    print("Video created to ", video_dir / video_name)
+    print("Video created to ", output_dir / video_name)
+
+    video_name = 'labelled_kin_and_cropped_kin_fps6.mp4'
+    write_kin_and_cropped_kin_video(
+        kin_frames,
+        trochanter_locations, femur_tibia_locations,
+        figsize=(15,7), fps=6,
+        half_width=30, margin=20,
+        video_name=video_name, output_dir=output_dir,
+    )
+    print("Video created to ", output_dir / video_name)
 
 
 
