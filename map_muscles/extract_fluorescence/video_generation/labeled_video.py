@@ -15,6 +15,15 @@ import map_muscles.video_converter as vc
 import map_muscles.extract_fluorescence.imaging_utils as imu
 import map_muscles.path_utils as pu
 
+"""
+This file contains functions to create videos from labelled data:
+- write_cropped_muscle_video: Create a video showing the cropped muscle images.
+- write_kin_and_cropped_kin_video: Create a video showing the kin images and the cropped kin images side by side.
+- write_cropped_femur_calibration_check_video: Create a video showing the cropped kin and muscle images side by side for calibration check.
+
+"""
+
+
 def get_sleap_location_start_id(locations, node_id=0):
     """
     Get the id in the locations array where the labelling starts.
@@ -236,9 +245,6 @@ def write_cropped_femur_calibration_check_frame(
 
     plt.close(fig)
 
-
-
-
 def write_cropped_femur_calibration_check_video(
         video_name,
         trochanter_locations, femur_tibia_locations,
@@ -328,7 +334,6 @@ if __name__ == "__main__":
     output_dir = pu.get_video_dir()
     video_name = 'cropped_femur_muscle_fps2.mp4'
 
-    """
     write_cropped_muscle_video(
         label_start_id,
         trochanter_locations,
@@ -370,7 +375,6 @@ if __name__ == "__main__":
     )
     print("Video created to ", output_dir / video_name)
 
-    """
     video_name = 'calibration_check_on_cropped_femur_fps_3.mp4'
 
     write_cropped_femur_calibration_check_video(
