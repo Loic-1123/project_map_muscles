@@ -8,9 +8,13 @@ import pandas as pd
 from pathlib import Path
 
 import map_muscles.muscle_template.xray_utils as xu
-
-
+import map_muscles.path_utils as pu
 import tqdm 
+
+"""
+This script provide functions to generate the convex hulls of muscles fibers,
+hereby creating a 3D maps muscles.
+"""
 
 def get_equally_spaced_colors(n:int, cmap='hsv', rm_alpha_channel=True):
     """
@@ -76,8 +80,7 @@ def muscles_hulls_pcds(muscles:list, color=True, voxel_size=1.0):
 
     pcds = []
     tqdm_muscles = tqdm.tqdm(muscles, desc='Creating point clouds from muscle hulls')
-    for muscle in tqdm_muscles:
-        muscle_points = points_from_muscle_df(muscle)
+    for muscle_points in tqdm_muscles:
         voxel_grid = basic_hull_voxel_grid(muscle_points, voxel_size=voxel_size)
         pcd = voxel_grid_to_pcd(voxel_grid)
         pcds.append(pcd)
@@ -113,7 +116,18 @@ def generate_and_save_3d_muscles_map(
     dir_path: Path, root_name:str, muscles:list, voxel_size=1.0, 
     muscle_names:list=MUSCLE_NAMES, idx=ORDER_IDX
     ):
-    
+    """
+    Generate and save 3D muscles map (points of convex hulls of fibers).
+
+    Args:
+        dir_path (Path): The directory path where the 3D muscles maps will be saved.
+        root_name (str): The root name for the generated files.
+        muscles (list): List of muscles (list of pd.DataFrame).
+        voxel_size (float, optional): The voxel size for voxelization. Defaults to 1.0.
+        muscle_names (list, optional): List of muscle names. Defaults to MUSCLE_NAMES.
+        idx (list, optional): List of indices. Defaults to ORDER_IDX.
+    """
+
     dir_path.mkdir(exist_ok=True, parents=True)
 
     muscles_points = []
@@ -146,7 +160,10 @@ def load_muscles_map_pcds(dir_path: Path,check_correct_nb:int=5):
         points = np.load(file_path)
         pcd.points = o3d.utility.Vector3dVector(points)
 
-    print(f'Loaded files: from {dir_path}', files)
+    print(f'Loaded files: from {dir_path}')
+
+    for file in files:
+        print(file.name)
         
     return pcds
 
@@ -171,14 +188,8 @@ def vs_pcds(pcds:list):
 
 if __name__ == "__main__":
 
-    df = xu.get_femur_muscles(remove=True)
-    #muscles = fo.Muscles.muscles_from_df(df).muscles
-
-
-    
-
-    data_dir_path = Path(get_root_path()) / 'map_muscles' / 'data' / 'muscles_maps'
-    
+    dfs = xu.get_femur_muscles(remove=True)
+    data_dir_path = pu.get_map_dir()
     dir_name='basic_map_without_fiber_segmentation'
 
     save_dir_path = data_dir_path / dir_name
@@ -186,7 +197,7 @@ if __name__ == "__main__":
 
     root_name = 'basic_vsize_1.0'
 
-    generate_and_save_3d_muscles_map(save_dir_path, root_name,muscles=df, voxel_size=1.0)
+    generate_and_save_3d_muscles_map(save_dir_path, root_name,muscles=dfs, voxel_size=1.0)
 
     pcds = load_muscles_map_pcds(save_dir_path)
 
