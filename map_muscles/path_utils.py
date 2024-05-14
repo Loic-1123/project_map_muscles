@@ -4,6 +4,11 @@ add_root()
 from pathlib import Path
 import functools
 
+"""
+This file contains utility functions to handle paths of the project (mainly directories).
+They assertain the existence of the directories and creates them if they do not exist.
+"""
+
 root_path = Path(get_root_path())
 
 map_muscles_dir = root_path / 'map_muscles'
@@ -29,64 +34,69 @@ basic_map_dir = map_dir / 'basic_map'
 
 map_matching_dir = map_dir / 'map_matching'
 
-"""
-directories = [
-    map_muscles_dir,
-    data_dir, 
-    recording_dir, 
-    img_dir1, 
-    img_dir2, 
-    video_dir,
-    xray_dir,
-    sleap_dir,
-    map_dir,
-    basic_map_dir, 
-    map_matching_dir]
-
-for directory in directories:
-    assert directory.exists(), f'Following directory does not exist: {directory}'
-"""
 def assert_directory(dir_path):
+    """
+    Asserts that the given directory path exists.
+
+    Parameters:
+    dir_path (Path): The path to the directory.
+
+    Raises:
+    AssertionError: If the directory does not exist.
+
+    """
     assert dir_path.exists(), f'Following directory does not exist: {dir_path}'
 
 def create_directory(dir_path, parents=True, exist_ok=True):
+    """
+    Create a directory at the specified path if it doesn't already exist.
 
+    Args:
+        dir_path (str or Path): The path of the directory to be created.
+        parents (bool, optional): If True, create parent directories as needed. Defaults to True.
+        exist_ok (bool, optional): If True, do not raise an exception if the directory already exists. Defaults to True.
+    """
     if not dir_path.exists():
         dir_path.mkdir(parents=parents, exist_ok=exist_ok)
         print(f'Created directory: {dir_path}')
     
-
-
-
 def assert_create_return_dir(dir_path):
+    """
+    A decorator that asserts the existence of a directory and creates it if necessary.
+    
+    Args:
+        dir_path (str): The path of the directory to be created.
+    
+    Returns:
+        function: The decorated function.
+    """
     def decorator(func):
         @functools.wraps(func)
         def wrapper(assert_dir=True, create_dir=True):
             if create_dir:
                 create_directory(dir_path)
             if assert_dir:
-             assert_directory(dir_path)
+                assert_directory(dir_path)
         
             return dir_path
         return wrapper
     return decorator
 
+@assert_create_return_dir(map_muscles_dir)
 def get_map_muscles_dir():
     """
-    Returns the directory path where the map muscles are stored.
-
-    Returns:
-        pathlib::Path : The directory path where the map muscles are stored.
+    Returns the directory path of the map_muscles project.
     """
-    return map_muscles_dir
-
+    pass
+@assert_create_return_dir(data_dir)
 def get_data_dir():
-    return data_dir
+    pass
 
+@assert_create_return_dir(recording_dir)
 def get_recording_dir():
-    return recording_dir
+    pass
 
-def get_img_dir(number='900_1440'):
+def get_img_dir(number='900_1440', create=False, assert_dir=True):
     """
     Returns the directory path for the specified image number.
 
@@ -99,39 +109,46 @@ def get_img_dir(number='900_1440'):
     Raises:
         AssertionError: If the specified path does not exist.
     """
-    if number == '900_1440':
-        return img_dir1
-    elif number == '5760-6210':
-        return img_dir2
-    else:
-        path = recording_dir / number
-        assert path.exists(), f'Following path does not exist: {path}'
-        return path
+    if number == '900_1440': path = img_dir1
+    elif number == '5760-6210': path = img_dir2
+    else: path = recording_dir / number
 
-def get_kin_dir(number='900_1440'):
+    if create: create_directory(path)
+    if assert_dir: assert_directory(path)    
+
+    return path
+
+def get_kin_dir(number='900_1440', create=False, assert_dir=True):
     path = get_img_dir(number) / 'kin'
-    assert path.exists(), f'Following path does not exist: {path}'
+    if create: create_directory(path)
+    if assert_dir: assert_directory(path)
     return path
 
-def get_muscle_dir(number='900_1440'):
+def get_muscle_dir(number='900_1440', create=False, assert_dir=True):
     path = get_img_dir(number) / 'muscle'
-    assert path.exists(), f'Following path does not exist: {path}'
+    if create: create_directory(path)
+    if assert_dir: assert_directory(path)
     return path
-    
+
+@assert_create_return_dir(video_dir)    
 def get_video_dir():
-    return video_dir
+    pass
 
+@assert_create_return_dir(xray_dir)
 def get_xray_dir():
-    return xray_dir
+    pass
 
+@assert_create_return_dir(sleap_dir)
 def get_sleap_dir():
-    return sleap_dir
+    pass
 
+@assert_create_return_dir(map_dir)
 def get_map_dir():
-    return map_dir
+    pass
 
+@assert_create_return_dir(basic_map_dir)
 def get_basic_map_dir():
-    return basic_map_dir
+    pass
 
 @assert_create_return_dir(map_matching_dir)
 def get_map_matching_dir():
