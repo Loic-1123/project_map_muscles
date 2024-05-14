@@ -265,9 +265,6 @@ def write_muscle_video(
         fps=1,
         gain=1,
         ):
-    
-    
-
     assert img_folder.exists() & img_folder.is_dir(), \
         f'img folder {img_folder} does not exist or is not a folder'
     
@@ -293,12 +290,10 @@ def write_muscle_video(
     for image in tqdm_images_paths:
         image_path = img_folder / image
         image = cv2.imread(str(image_path), -1)*gain
-        
+
         frames.append(image)
 
     print("shape: " + str(frames[0].shape))
-    # convert frames to 3 channels gray scale (might be useful)
-    #frames = [cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR) for frame in frames]
 
     frames_to_video(frames, video_file, fps)
 
