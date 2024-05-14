@@ -1,16 +1,33 @@
-from _root_path import add_root, get_root_path
+from _root_path import add_root
 add_root()
 
-from pathlib import Path
 import pandas as pd
 pd.options.mode.copy_on_write = True
 
 import map_muscles.muscle_template.xray_utils as xu
 import matplotlib.pyplot as plt
 import numpy as np
+np.random.seed(0)
 
+"""
+This script visualizes the fibers of leg muscles.
+Two visualization are shown:
+1. All fibers of the leg muscles
+2. The fibers related to the femur muscles
+"""
 
 def plot_lines(ax, lines, c):
+       """
+       Plot lines in a 3D plot.
+
+       Parameters:
+       - ax: The 3D axes object to plot on.
+       - lines: A list of lines, where each line is a pair of tuple of x, y, and z coordinates, shape(n, 2, 3) # n lines, 2 points per line, 3 coordinates per point.
+       - c: The color of the lines.
+
+       Returns:
+       None
+       """
        for line in lines:
               x, y, z = line
               ax.plot(x, y, z, color=c)
@@ -25,11 +42,31 @@ def set_xyz_labels(ax):
        ax.set_zlabel('Z')
 
 def get_shuffled_color_ids(parts):
+       """
+       Generate shuffled color IDs for each part.
+
+       Parameters:
+       parts (list): A list of parts.
+
+       Returns:
+       numpy.ndarray: An array of shuffled color IDs.
+       """
        color_ids = np.linspace(0, 1, len(parts))
        np.random.shuffle(color_ids)
        return color_ids
 
 def get_random_color_map(parts, rgb_only=False, palette=plt.cm.hsv):
+       """
+       Generate a random color map for the given parts.
+
+       Parameters:
+       parts (list): A list of parts.
+       rgb_only (bool, optional): If True, return only RGB values. Defaults to False.
+       palette (matplotlib colormap, optional): The colormap to use for generating colors. Defaults to plt.cm.hsv.
+
+       Returns:
+       numpy.ndarray: An array of colors representing the color map.
+       """
        color_ids = get_shuffled_color_ids(parts)
        colors = palette(color_ids)
 
@@ -39,10 +76,32 @@ def get_random_color_map(parts, rgb_only=False, palette=plt.cm.hsv):
        return colors
 
 def get_linear_color_map(parts, palette=plt.cm.hsv):
+       """
+       Generate a linear color map based on the number of parts.
+
+       Parameters:
+       parts (int): The number of parts to generate colors for.
+       palette (matplotlib.colors.Colormap, optional): The colormap to use for generating colors. Defaults to plt.cm.hsv.
+
+       Returns:
+       numpy.ndarray: An array of colors corresponding to each part.
+       """
        color_ids = np.linspace(0, 1, len(parts))
        return palette(color_ids)
 
 def plot_fibers(parts, colors, plot_labels=False):
+       """
+       Plot fibers in a 3D space.
+
+       Parameters:
+       - parts (list): List of dataframes representing different parts of the fibers.
+       - colors (list): List of colors corresponding to each part.
+       - plot_labels (bool): Flag indicating whether to plot labels for each part.
+
+       Returns:
+       None
+       """
+
        fig = plt.figure()
        ax = fig.add_subplot(111, projection='3d')
        set_xyz_labels(ax)
@@ -55,19 +114,8 @@ def plot_fibers(parts, colors, plot_labels=False):
               if plot_labels:
                      plot_text_label(ax, lines, part['layer_name'].iloc[0], c)
 
-red = np.array([1, 0, 0])
-
-def plot_single_muscle(ax, muscle, color=red, plot_labels=False):
-       muscle.loc[:,'line'] = muscle.apply(lambda row: xu.create_line(row['pointA'], row['pointB']), axis=1)
-       lines = muscle['line']
-       plot_lines(ax, lines, color)
-
-       if plot_labels:
-              plot_text_label(ax, lines, muscle['layer_name'].iloc[0], color)
-
 if __name__ == "__main__":
        lh = xu.get_leg(leg='LH')
-       lh.describe()
 
        layers_names = lh['layer_name'].unique()
        """
@@ -89,11 +137,9 @@ if __name__ == "__main__":
 
        plot_fibers(leg_parts, colors)
 
-       # isolate fibers related to femur: layer names containing 'Fe'
-       fe_ids = [layer for layer in layers_names if 'Fe' in layer]
-       
+       fe_ids = [layer for layer in layers_names if 'Fe' in layer]       
        """
-       ['LH TrFe', 
+       ['LH TrFe', # removed
        'LH FeTi flexor', 
        'LH FeTi anterior acc flexor', 
        'LH FeTi posterior acc flexor', 
@@ -103,15 +149,8 @@ if __name__ == "__main__":
 
        femur_fibers = xu.get_femur_muscles(remove=True)
 
-
-
        colors = get_random_color_map(femur_fibers)
 
        plot_fibers(femur_fibers, colors, plot_labels=True)
 
        plt.show()
-
-       # nb muscles related to femur
-       len(femur_fibers)
-       # 6
-
