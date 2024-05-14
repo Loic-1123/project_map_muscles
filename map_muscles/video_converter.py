@@ -1,24 +1,26 @@
-from _root_path import add_root, get_root_path
+from _root_path import add_root
 add_root()
 
 import cv2
 import os
-from pathlib import Path
 import tqdm
-import map_muscles.extract_fluorescence.imaging_utils as imu
 import numpy as np
-
 import matplotlib as mpl
 mpl.use('TkAgg')
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
-video_path = Path(get_root_path()) / 'map_muscles' / 'data' / '20240213_muscle_recording' / 'videos'
+import map_muscles.extract_fluorescence.imaging_utils as imu
+import map_muscles.path_utils as pu
 
-def get_video_dir():
-    assert video_path.exists(), f'video path {video_path} does not exist'
-    return video_path
+"""
+This file contains functions to:
+- extract frames/images from folders,
+- write video from frames
+- write video from matplotlib figures
+"""
 
 def get_fourcc(ext = 'mp4v'):
+
     return cv2.VideoWriter_fourcc(*ext)
 
 def get_video_dimensions(figsize, factor=100):
@@ -37,7 +39,7 @@ def get_video_writer(
         video_name,
         figsize,
         fps,
-        video_dir = get_video_dir(),
+        video_dir = pu.get_video_dir(),
         fourcc=get_fourcc(), 
         ):
     """Returns a cv2 VideoWriter object.
@@ -63,9 +65,6 @@ def frames_to_video(
         fps:int=1,
         fourcc=cv2.VideoWriter_fourcc(*'mp4v'),
         ):
-
-    # assert frames not empty
-    assert ... #TODO
 
     frame = frames[0]
     height, width = frame.shape
@@ -94,9 +93,30 @@ def extract_img_names(img_folder, img_extension):
     return [img for img in os.listdir(img_folder) if img.endswith(img_extension)]
 
 def extract_img_paths(img_folder, img_extension):
+    """
+    Extracts the paths of all image files in the given folder with the specified extension.
+
+    Args:
+        img_folder (str): The path to the folder containing the image files.
+        img_extension (str): The extension of the image files to be extracted.
+
+    Returns:
+        list: A list of paths to the image files.
+
+    """
     return [img_folder / img for img in os.listdir(img_folder) if img.endswith(img_extension)]
 
 def print_index_filtering(start_index, end_index):
+    """
+    Prints the index filtering applied to images.
+
+    Parameters:
+        start_index (int or None): The start index for filtering.
+        end_index (int or None): The end index for filtering.
+
+    Returns:
+        None
+    """
 
     if start_index is None and end_index is None:
         print('No index filtering applied')
@@ -108,6 +128,18 @@ def print_index_filtering(start_index, end_index):
         print(f'Filtering images with start_index: {start_index} and end_index: {end_index}')
 
 def index_filtering(images_paths, start_index, end_index):
+    """
+    Filters a list of image paths based on the start and end index.
+
+    Args:
+        images_paths (list): A list of image paths.
+        start_index (int): The start index for filtering.
+        end_index (int): The end index for filtering.
+
+    Returns:
+        list: A filtered list of image paths.
+
+    """
     if start_index:
         images_paths = [path for path in images_paths if (get_index(path) > start_index)]
     if end_index:
@@ -117,6 +149,19 @@ def index_filtering(images_paths, start_index, end_index):
     return images_paths
 
 def extract_kin_frames(kin_path, img_extension='jpg', start_index=None, end_index=None):
+    """
+    Extracts frames from a folder containing kinematic images.
+    Applies a filtering based on the start and end index, if provided.
+
+    Args:
+        kin_path (str): The path to the directory.
+        img_extension (str, optional): The image extension of the frames. Defaults to 'jpg'.
+        start_index (int, optional): The starting index of the frames to extract. Defaults to None.
+        end_index (int, optional): The ending index of the frames to extract. Defaults to None.
+
+    Returns:
+        list: A list of extracted frames.
+    """
     images_paths = extract_img_names(kin_path, img_extension)
     images_paths = index_filtering(images_paths, start_index, end_index)
     images_paths.sort(key=get_index)
@@ -126,7 +171,8 @@ def extract_kin_frames(kin_path, img_extension='jpg', start_index=None, end_inde
     nb_frames = len(images)*3
 
     print(f'Extracting {nb_frames} frames from {kin_path}')
-    for image in tqdm.tqdm(images):
+    tqdm_images = tqdm.tqdm(images)
+    for image in tqdm_images:
         frames.append(image[:,:,0])
         frames.append(image[:,:,1])
         frames.append(image[:,:,2])
@@ -134,6 +180,19 @@ def extract_kin_frames(kin_path, img_extension='jpg', start_index=None, end_inde
     return frames
 
 def extract_muscle_frames(muscle_path, img_extension='tif', start_index=None, end_index=None, gain=1):
+    """
+    Extracts muscle frames from the given directory containing muscle images.
+
+    Args:
+        muscle_path (str): The path to the directory.
+        img_extension (str, optional): The extension of the muscle images. Defaults to 'tif'.
+        start_index (int, optional): The starting index of the muscle frames to extract. Defaults to None.
+        end_index (int, optional): The ending index of the muscle frames to extract. Defaults to None.
+        gain (int, optional): The gain to apply to the extracted muscle frames. Defaults to 1.
+
+    Returns:
+        list: A list of extracted muscle frames.
+    """
     images_paths = extract_img_names(muscle_path, img_extension)
     images_paths = index_filtering(images_paths, start_index, end_index)
     images_paths.sort(key=lambda x: int(x.split('.')[0]))
@@ -144,24 +203,39 @@ def write_kin_video(
         img_folder,
         video_name,
         output_folder,
-        start_index = None,
-        end_index = None,
-        img_extension = 'jpg',
+        start_index=None,
+        end_index=None,
+        img_extension='jpg',
         fps=1
         ):
+    """
+    Writes a kinematic video from a folder of images.
 
+    Args:
+        img_folder (str or Path): Path to the folder containing the kinetic images.
+        video_name (str): Name of the output video file (without extension).
+        output_folder (str or Path): Path to the folder where the output video will be saved.
+        start_index (int, optional): Start index for filtering the images. Defaults to None.
+        end_index (int, optional): End index for filtering the images. Defaults to None.
+        img_extension (str, optional): Extension of the input image files. Defaults to 'jpg'.
+        fps (int, optional): Frames per second for the output video. Defaults to 1.
+
+    Raises:
+        AssertionError: If the input image folder or output folder does not exist or is not a folder.
+
+    """
     assert img_folder.exists() & img_folder.is_dir(), \
         f'img folder {img_folder} does not exist or is not a folder'
-    
+
     assert output_folder.exists() & output_folder.is_dir(), \
         f'output folder {output_folder} does not exist or is not a folder'
-    
+
     video = video_name + '.mp4'
     video_file = output_folder / video
 
     images_paths = [img for img in os.listdir(img_folder) if img.endswith(img_extension)]
 
-    #filter out with index
+    # filter out with index
     images_paths = index_filtering(images_paths, start_index, end_index)
     # make sure that the images are sorted
     images_paths.sort(key=get_index)
@@ -179,7 +253,7 @@ def write_kin_video(
         frames.append(image[:,:,1])
         frames.append(image[:,:,2])
 
-    frames_to_video(frames, video_file, output_folder, fps)
+    frames_to_video(frames, video_file, fps=fps)
     
 def write_muscle_video(
         img_folder,
@@ -191,6 +265,8 @@ def write_muscle_video(
         fps=1,
         gain=1,
         ):
+    
+    
 
     assert img_folder.exists() & img_folder.is_dir(), \
         f'img folder {img_folder} does not exist or is not a folder'
@@ -224,7 +300,7 @@ def write_muscle_video(
     # convert frames to 3 channels gray scale (might be useful)
     #frames = [cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR) for frame in frames]
 
-    frames_to_video(frames, video_file, output_folder, fps)
+    frames_to_video(frames, video_file, fps)
 
 def write_the_two_complete_kin_videos(
         image_folder,
@@ -233,8 +309,27 @@ def write_the_two_complete_kin_videos(
         number = '900_1440',
         number2 = '5760-6210',
         fps=1,
+    ):
 
-        ):
+    """
+    Writes a muscle video from a folder of images.
+
+    Args:
+        img_folder (Path): The path to the folder containing the images.
+        video_name (str): The name of the output video file.
+        output_folder (Path): The path to the folder where the video will be saved.
+        start_index (int, optional): The starting index of the images to include in the video. Defaults to None.
+        end_index (int, optional): The ending index of the images to include in the video. Defaults to None.
+        img_extension (str, optional): The extension of the image files. Defaults to 'tif'.
+        fps (int, optional): The frames per second of the output video. Defaults to 1.
+        gain (int, optional): The gain to apply to the images. Defaults to 1.
+
+    Raises:
+        AssertionError: If the img_folder or output_folder does not exist or is not a folder.
+
+    Returns:
+        None
+    """
     
     img_folder = image_folder / number / kin_folder
     img_folder2 = image_folder / number2 / kin_folder
@@ -252,6 +347,15 @@ def write_the_two_complete_kin_videos(
     write_kin_video(img_folder2, video_name2, output_folder, fps=fps)
 
 def save_frame_plt_film(out, fig):
+    """
+    Save (append) a frame from a matplotlib figure to a video file.
+
+    Parameters:
+    - out: cv2.VideoWriter
+        The video writer object to write the frame to.
+    - fig: matplotlib.figure.Figure
+        The matplotlib figure object containing the frame to be saved.
+    """
     canvas = FigureCanvas(fig)
     canvas.draw()
     mat = np.array(canvas.renderer._renderer)
@@ -266,23 +370,14 @@ def end_cv2_writing(out):
     """
     out.release()
     cv2.destroyAllWindows()
-    print('Video writing ended')
     
 
 
 if __name__ == "__main__":
-    root_path = Path(get_root_path())
-    image_folder = root_path / 'map_muscles' / 'data' / '20240213_muscle_recording'
-    output_folder = image_folder / 'videos'
-    output_folder.mkdir(exist_ok=True)
-    
-    kin_folder = 'kin'
-    muscle_folder = 'muscle'
 
-    number = '900_1440'
-    
-    img_kin_folder = image_folder / number / kin_folder
-    img_muscle_folder = image_folder / number / muscle_folder
+    output_folder = pu.get_video_dir()
+    img_kin_folder = pu.get_kin_dir()
+    img_muscle_folder = pu.get_muscle_dir()
     
     assert img_kin_folder.exists()
     assert img_muscle_folder.exists()
@@ -300,11 +395,12 @@ if __name__ == "__main__":
 
     kin_end_id = kin_min_index + end_sec * fps
 
-    print(kin_min_index, kin_start_id, kin_end_id)
-
     kin_fps = 20
     
-    write_kin_video(img_kin_folder, 'kin_clip', output_folder, start_index=kin_start_id, end_index=kin_end_id, fps=kin_fps)
+    write_kin_video(
+        img_kin_folder, 'kinematic_clip', output_folder,
+        start_index=kin_start_id, end_index=kin_end_id, fps=kin_fps
+        )
 
     muscle_min_id = imu.get_min_id(img_muscle_folder, 'tif', id_format='{:06d}')
 
@@ -315,16 +411,7 @@ if __name__ == "__main__":
 
     muscle_fps = kin_fps//ratio
 
-    print(muscle_min_id, start_muscle_index, end_muscle_index)
-
     write_muscle_video(img_muscle_folder, 'muscle_clip', output_folder, start_index=start_muscle_index, end_index=end_muscle_index, fps=muscle_fps, gain=1)
 
     kin_diff = kin_end_id - kin_start_id
     muscle_diff = end_muscle_index - start_muscle_index
-
-    print(kin_diff, muscle_diff)
-
- 
-
-
-
