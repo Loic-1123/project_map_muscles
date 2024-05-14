@@ -1,4 +1,4 @@
-from _root_path import add_root, get_root_path
+from _root_path import add_root
 add_root()
 
 import map_muscles.muscle_template.map as mp
@@ -7,6 +7,10 @@ import map_muscles.path_utils as pu
 import numpy as np
 import open3d as o3d
 from pathlib import Path
+
+"""
+This file contains tests for the functions in map.py.
+"""
 
 basic_muscle_name = "id_1_basic_d1.0_v1.0_LH_FeTi_flexor.pcd.npy"
 

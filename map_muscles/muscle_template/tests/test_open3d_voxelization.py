@@ -2,13 +2,16 @@ from _root_path import add_root
 add_root()
 
 import numpy as np
+np.random.seed(0)
 import open3d as o3d
 
 import map_muscles.muscle_template.xray_utils as xu
 import map_muscles.muscle_template.visualize_leg_fibers as vf
 import map_muscles.muscle_template.open3d_voxelization as vx
 
-np.random.seed(0)
+"""
+This file contains tests for the functions in open3d_voxelization.py.
+"""
 
 muscles = xu.get_femur_muscles(remove=True)
 muscle = muscles[0]

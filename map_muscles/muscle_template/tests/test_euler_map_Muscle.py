@@ -11,6 +11,10 @@ import map_muscles.muscle_template.euler_map as mp
 from map_muscles.muscle_template.euler_map import assert_angle
 import map_muscles.path_utils as pu
 
+"""
+This file contains tests for the class Muscle() in euler_map.py.
+"""
+
 pi = np.pi
 
 def unit(vec:np.ndarray):
