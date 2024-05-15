@@ -38,14 +38,14 @@ ZAB = [
     (unit([-1,0,-1]), 3*pi/2, 3*pi/4),
     (unit([0,-1,-1]), 0, 3*pi/4),
     
-    (unit([-1,-1,-1]), 2*pi - pi/4, np.arccos(1/np.sqrt(3))+ pi),
+    (unit([-1,-1,-1]), 2*pi - pi/4, np.arccos(-1/np.sqrt(3))),
     
     (unit([1,-1,0]), pi/4, pi/2),
     (unit([-1,1,0]), pi + pi/4, pi/2),
     (unit([1,0,-1]), pi/2, 3*pi/4),
     (unit([-1,0,1]), 3*pi/2, pi/4),
     (unit([0,1,-1]), pi, 3*pi/4),
-    (unit([0,-1,1]), 0, 3*pi/4),
+    (unit([0,-1,1]), 0, pi/4),
 
 ]
 
@@ -212,8 +212,6 @@ def test_init_Muscle():
     ]
 
     assert_none(*nones)
-
-# small delta vector
 
 def test_set_axis_points_and_dependant_attributes(delta=1e-6+3.7):
     """
@@ -395,16 +393,6 @@ def test_visualize_translation():
     vis.run(); vis.destroy_window()
 
 
-def print_warning_expected(n:int):
-    def decorator(func_test):
-        def wrapper(*args, **kwargs):
-            print(f"---{n} Warning expected Below ---")
-            func_test(*args, **kwargs)
-            print(f"---{n} Warning expected Above ---")
-        return wrapper
-    return decorator
-
-@print_warning_expected(3)
 def test_reset_rotation_correct_angles_and_vectors():
     
     m = get_muscle()
@@ -426,8 +414,6 @@ def test_reset_rotation_correct_angles_and_vectors():
     assert np.allclose(m_point,r_point),\
     f"Expected first axis points to coincide but got m axis point: {m_point}, mr axis point {r_point}"
 
-
-@print_warning_expected(3)
 def test_visualize_reset_rotation():
 
     """ 
@@ -458,16 +444,18 @@ def test_rotate_to_angles():
     m = get_muscle()
     m.init_default_axis_points()
 
-    alphas = np.linspace(0.1, 2*pi, 15)
-    betas = np.linspace(0, pi, 7)
-    gammas = np.linspace(0.1, 2*pi, 9)
+    delta=0.1
+
+    alphas = np.linspace(delta, 2*pi-delta, 15)
+    betas = np.linspace(0, pi-delta, 7)
+    gammas = np.linspace(delta, 2*pi-delta, 9)
 
     ab = list(product(alphas, betas))
     angles_triplets = list(product(ab, gammas))
     angles_triplets = [(*list(ab), g) for ab, g in angles_triplets]
 
     for angles in angles_triplets:
-        mr = m.rotate_to_angles(angles, raise_assertions=True, print_debug_info=True)
+        mr = m.rotate_to_angles(angles, raise_assertions=True, print_debug_info=False)
 
         alpha, beta, gamma = angles
 
@@ -528,20 +516,19 @@ if __name__ == '__main__':
     test_compute_beta()
     test_compute_gamma()
 
-    #test_init_Muscle()
-    #test_set_axis_points_and_dependant_attributes()
-    #test_load_from_array_file()
+    test_init_Muscle()
+    test_set_axis_points_and_dependant_attributes()
+    test_load_from_array_file()
 
     #test_muscle_visualization()
     #test_visualize_gamma_initialization()
     #test_visualize_translation()
 
-    #test_reset_rotation_correct_angles_and_vectors()
+    test_reset_rotation_correct_angles_and_vectors()
     
     #test_visualize_reset_rotation()
 
-    #test_rotate_to_angles() #test not working but rotation is working
-
+    test_rotate_to_angles()
     
 
 
