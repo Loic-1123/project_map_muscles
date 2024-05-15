@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 
 import map_muscles.muscle_template.xray_utils as xu
 import map_muscles.muscle_template.visualize_leg_fibers as vf
-import map_muscles.muscle_template.fibers_object as fo
 
 
 # Using Euler angles: https://en.wikipedia.org/wiki/Euler_angles#Classic_Euler_angles
@@ -242,8 +241,8 @@ class Muscle():
 
         return cls(points, name)
 
-    # Translation
-
+    # Transformations
+    ## Translation
     def translate(self, translation: np.ndarray):
         t_points = self.points + translation
         t_axis_points = self.axis_points + translation
@@ -252,8 +251,7 @@ class Muscle():
     def centered_on_axis_point(self):
         return self.translate(-self.axis_points[0])
     
-    # Rotation: rotation occurs around the first axis point
-
+    ## Rotation: rotation occurs around the first axis point
     def reset_rotation(self, print_warning=False, raise_assertions=False, translate_back=True):
         """
         Resets the rotation of the muscle (alpha=beta=gamma = 0).
@@ -300,7 +298,7 @@ class Muscle():
             r_axis_points = r_axis_points + self.axis_points[0]
 
         return Muscle(r_points, name=self.name, axis_points=r_axis_points, gamma=0)
-
+    
     def rotate_to_angles(self, angles: np.ndarray, raise_assertions=False, translate_back=True, print_warning=False, print_debug_info=False):
         """
         Rotate the muscle to the specified angles.
@@ -377,15 +375,7 @@ class Muscle():
         
         return Muscle(rpoints, name=self.name, axis_points=raxis, gamma=new_gamma)
 
-    def project_points_on_xy_plane(self, remove_z_axis=False):
-
-        points = self.points[:, :2]
-        
-        if remove_z_axis:
-            return points
-        else:
-            return np.hstack((points, np.zeros((points.shape[0], 1))))
-    
+    ## Scaling        
     def scale(self, scale_factor: float):
             """
             Scales the muscle by the given scale factor.
@@ -398,17 +388,28 @@ class Muscle():
                 Muscle: The scaled muscle.
             """
 
+            ref = self.axis_points[0]
+
             centered_Muscle = self.centered_on_axis_point()
 
             scaled_points = centered_Muscle.get_points() * scale_factor
-            scaled_axis_points = centered_Muscle.axis_points * scale_factor
+            scaled_axis_points = centered_Muscle.get_axis_points() * scale_factor
 
             # translate back
-            scaled_points = scaled_points + self.axis_points[0]
-            scaled_axis_points = scaled_axis_points + self.axis_points[0]
+            scaled_points = scaled_points + ref
+            scaled_axis_points = scaled_axis_points + ref
 
-            return Muscle(scaled_points, name=self.name, axis_points=scaled_axis_points, roll=self.roll)
+            return Muscle(scaled_points, name=self.name, axis_points=scaled_axis_points, gamma=self.gamma)
     
+    ## Projection
+    def project_points_on_xy_plane(self, remove_z_axis=False):
+
+        points = self.points[:, :2]
+        
+        if remove_z_axis:
+            return points
+        else:
+            return np.hstack((points, np.zeros((points.shape[0], 1))))
     
     def generate_map2d(self):
         return IndividualMap2d(
@@ -505,11 +506,6 @@ class Muscle():
         self.assert_z_vector("In init_beta()")
         self.beta = compute_beta(self.z_vector)
 
-    def init_gamma_from_x_y_vectors(self):
-        self.assert_x_vector("In init_gamma()")
-        self.assert_y_vector("In init_gamma()")
-        self.gamma = compute_gamma(self.x_vector, self.y_vector)
-
     def init_gamma_and_x_y_vectors(self, gamma=0):
         self.assert_alpha("In init_default_gamma_and_x_y_vectors()")
         self.assert_beta("In init_default_gamma_and_x_y_vectors()")
@@ -567,7 +563,14 @@ class Muscle():
         """
         return np.mean(self.points, axis=0)
 
-
+    def compute_projection_on_xy_plane(self, remove_z_axis=False):
+        points = self.points[:, :2]
+        
+        if remove_z_axis:
+            return points
+        else:
+            return np.hstack((points, np.zeros((points.shape[0], 1))))
+        
     # Asserters
 
     def assert_axis_points(self, string=None):

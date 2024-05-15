@@ -291,11 +291,12 @@ def generate_xy_plane_points(dim:int, n:int, z=0, center=(0,0)):
 
     return points
 
-def add_pcd_xy_plane(vis, dim:int, n:int, z=0, center=(0,0)):
+def add_pcd_xy_plane(vis, dim:int, n:int, z=0, center=(0,0), color=[0,1,0]):
     points = generate_xy_plane_points(dim, n, z, center)
 
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(points)
+    pcd.paint_uniform_color(color)
 
     vis.add_geometry(pcd)
 
@@ -498,20 +499,196 @@ def test_rotate_to_angles():
         assert np.allclose(m_point,r_point),\
         f"Expected first axis points to coincide but got m axis point: {m_point}, mr axis point {r_point}"
 
+def assert_xyz_vectors_same(m1, m2):
+    assert np.allclose(m1.get_x_vector(), m2.get_x_vector()), f"Expected x = {m1.get_x_vector()}, got {m2.get_x_vector()}"
+    assert np.allclose(m1.get_y_vector(), m2.get_y_vector()), f"Expected y = {m1.get_y_vector()}, got {m2.get_y_vector()}"
+    assert np.allclose(m1.get_z_vector(), m2.get_z_vector()), f"Expected z = {m1.get_z_vector()}, got {m2.get_z_vector()}"
 
-        
+def assert_angles_same(m1, m2):
+    assert np.isclose(m1.get_alpha(), m2.get_alpha()), f"Expected alpha = {m1.get_alpha()}, got {m2.get_alpha()}"
+    assert np.isclose(m1.get_beta(), m2.get_beta()), f"Expected beta = {m1.get_beta()}, got {m2.get_beta()}"
+    assert np.isclose(m1.get_gamma(), m2.get_gamma()), f"Expected gamma = {m1.get_gamma()}, got {m2.get_gamma()}"
 
+def test_scaling():
+    m = get_muscle()
+    m.init_default_axis_points()
 
+    scale_factor = 2.73
 
+    ms = m.scale(scale_factor)
 
+    # axis vectors should be the same
+    assert_xyz_vectors_same(m, ms)
 
+    # assert axis points are scaled: axis_points[0] should be the same, 
+    # axis_points[1] should be scaled by scale_factor in the direction of z_vector
+    ap = m.get_axis_points()
+    aps = ms.get_axis_points()
 
+    assert np.allclose(ap[0], aps[0]), f"Expected axis_points[0] to be the same, got {ap[0]}, {aps[0]}"
 
+    aps_expected = ap[0] + (ap[1] - ap[0])*scale_factor
+
+    assert np.allclose(aps[1], aps_expected), f"Expected axis_points[1] to be {aps_expected}, got {aps[1]}"
+
+    # assert alpha, beta, gamma are the same
+    assert_angles_same(m, ms)
+
+def test_translation():
+    m= get_muscle()
+    m.init_default_axis_points()
+
+    translation_vec = np.array([98,277,3])
+
+    mt = m.translate(translation_vec)
+
+    # axis vectors should be the same
+    assert_xyz_vectors_same(m, mt)
+    # assert axis points are translated
+
+    ap = m.get_axis_points()
+    apt = mt.get_axis_points()
+
+    apt_expected = ap + translation_vec
+
+    assert np.allclose(apt, apt_expected), f"Expected axis_points[0] to be {apt_expected[0]}, got {ap}"
+
+    # assert alpha, beta, gamma are the same
+    assert_angles_same(m, mt)
+
+    # points should be translated
+    assert np.allclose(m.get_points() + translation_vec, mt.get_points())
+
+def test_visualize_scaling_and_translation():
+    m = get_muscle()
+    m.init_default_axis_points()
+
+    translation_vec1 = np.array([100,0,0])
+    translation_vec2 = np.array([0,100,0])
+    translation_vec3 = np.array([0,0,100])
+
+    translation_vec4 = np.array([100,100,100])
+    scale_factor = 2.73
+
+    m1 = m.translate(translation_vec1)
+    m2 = m.translate(translation_vec2)
+    m3 = m.translate(translation_vec3)
+
+    m4 = m.translate(translation_vec4)
+    m4 = m4.scale(scale_factor)
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    m.draw_default(vis)
+
+    m1.draw_points(vis, color=[1,0,0])
+    m1.draw_axis(vis)
+
+    m2.draw_points(vis, color=[0,1,0])
+    m2.draw_axis(vis)
+
+    m3.draw_points(vis, color=[0,0,1])
+    m3.draw_axis(vis)
+
+    m4.draw_points(vis, color=[1,0.5,0])
+    m4.draw_axis(vis)
+
+    # x-y plane
+    center = m.get_axis_points()[0]
+    add_coor_frame(vis, center, size=200)
+    add_pcd_xy_plane(vis, 1000, 100, z=center[2]-400, center=(center[0], center[1]))
+
+    vis.run(); vis.destroy_window()
+
+def test_visualize_rotation():
+    angles1 = np.array([3*pi/4, pi/4, 0]) # should be point to the tetrahedron last point with the frame, and be rotated (roll)
+    angles2 = np.array([pi/2, 0, pi/2])
+    angles3 = np.array([pi, 0, 0])
+    # 2 and 3 should be confounded, and lying on the z axis
+    angles4 = np.array([0, pi/2, pi/2]) # should be lying on the x-y plane, (z_vec= [0,-1,0])
+
+    # some random angles
+    np.random.seed(0)
+    angles5 = np.random.rand(3)*2*pi
+
+    m = get_muscle()
+    m.init_default_axis_points()
+
+    mr1 = m.rotate_to_angles(angles1)
     
+    delta = np.array([3,3,3])
+    mr2 = m.rotate_to_angles(angles2)
+    mr2 = mr2.translate(-delta)
+    mr3 = m.rotate_to_angles(angles3)
+    mr3 = mr3.translate(delta)
+
+    mr4 = m.rotate_to_angles(angles4)
+    mr5 = m.rotate_to_angles(angles5)
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    m.draw_default(vis)
+
+    mr1.draw_points(vis, color=[1,0.5,0])
+    mr1.draw_axis(vis, color=[1,0.5,0])
+
+    mr2.draw_points(vis, color=[0,0.5,1])
+    mr2.draw_axis(vis, color=[0,0.5,1])
+    mr3.draw_points(vis, color=[0.5,0,1])
+    mr3.draw_axis(vis, color=[0.5,0,1])
+
+    mr4.draw_points(vis, color=[0,1,0])
+    mr4.draw_axis(vis, color=[0,1,0])
+
+    mr5.draw_points(vis, color=[0.5,0.5,0.5])
+    mr5.draw_axis(vis, color=[0.5,0.5,0.5])
+
+    center = m.get_axis_points()[0]
+    add_coor_frame(vis, center, size=200)
+    add_pcd_xy_plane(vis, 1000, 100, z=center[2], center=(center[0], center[1]))
+
+    vis.run(); vis.destroy_window()
+    
+def test_visualize_project_points_on_xy_plane():
+    m = get_muscle()
+    m.init_default_axis_points()
+    m = m.centered_on_axis_point()
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    m.draw_default(vis)
+
+    center = m.get_axis_points()[0]
+
+    add_coor_frame(vis, center, size=200)
+
+    points_proj = m.project_points_on_xy_plane(remove_z_axis=False)
+
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(points_proj)
+    pcd.paint_uniform_color([0,1,0])
+
+    m.draw_default(vis)
+
+    # add xy plane
+
+    add_pcd_xy_plane(vis, 1000, 100, z=0, center=(center[0], center[1]))
+
+    vis.add_geometry(pcd)
+
+    vis.run(); vis.destroy_window()
+
+
+
 
 
 
 if __name__ == '__main__':
+
+    """Computing Tests"""
     test_compute_alpha()
     test_compute_beta()
     test_compute_gamma()
@@ -520,18 +697,24 @@ if __name__ == '__main__':
     test_set_axis_points_and_dependant_attributes()
     test_load_from_array_file()
 
+    test_reset_rotation_correct_angles_and_vectors()
+    test_rotate_to_angles()
+
+    test_scaling()
+    test_translation()
+
+    """Visualizing Tests"""
     #test_muscle_visualization()
     #test_visualize_gamma_initialization()
     #test_visualize_translation()
-
-    test_reset_rotation_correct_angles_and_vectors()
     
     #test_visualize_reset_rotation()
 
-    test_rotate_to_angles()
-    
+    #test_visualize_scaling_and_translation()
 
+    #test_visualize_rotation()
 
+    test_visualize_project_points_on_xy_plane()
     
     print("All tests passed! (test_map_euler.py)")
 
