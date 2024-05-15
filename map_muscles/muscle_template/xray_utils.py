@@ -1,12 +1,20 @@
-from _root_path import add_root, get_root_path
+from _root_path import add_root
 add_root()
 
-from pathlib import Path
 import pandas as pd
 import json
 import numpy as np
 
-data_path = Path(get_root_path()) / 'map_muscles' / 'data' / 'xray'
+import map_muscles.path_utils as pu
+
+"""
+The main of this file extract the leg muscles from the muscle_state json file and save them in csv files.
+
+This file also contains functions to preprocess the data frames of the leg muscles,
+as well as getting a list of data frames of the femur muscles.
+"""
+
+data_path = pu.get_xray_dir()
 muscle_state_path = data_path / 'muscles_state.json'
 
 def load_muscle_state(path=muscle_state_path):
@@ -24,7 +32,21 @@ def get_leg(data_dir=data_path, leg='LH'):
     leg = pd.read_csv(data_dir / f'{leg}.csv')
     return leg
 
-def get_femur_muscles(data_dir=data_path, leg='LH', femur_id = 'Fe', lines=True, remove=False, to_remove=['LH TrFe']):
+def get_femur_muscles(data_dir=data_path, leg='LH', femur_id='Fe', lines=True, remove=False, to_remove=['LH TrFe']):
+    """
+    Get the muscles associated with the femur.
+
+    Args:
+        data_dir (str): The directory path where the data is stored. Default is `data_path`.
+        leg (str): The leg identifier. Default is 'LH'.
+        femur_id (str): The identifier for the femur muscles. Default is 'Fe'.
+        lines (bool): Whether to add lines to the muscle dataframes. Default is True.
+        remove (bool): Whether to remove specific muscles from the result. Default is False.
+        to_remove (list): List of muscle names to remove from the result. Default is ['LH TrFe'].
+
+    Returns:
+        list: A list of dataframes, each containing a muscle associated with the femur.
+    """
     lh = get_leg(data_dir, leg)
     layers_names = lh['layer_name'].unique()
     fe_ids = [layer for layer in layers_names if femur_id in layer]
@@ -38,22 +60,19 @@ def get_femur_muscles(data_dir=data_path, leg='LH', femur_id = 'Fe', lines=True,
 
     return femur_muscles
 
-def get_points(df, A_key='pointA', B_key='pointB'):
-    """
-    Get the points from the dataframe
-    """
-
-    A = df[A_key]
-    B = df[B_key]
-    points = np.concatenate((A, B), axis=0)
-
-    # to array
-    points = np.array([eval(point) for point in points])
-    
-    return points
-
 # function to create a line from two points
-def create_line(p1, p2, str = True):
+def create_line(p1, p2, str=True):
+    """
+    Create a line in 3D space between two points.
+
+    Parameters:
+        p1 (tuple): The coordinates of the first point (x, y, z).
+        p2 (tuple): The coordinates of the second point (x, y, z).
+        str (bool, optional): Indicates whether the input points are strings that need to be evaluated. Defaults to True.
+
+    Returns:
+        tuple: Three lists representing the x, y, and z coordinates of the line.
+    """
     if str:
         p1 = eval(p1)
         p2 = eval(p2)
@@ -63,6 +82,27 @@ def create_line(p1, p2, str = True):
     return x, y, z
 
 def add_lines_to_df(df, A_key='pointA', B_key='pointB'):
+    """
+    Add a new column 'line' to the DataFrame `df`
+    by evaluating the values of columns `A_key` and `B_key` as numpy arrays 
+    and storing them as a single numpy array representing a line in the 'line' column.
+
+    Parameters:
+    - df: DataFrame
+        The input DataFrame to which the 'line' column will be added.
+    - A_key: str, optional
+        The name of the column containing the values for point A. Default is 'pointA'.
+    - B_key: str, optional
+        The name of the column containing the values for point B. Default is 'pointB'.
+
+    Returns:
+    - df: DataFrame
+        The input DataFrame with the new 'line' column added.
+
+    Raises:
+    - AssertionError: If the type of the elements in the 'line' column is not numpy.ndarray.
+    """
+    
     df['line'] = df.apply(lambda row: np.array([eval(row[A_key]), eval(row[B_key])]), axis=1)
 
     # assert type of element in line is np.array
@@ -106,19 +146,21 @@ if __name__ == "__main__":
     # array(['LF', 'RM', 'LH'], dtype=object)
     """
 
-    def get_leg(df=leg_fibers, leg='LH'):
+    def isolate_leg(df=leg_fibers, leg='LH'):
         leg = df[df['leg'] == leg]
         leg = leg.drop(columns='leg')
         return leg
     
-    lh = get_leg(leg='LH')
-    lf = get_leg(leg='LF')
-    rm = get_leg(leg='RM')
+    lh = isolate_leg(leg='LH')
+    lf = isolate_leg(leg='LF')
+    rm = isolate_leg(leg='RM')
 
     # save the legs
-    lh.to_csv(data_path / 'LH.csv', index=False)
-    lf.to_csv(data_path / 'LF.csv', index=False)
-    rm.to_csv(data_path / 'RM.csv', index=False)
+    lh.to_csv(data_path / 'LHtest.csv', index=False)
+    lf.to_csv(data_path / 'LFtest.csv', index=False)
+    rm.to_csv(data_path / 'RMtest.csv', index=False)
+
+    print(f'Leg fibers data frames saved in {data_path}')
 
 
 
