@@ -15,7 +15,9 @@ def get_locations_from_sleap_file(
         sleap_file_path,
         trochanter_id=0,
         femur_tibia_id=1,
-        tibia_tarsus_id=2
+        tibia_tarsus_id=2,
+        top_trochanter_id=3,
+        top_femur_tibia_id=4,
         ):
     with h5py.File(sleap_file_path, 'r') as f:
         locations = f["tracks"][:].T
@@ -23,8 +25,10 @@ def get_locations_from_sleap_file(
     trochanter_locations = locations[:, trochanter_id, :, 0]
     femur_tibia_locations = locations[:, femur_tibia_id, :, 0]
     tibia_tarsus_locations = locations[:, tibia_tarsus_id, :, 0]
+    top_trochanter_locations = locations[:, top_trochanter_id, :, 0]
+    top_femur_tibia_locations = locations[:, top_femur_tibia_id, :, 0]
 
-    return trochanter_locations, femur_tibia_locations, tibia_tarsus_locations
+    return trochanter_locations, femur_tibia_locations, tibia_tarsus_locations, top_trochanter_locations, top_femur_tibia_locations
 
 def get_labeled_kin_frame(
         npy_file_path,
