@@ -137,7 +137,7 @@ class MappedFrame():
         ax.plot(self.kin_top_axis[:, 0]+delta[0], self.kin_top_axis[:, 1]+delta[1], **kwargs)
         return ax
 
-    def plot_map_axis_middle_view(self, ax, delta=(0,0), **kwargs):
+    def plot_map_axis_middle_view(self, ax, label='map axis middle view',delta=(0,0), **kwargs):
         """
         Plots the projected map axis on the given axes.
 
@@ -154,10 +154,10 @@ class MappedFrame():
         # remove z coordinate
         axis = axis[:, [0, 1]] + delta
 
-        ax.plot(axis[:, 0], axis[:, 1], **kwargs)
+        ax.plot(axis[:, 0], axis[:, 1], label=label, **kwargs)
         return ax
     
-    def plot_map_axis_top_view(self, ax, delta=(0,0), **kwargs):
+    def plot_map_axis_top_view(self, ax, label='map axis top view', delta=(0,0), **kwargs):
         """
         Plots the projected map axis on the y-z plane on the given ax.
         Align the axis with the kin_top_axis.
@@ -179,10 +179,10 @@ class MappedFrame():
 
         axis = axis + self.kin_top_axis[0] + delta
 
-        ax.plot(axis[:, 0], axis[:, 1], **kwargs)
+        ax.plot(axis[:, 0], axis[:, 1], label=label, **kwargs)
         return ax
 
-    def plot_kinematic_vector(self, ax, length=50, delta=(0,0), **kwargs):
+    def plot_kinematic_vector(self, ax, length=50, top_label='Top kinematic axis', middle_label='Middle kinematic axis', delta=(0,0), **kwargs):
         """
         Plot the kinematic vector on the given axes.
 
@@ -202,8 +202,8 @@ class MappedFrame():
         segment_top = np.array([self.kin_top_axis[0], self.kin_top_axis[0] + vec_top*length]) + delta
         segment_middle = np.array([self.kin_middle_axis[0], self.kin_middle_axis[0] + vec_middle*length]) + delta
 
-        ax.plot(segment_top[:, 0], segment_top[:, 1], color='r', label='Top kinematic axis', **kwargs)
-        ax.plot(segment_middle[:, 0], segment_middle[:, 1], color='b', label='Middle kinematic axis', **kwargs)
+        ax.plot(segment_top[:, 0], segment_top[:, 1], color='r', label=top_label, **kwargs)
+        ax.plot(segment_middle[:, 0], segment_middle[:, 1], color='b', label=middle_label, **kwargs)
 
         return ax
 

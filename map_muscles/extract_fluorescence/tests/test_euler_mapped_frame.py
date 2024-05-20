@@ -256,11 +256,7 @@ def test_visualize_scaling_on_kinetic_frame():
     mframe.plot_kin_img(ax, cmap='gray')
     
     mframe.plot_kin_middle_axis(ax, delta=2*delta)
-    mframe.plot_kin_top_axis(ax, delta=2*delta)
     
-    mframe.plot_map_axis_top_view(ax, label='Map axis top view')
-    mframe.plot_map_axis_middle_view(ax, label='Map axis middle view')
-
     mframe.plot_convex_hulls(ax)
 
     ax.axis('off')

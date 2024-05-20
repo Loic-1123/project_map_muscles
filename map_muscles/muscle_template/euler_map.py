@@ -544,9 +544,9 @@ class Muscle():
         self.beta = compute_beta(self.z_vector)
 
     def init_gamma_and_x_y_vectors(self, gamma=0):
-        self.assert_alpha("In init_default_gamma_and_x_y_vectors()")
-        self.assert_beta("In init_default_gamma_and_x_y_vectors()")
-        self.assert_z_vector("In init_default_gamma_and_x_y_vectors()")
+        self.assert_alpha("In init_gamma_and_x_y_vectors()")
+        self.assert_beta("In init_gamma_and_x_y_vectors()")
+        self.assert_z_vector("In init_gamma_and_x_y_vectors()")
 
         self.gamma = gamma
 
@@ -557,13 +557,13 @@ class Muscle():
     def init_default_axis_points(
         self, 
         direction: np.ndarray=np.array([0.4,0.6,-0.3]), 
-        dist: float=400,
+        dist: float=600,
         gamma=0
         ):
         com = self.compute_com()
         axis_points = np.array([
-            com - dist*direction,
-            com + dist*direction
+            com + dist*direction,
+            com - dist*direction
         ])
         self.set_axis_points(axis_points, gamma=gamma)
 
@@ -1024,8 +1024,8 @@ class MuscleMap():
         ):
         com = self.compute_com()
         axis_points = np.array([
-            com - dist*direction,
-            com + dist*direction
+            com + dist*direction,
+            com - dist*direction
         ])
         self.set_axis_points(axis_points, gamma=gamma)
 
