@@ -2,21 +2,13 @@ from _root_path import add_root
 add_root()
 
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.spatial.transform import Rotation as R
-
-
-import map_muscles.path_utils as pu
 import map_muscles.muscle_template.euler_map as mp
-import map_muscles.extract_fluorescence.mapping.plot_map_on_pixel_img as pmp
-
 
 class MappedFrame():
     kin_img: np.ndarray
     kin_middle_axis: np.ndarray # 2D array of shape (2, 2) (middle view)
     kin_top_axis: np.ndarray # 2D array of shape (2, 2) (top view)
     mmap: mp.MuscleMap
-    
 
     def __init__(
             self, 

@@ -7,16 +7,42 @@ import matplotlib.pyplot as plt
 import map_muscles.path_utils as pu
 import map_muscles.extract_fluorescence.mapping.euler_mapped_frame as mf
 import map_muscles.muscle_template.euler_map as mp
-import map_muscles.extract_fluorescence.mapping.plot_map_on_pixel_img as pmp
 import map_muscles.extract_fluorescence.imaging_utils as imu
 
 
+def get_locations_from_sleap_file(
+        sleap_file_path,
+        trochanter_id=0,
+        femur_tibia_id=1,
+        tibia_tarsus_id=2,
+        top_trochanter_id=3,
+        top_femur_tibia_id=4,
+        ):
+    with h5py.File(sleap_file_path, 'r') as f:
+        locations = f["tracks"][:].T
+
+    trochanter_locations = locations[:, trochanter_id, :, 0]
+    femur_tibia_locations = locations[:, femur_tibia_id, :, 0]
+    tibia_tarsus_locations = locations[:, tibia_tarsus_id, :, 0]
+    top_trochanter_locations = locations[:, top_trochanter_id, :, 0]
+    top_femur_tibia_locations = locations[:, top_femur_tibia_id, :, 0]
+
+    return trochanter_locations, femur_tibia_locations, tibia_tarsus_locations, top_trochanter_locations, top_femur_tibia_locations
+
+def get_labeled_kin_frame(
+        npy_file_path,
+        idx):
+    kin_frames = np.load(npy_file_path)
+
+    labeled_kin_frame = kin_frames[idx]
+
+    return labeled_kin_frame
 
 sleap_dir = pu.get_sleap_dir()
 sleap_file = 'label_femur_V2.000_900_1440_kin.analysis.h5'
 sleap_file_path = sleap_dir / sleap_file
 
-tro, ft, tt, top_tro, top_ft = pmp.get_locations_from_sleap_file(sleap_file_path)
+tro, ft, tt, top_tro, top_ft = get_locations_from_sleap_file(sleap_file_path)
 
 idx = len(tro) - 80
 
@@ -29,7 +55,7 @@ kin_frames_dir = pu.get_kin_frames_dir()
 kin_file = 'kin_frames_3601_5800.npy'
 kin_file_path = kin_frames_dir/ kin_file
 
-KINFRAME = pmp.get_labeled_kin_frame(kin_file_path, idx)
+KINFRAME = get_labeled_kin_frame(kin_file_path, idx)
 
 map_dir = pu.get_basic_map_dir()
 MMAP = mp.MuscleMap.from_directory(map_dir)
@@ -44,7 +70,7 @@ def get_mframe():
 
 
 def test_plot_coordinate_frame():
-    mframe = mf.MappedFrame(KINFRAME, IMGAXIS, MMAP)
+    mframe = get_mframe()
 
     fig, ax = plt.subplots(1,1, figsize=FIGSIZE)
 
