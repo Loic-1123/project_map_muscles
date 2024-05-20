@@ -169,19 +169,98 @@ def test_visualize_roll():
 
     vis.run(); vis.destroy_window()
 
+def test_visualize_apply_rotation():
+    mmap = get_map()
+    mmap = mmap.reset_rotation()
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    add_coor_frame(vis, center, size=500)
+    add_pcd_xy_plane(vis, 4000, 100, z=center[2], center=(center[0], center[1]))
+
+    n = 9
+
+    dist = 400
+
+    alphas = np.linspace(0, pi, n)
+    betas = np.linspace(0, pi, n)
+
+    # check beta
+    mmap.draw_default(vis)
+
+    for i in range(n):
+        alpha = 0
+        beta = betas[i]
+        gamma = 0
+        d = i * dist
+        angles = mmap.get_angles()
+        angles = (alpha, beta, gamma)
+        rot = R.from_euler('ZXZ', angles)
+        mmap1 = mmap.apply_rotation(rot).translate(np.array([d, 0, 0]))
+        mmap1.draw_default(vis)
+
+    center = mmap.get_axis_points()[0]
 
 
+    # check alpha
+    mmap = mmap.translate(np.array([0, 3*dist, 0]))
+    mmap.draw_default(vis)
+    for i in range(n):
+        alpha = alphas[i]
+        beta = pi/2
+        gamma = 0
+        d = i * dist
+        angles = mmap.get_angles()
+        angles = (alpha, beta, gamma)
+        rot = R.from_euler('ZXZ', angles)
+        mmap1 = mmap.apply_rotation(rot).translate(np.array([d, 0, 0]))
+        mmap1.draw_default(vis)
+
+
+    # both
+    mmap = mmap.translate(np.array([0, 3*dist, 0]))
+    mmap.draw_default(vis)
+    for i in range(n):
+        alpha = alphas[i]
+        beta = betas[i]
+        gamma = 0
+        d = i * dist
+        angles = mmap.get_angles()
+        angles = (alpha, beta, gamma)
+        rot = R.from_euler('ZXZ', angles)
+        mmap1 = mmap.apply_rotation(rot).translate(np.array([d, 0, 0]))
+        mmap1.draw_default(vis)
+
+    vis.run(); vis.destroy_window()
+
+
+
+
+
+
+    
+    
+    
 
 
 
 
 
 if __name__ == "__main__":
+    
+    ### Numerical tests ###
     test_map_constructor()
+    
+    
+    ### Visualization tests ###
     #test_visualize_map()
     #test_visualize_translation()
     #test_visualize_reset_rotation()
     #test_visualize_rotation()
     #test_visualize_roll()
-    
+    test_visualize_apply_rotation()
+
+
+
     print("All tests passed.")

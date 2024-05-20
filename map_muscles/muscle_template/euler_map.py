@@ -387,6 +387,31 @@ class Muscle():
         
         return Muscle(rpoints, name=self.name, axis_points=raxis, gamma=new_gamma)
 
+    def apply_rotation(self, r: Rot, translate_back=True):
+        """
+        Apply a rotation to the muscle.
+
+        Args:
+            r (Rot): The rotation to apply.
+            translate_back (bool, optional): Whether to translate the muscle back to its original position after rotation. Defaults to True.
+
+        Returns:
+            Muscle: The rotated muscle.
+        """
+        centered = self.centered_on_axis_point()
+
+        r_points = r.apply(centered.get_points())
+        r_axis_points = r.apply(centered.get_axis_points())
+
+        if translate_back:
+            ref_axis_point = self.get_axis_points()[0]
+            r_points = r_points + ref_axis_point
+            r_axis_points = r_axis_points + ref_axis_point
+
+        new_gamma = compute_gamma(r.apply(centered.get_x_vector()), r.apply(centered.get_y_vector()), print_warning=False)
+
+        return Muscle(r_points, name=self.name, axis_points=r_axis_points, gamma=new_gamma)
+
     ## Scaling        
     def scale(self, scale_factor: float):
             """
@@ -837,6 +862,32 @@ class MuscleMap():
             new_gamma = angles[2] - angles[0]
 
         return MuscleMap(r_muscles, axis_points=r_axis_points, name=self.name, gamma=new_gamma)
+
+    def apply_rotation(self, r: Rot, translate_back=True):
+        """
+        Apply a rotation to the muscle map.
+
+        Args:
+            r (Rot): The rotation to apply.
+            translate_back (bool, optional): Whether to translate the muscle back to its original position after rotation. Defaults to True.
+
+        Returns:
+            MuscleMap: The rotated muscle map.
+        """
+        r_muscles = [muscle.apply_rotation(r, translate_back=translate_back) for muscle in self.muscles]
+
+
+        ref_point = self.axis_points[0]
+        caxis = self.axis_points - ref_point
+        r_axis_points = r.apply(caxis)
+
+        if translate_back:
+            r_axis_points = r_axis_points + ref_point
+
+        new_gamma = compute_gamma(r.apply(self.get_x_vector()), r.apply(self.get_y_vector()), print_warning=False)
+
+        return MuscleMap(r_muscles, axis_points=r_axis_points, name=self.name, gamma=new_gamma)
+
 
     ## Scaling
 
