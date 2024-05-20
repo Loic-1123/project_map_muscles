@@ -1059,7 +1059,21 @@ class MuscleMap():
             points.extend(muscle.get_points())
 
         return np.mean(points, axis=0)
-        
+    
+    def compute_axis_vector(self, unit=False) -> np.ndarray:
+        """
+        Calculate the axis vector of the muscle map.
+
+        Args:
+            unit (bool, optional): Whether to return the unit vector. Defaults to False.
+
+        Returns:
+            np.ndarray: The axis vector of the muscle map.
+        """
+        axis_vector = self.axis_points[1] - self.axis_points[0]
+        if unit:
+            axis_vector = axis_vector / np.linalg.norm(axis_vector)
+        return axis_vector
     # Asserters
 
     def assert_axis_points(self, string=None):
@@ -1145,115 +1159,3 @@ class MuscleMap():
         self.draw_points(vis)
         self.draw_axis(vis)
         self.draw_xyz_vectors(vis)
-
-
-
-class IndividualMap2d():
-
-    name = str # Name of the map
-    axis_points: np.ndarray # Axis points of the map, shape: (n, 2)
-    points: np.ndarray # 2D points representing the map, shape: (n, 2)
-
-    def __init__(self, points: np.ndarray, axis_points: np.ndarray=None, name=None):
-        self.points = points
-
-        if np.any(axis_points, None):
-            self.set_axis_points(axis_points)
-        else:
-            self.axis_points = None
-
-        self.name = name
-    
-
-    def translate(self, translation_vec: np.ndarray):
-        translated_points = self.points + translation_vec
-        translated_axis_points = self.axis_points + translation_vec
-        return IndividualMap2d(translated_points, axis_points=translated_axis_points, name=self.name)
-    
-    def get_points(self, d3=False):
-        if d3:
-            return np.hstack((self.points, np.zeros((self.points.shape[0], 1))))
-        else:
-            return self.points
-    
-    def get_name(self):
-        return self.name
-    
-    def scale(self, scale_factor: float, warning=True): 
-        if not np.allclose(self.axis_points[0], np.zeros(2)) and warning:
-            print("Map: axis_points[0] not at origin, scaling might not be accurate.")
-
-        scaled_points = self.points * scale_factor
-        scaled_axis_points = self.axis_points * scale_factor
-        return IndividualMap2d(scaled_points, axis_points=scaled_axis_points, name=self.name)
-    
-
-            
-    def set_axis_points(self, axis_points: np.ndarray):
-        self.axis_points = axis_points
-
-    def set_name(self, name: str):
-        self.name = name    
-
-
-class Map2d():
-    individual_maps: list # List of IndividualMap2d objects
-    axis_points: np.ndarray # Axis points of the map, shape: (n, 2)
-
-    def __init__(self, individual_maps: list, axis_points: np.ndarray=None):
-        self.individual_maps = individual_maps
-
-        assert axis_points.shape == (2, 2), "Axis points must be a 2x2 array."
-
-        if np.any(axis_points, None):
-            self.set_axis_points(axis_points)
-        else:
-            self.axis_points = None
-    
-    def translate(self, translation_vec: np.ndarray):
-        translated_maps = [mmap.translate(translation_vec) for mmap in self.individual_maps]
-        translated_axis_points = self.axis_points + translation_vec
-        return Map2d(translated_maps, axis_points=translated_axis_points)
-    
-    def scale(self, scale_factor: float, warning=True):
-        scaled_maps = [mmap.scale(scale_factor, warning=warning) for mmap in self.individual_maps]
-        scaled_axis_points = self.axis_points * scale_factor
-        return Map2d(scaled_maps, axis_points=scaled_axis_points)
-
-    # Plotting
-
-    def plot_axis(self, ax, **kwargs):
-        ax.plot(self.axis_points[:, 0], self.axis_points[:, 1], **kwargs)
-        return ax
-    
-    def plot_maps(self, ax, colors=None, **kwargs):
-        if colors is None:
-            colors = get_equally_spaced_colors(len(self.individual_maps))
-
-        for mmap, color in zip(self.individual_maps, colors):
-            ax.scatter(mmap.get_points()[:, 0], mmap.get_points()[:, 1], color=color, **kwargs)
-        return ax
-
-    # Getters
-
-    def get_maps(self):
-        return self.individual_maps
-    
-    def get_axis_points(self):
-        return self.axis_points
-    
-    def get_points(self, d3=False):
-        points = [m.get_points(d3=d3) for m in self.individual_maps]
-        return np.vstack(points)
-
-    
-    # Setters
-
-    def set_axis_points(self, axis_points: np.ndarray):
-        self.axis_points = axis_points
-        for m in self.individual_maps:
-            m.set_axis_points(axis_points)    
-
-
-    
-    

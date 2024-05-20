@@ -240,6 +240,35 @@ def test_visualize_orient_map():
 
 
 
+def test_visualize_scaling_on_kinetic_frame():
+    mframe = get_mframe()
+
+    mframe.align_map_axis_ref_points()
+    mframe.orient_map()
+    ratio = mframe.compute_kin_map_ratio()
+    mframe.scale_map(ratio=ratio)
+
+
+
+    fig, ax = plt.subplots(1,1, figsize=FIGSIZE)
+
+    delta = np.array([10, 0])
+    mframe.plot_kin_img(ax, cmap='gray')
+    
+    mframe.plot_kin_middle_axis(ax, delta=2*delta)
+    mframe.plot_kin_top_axis(ax, delta=2*delta)
+    
+    mframe.plot_map_axis_top_view(ax, label='Map axis top view')
+    mframe.plot_map_axis_middle_view(ax, label='Map axis middle view')
+
+    mframe.plot_convex_hulls(ax)
+
+    ax.axis('off')
+    ax.legend()
+
+    plt.show()
+
+
 if __name__ == "__main__":
     
     ### Numerical tests ###
@@ -250,11 +279,12 @@ if __name__ == "__main__":
     
     ### Visualizations tests ###
 
-    test_plot_coordinate_frame()
-    test_visualize_map_aligned_with_kin_middle_axis()
-    test_visualize_scaled_translated_map()
-    test_visualize_compute_kinematic_vector()
-    test_visualize_orient_map()
+    #test_plot_coordinate_frame()
+    #test_visualize_map_aligned_with_kin_middle_axis()
+    #test_visualize_scaled_translated_map()
+    #test_visualize_compute_kinematic_vector()
+    #test_visualize_orient_map()
+    test_visualize_scaling_on_kinetic_frame()
 
 
     print("All tests passed.")

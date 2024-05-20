@@ -2,6 +2,11 @@ from _root_path import add_root
 add_root()
 
 import numpy as np
+import matplotlib.pyplot as plt
+from scipy.spatial import ConvexHull
+
+
+
 import map_muscles.muscle_template.euler_map as mp
 
 class MappedFrame():
@@ -38,7 +43,7 @@ class MappedFrame():
         aligned_mmap = cmmap.translate(tvec)
         self.mmap = aligned_mmap
 
-    def scale_map(self, ratio=None):
+    def scale_map(self, ratio):
         """
         Scales the map by a given ratio.
         Default: if ratio is None, compute the ratio between the kinematic axis and the map axis.
@@ -51,9 +56,6 @@ class MappedFrame():
         """
 
         ref_point = self.mmap.get_axis_points()[0]
-
-        if ratio is None:
-            ratio = self.compute_axis_ratio()
 
         cmmap = self.mmap.centered_on_axis_point()
 
@@ -105,7 +107,7 @@ class MappedFrame():
         ax.imshow(self.kin_img, **kwargs)
         return ax
     
-    def plot_kin_middle_axis(self, ax, **kwargs):
+    def plot_kin_middle_axis(self, ax, delta=np.array([0,0]),**kwargs):
         """
         Plots the kinematic axis on the given axes.
 
@@ -117,10 +119,10 @@ class MappedFrame():
             matplotlib.axes.Axes: The modified axes object.
 
         """
-        ax.plot(self.kin_middle_axis[:, 0], self.kin_middle_axis[:, 1], **kwargs)
+        ax.plot(self.kin_middle_axis[:, 0]+delta[0], self.kin_middle_axis[:, 1]+delta[1], **kwargs)
         return ax
     
-    def plot_kin_top_axis(self, ax, **kwargs):
+    def plot_kin_top_axis(self, ax, delta=np.array([0,0]),**kwargs):
         """
         Plots the top kinematic axis on the given axes.
 
@@ -132,7 +134,7 @@ class MappedFrame():
             matplotlib.axes.Axes: The modified axes object.
 
         """
-        ax.plot(self.kin_top_axis[:, 0], self.kin_top_axis[:, 1], **kwargs)
+        ax.plot(self.kin_top_axis[:, 0]+delta[0], self.kin_top_axis[:, 1]+delta[1], **kwargs)
         return ax
 
     def plot_map_axis_middle_view(self, ax, delta=(0,0), **kwargs):
@@ -200,8 +202,8 @@ class MappedFrame():
         segment_top = np.array([self.kin_top_axis[0], self.kin_top_axis[0] + vec_top*length]) + delta
         segment_middle = np.array([self.kin_middle_axis[0], self.kin_middle_axis[0] + vec_middle*length]) + delta
 
-        ax.plot(segment_top[:, 0], segment_top[:, 1], color='r', label='Top kinematic axis')
-        ax.plot(segment_middle[:, 0], segment_middle[:, 1], color='b', label='Middle kinematic axis')
+        ax.plot(segment_top[:, 0], segment_top[:, 1], color='r', label='Top kinematic axis', **kwargs)
+        ax.plot(segment_middle[:, 0], segment_middle[:, 1], color='b', label='Middle kinematic axis', **kwargs)
 
         return ax
 
@@ -249,6 +251,29 @@ class MappedFrame():
 
         return ax
 
+    def plot_convex_hulls(self, ax, colors=None, labels=None, **kwargs):
+        """
+        Plot the convex hulls of the muscles on the given axes.
+
+        Parameters:
+        - ax: The axes object on which to plot the convex hulls.
+        - colors: Optional. A list of colors to use for each convex hull. If not provided, a set of equally spaced colors will be used.
+        - labels: Optional. A list of labels for each convex hull. If provided, the labels will be displayed on the plot.
+        - **kwargs: Additional keyword arguments to be passed to the `convex_hull_plot_2d` function.
+
+        Returns:
+        - The modified axes object.
+
+        """
+        if colors is None:
+            colors = mp.get_equally_spaced_colors(len(self.mmap.get_muscles()))
+        if labels is None:
+            labels = [None] * len(self.mmap.get_muscles())
+        hulls = self.compute_projected_hulls()
+        for hull, c, label in zip(hulls, colors, labels):
+            points = hull.points
+            plt.plot(points[hull.vertices,0], points[hull.vertices,1], color=c, label=label, **kwargs)
+        return ax
 
     # Getters
     def get_img(self):
@@ -276,7 +301,6 @@ class MappedFrame():
         assert type(mmap) == mp.MuscleMap, \
             f'Expected a MuscleMap object, got {type(mmap)}'
         self.mmap = mmap
-
     def set_img(self, kin_img):
         assert type(kin_img) == np.ndarray, \
             f'Expected a numpy array, got {type(kin_img)}'
@@ -294,20 +318,6 @@ class MappedFrame():
 
         return points
     
-    def compute_axis_ratio(self):
-        """
-        Compute the ratio between the kinematic axis and the map axis.
-
-        Returns:
-        - The ratio between the kinematic axis and the map axis.
-        """
-
-        axis_pts = self.mmap.get_axis_points()
-        map_axis_norm = np.linalg.norm(axis_pts[1] - axis_pts[0])
-        kin_middle_axis_norm = np.linalg.norm(self.kin_middle_axis[1] - self.kin_middle_axis[0])
-
-        return kin_middle_axis_norm / map_axis_norm
-
     def compute_kin_middle_axis_vector(self, unit=True):
         """
         Compute the unit vector of the kinematic axis.
@@ -343,8 +353,7 @@ class MappedFrame():
             vec = vec / np.linalg.norm(vec)
 
         return vec
-
-        
+       
     def compute_kinematic_vector(self, unit=True):
         """
         Compute the kinematic vector derived from the middle and top views.
@@ -414,5 +423,30 @@ class MappedFrame():
 
         return angle
         
+    def compute_kin_map_ratio(self):
+        """
+        Compute the ratio between the kinematic axis and the map axis.
 
+        Returns:
+        - The ratio between the kinematic axis and the map axis.
+        """
+        kinematic_vector = self.compute_kinematic_vector(unit=False)
+        map_axis_vec = self.mmap.compute_axis_vector(unit=False)
 
+        ratio = np.linalg.norm(kinematic_vector) / np.linalg.norm(map_axis_vec)
+
+        return ratio
+
+    def compute_projected_hulls(self):
+        """
+        Compute the projected convex hulls of the muscles.
+
+        Returns:
+        - The projected convex hulls of the muscles.
+        """
+        muscles_pts = self.compute_projected_muscle_points()
+        hulls = []
+        for pts in muscles_pts:
+            hull = ConvexHull(pts)
+            hulls.append(hull)
+        return hulls
