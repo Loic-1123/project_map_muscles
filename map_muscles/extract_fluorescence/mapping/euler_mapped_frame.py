@@ -63,7 +63,7 @@ class MappedFrame():
     
     def orient_map(self):
         """
-        Orient the map to match the kinematic and top kinematic derived angles.
+        Orient the map to match the kinematic vector derived from the top and middle views axes.
 
         Returns:
             None
