@@ -3,6 +3,7 @@ add_root()
 
 import numpy as np
 import matplotlib.pyplot as plt
+import h5py
 
 import map_muscles.path_utils as pu
 import map_muscles.extract_fluorescence.mapping.euler_mapped_frame as mf
@@ -243,16 +244,16 @@ if __name__ == "__main__":
     
     ### Numerical tests ###
     test_compute_kin_middle_axis_angle()
-    #test_compute_kin_top_axis_angle()
+    test_compute_kin_top_axis_angle()
     test_compute_kinematic_vector()
 
     
     ### Visualizations tests ###
 
-    #test_plot_coordinate_frame()
-    #test_visualize_map_aligned_with_kin_middle_axis()
-    #test_visualize_scaled_translated_map()
-    #test_visualize_compute_kinematic_vector()
+    test_plot_coordinate_frame()
+    test_visualize_map_aligned_with_kin_middle_axis()
+    test_visualize_scaled_translated_map()
+    test_visualize_compute_kinematic_vector()
     test_visualize_orient_map()
 
 
