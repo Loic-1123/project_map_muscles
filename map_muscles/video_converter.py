@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib as mpl
 mpl.use('TkAgg')
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from pathlib import Path
 
 import map_muscles.extract_fluorescence.imaging_utils as imu
 import map_muscles.path_utils as pu
@@ -20,7 +21,6 @@ This file contains functions to:
 """
 
 def get_fourcc(ext = 'mp4v'):
-
     return cv2.VideoWriter_fourcc(*ext)
 
 def get_video_dimensions(figsize, factor=100):
@@ -40,7 +40,7 @@ def get_video_writer(
         figsize,
         fps,
         video_dir = pu.get_video_dir(),
-        fourcc=get_fourcc(), 
+        fourcc=get_fourcc(),
         ):
     """Returns a cv2 VideoWriter object.
 
@@ -255,47 +255,9 @@ def write_kin_video(
 
     frames_to_video(frames, video_file, fps=fps)
     
-def write_muscle_video(
-        img_folder,
-        video_name,
-        output_folder,
-        start_index = None,
-        end_index = None,
-        img_extension = 'tif',
-        fps=1,
-        gain=1,
-        ):
-    assert img_folder.exists() & img_folder.is_dir(), \
-        f'img folder {img_folder} does not exist or is not a folder'
-    
-    assert output_folder.exists() & output_folder.is_dir(), \
-        f'output folder {output_folder} does not exist or is not a folder'
-    
-    video = video_name + '.mp4'
-    video_file = output_folder / video
-
-    images_paths = extract_img_names(img_folder, img_extension)
-
-    #filter out with index
-    images_paths = index_filtering(images_paths, start_index, end_index)
-
-    # make sure that the images are sorted
-    images_paths.sort(key=lambda x: int(x.split('.')[0]))
-
-    print(f'Extracting frames from {img_folder} to create video')
-
-    frames = []
-
-    tqdm_images_paths = tqdm.tqdm(images_paths)
-    for image in tqdm_images_paths:
-        image_path = img_folder / image
-        image = cv2.imread(str(image_path), -1)*gain
-
-        frames.append(image)
-
-    print("shape: " + str(frames[0].shape))
-
-    frames_to_video(frames, video_file, fps)
+def muscle_dir_to_array(muscle_dir_path, img_extension='tif', gain=1):
+    frames = extract_muscle_frames(muscle_dir_path, img_extension, gain=gain)
+    return np.array(frames)
 
 def write_the_two_complete_kin_videos(
         image_folder,
@@ -366,47 +328,117 @@ def end_cv2_writing(out):
     out.release()
     cv2.destroyAllWindows()
     
+def correct_muscle_img_orientation(img):
+    """
+    Corrects the orientation of a muscle image to correspond to the kinematic orientation.
+    
+    Args:
+        img (numpy.ndarray): The muscle image to be corrected.
+        
+    Returns:
+        numpy.ndarray: The corrected muscle image.
+    """
+    img = cv2.flip(img,0)
+    img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    return img
+
+def correct_muscle_frames_orientation(frames):
+    return [correct_muscle_img_orientation(frame) for frame in frames]
+
+def save_corrected_muscle_frames(
+        muscle_dir=pu.get_muscle_dir(), 
+        output_path=pu.get_muscle_frames_dir()/'muscle_frames_900_1399', 
+        img_extension='tif', gain=1):
+    """
+    Save the corrected muscle frames to a numpy file.
+
+    Args:
+        muscle_dir (str): The directory containing the muscle frames.
+        output_path (str): The path to save the corrected muscle frames.
+        img_extension (str): The extension of the muscle frame images.
+        gain (float): The gain value for correcting the muscle frames.
+
+    Returns:
+        None
+    """
+    frames = extract_muscle_frames(muscle_dir, img_extension, gain=gain)
+    corrected_frames = correct_muscle_frames_orientation(frames)
+    np.save(output_path, corrected_frames)
+
+
+def save_muscle_video(frames, output_path:Path, fps=30):
+    """
+    Save a list of muscle frames as a video file.
+
+    Args:
+        frames (List[np.ndarray]): List of frames to be saved as a video.
+        output_path (Path): Path to save the video file.
+        fps (int, optional): Frames per second of the output video. Defaults to 30.
+    """
+    frame = frames[0]
+    height, width = frame.shape
+    out = cv2.VideoWriter(str(output_path), cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height), isColor=False)
+    
+    print(f'Creating video with {len(frames)} frames to {output_path}')
+    tqdm_frames = tqdm.tqdm(frames)
+    for frame in tqdm_frames:
+        out.write(frame.astype('uint8'))
+
+    out.release()
+    cv2.destroyAllWindows()
+
+    assert output_path.exists(), f'video {output_path} was not created'
+    print(f'Video created to {output_path}')
+
+def write_muscle_video(
+        muscle_frames_path=pu.get_muscle_frames_dir()/'muscle_frames_900_1399.npy',
+        save_path=pu.get_video_dir()/'muscle_frames_900_1399.mp4',
+        fps=6,
+):
+    """
+    Writes a muscle video using the muscle frames stored in the given muscle_frames_path.
+    
+    Args:
+        muscle_frames_path (str): Path to the muscle frames file.
+        save_path (str): Path to save the muscle video.
+        fps (int): Frames per second for the muscle video.
+    """
+    muscle_frames = np.load(muscle_frames_path)
+    save_muscle_video(muscle_frames, save_path, fps=fps)
+
+def write_muscle_video_with_threshold(
+        muscle_frames_path=pu.get_muscle_frames_dir()/'muscle_frames_900_1399.npy',
+        save_dir=pu.get_video_dir(),
+        root_name='muscle_video_900_1399',
+        threshold=250,
+        fps=6,
+):
+    """
+    Writes a muscle video with a specified threshold.
+
+    Args:
+        muscle_frames_path (str): Path to the muscle frames file.
+        save_dir (str): Directory to save the muscle video.
+        root_name (str): Root name of the muscle video file.
+        threshold (int): Threshold value to apply to the muscle frames.
+        fps (int): Frames per second for the muscle video.
+
+    Returns:
+        None
+    """
+    muscle_frames = np.load(muscle_frames_path)
+    muscle_frames[muscle_frames > threshold] = threshold
+    name = root_name + f'_threshold_{threshold}.mp4'
+    save_path = save_dir/name
+    save_muscle_video(muscle_frames, save_path, fps=fps)
 
 
 if __name__ == "__main__":
-
-    output_folder = pu.get_video_dir()
-    img_kin_folder = pu.get_kin_dir()
-    img_muscle_folder = pu.get_muscle_dir()
+    #save_corrected_muscle_frames()
+    write_muscle_video()
     
-    assert img_kin_folder.exists()
-    assert img_muscle_folder.exists()
+    thresholds = np.arange(200, 600, 50)
 
-    # 24 - 29 sec on 30 fps video
-
-    fps = 30
-
-    start_sec = 24
-    end_sec = 29
-
-    kin_min_index = imu.get_min_id(img_kin_folder, 'jpg')
-
-    kin_start_id = kin_min_index + start_sec * fps
-
-    kin_end_id = kin_min_index + end_sec * fps
-
-    kin_fps = 20
+    for threshold in thresholds:
+        write_muscle_video_with_threshold(threshold=threshold)
     
-    write_kin_video(
-        img_kin_folder, 'kinematic_clip', output_folder,
-        start_index=kin_start_id, end_index=kin_end_id, fps=kin_fps
-        )
-
-    muscle_min_id = imu.get_min_id(img_muscle_folder, 'tif', id_format='{:06d}')
-
-    ratio = 4
-
-    start_muscle_index = imu.get_matching_muscle_id(kin_start_id, kin_min_index, ratio, muscle_min_id)
-    end_muscle_index = imu.get_matching_muscle_id(kin_end_id, kin_min_index, ratio, muscle_min_id)
-
-    muscle_fps = kin_fps//ratio
-
-    write_muscle_video(img_muscle_folder, 'muscle_clip', output_folder, start_index=start_muscle_index, end_index=end_muscle_index, fps=muscle_fps, gain=1)
-
-    kin_diff = kin_end_id - kin_start_id
-    muscle_diff = end_muscle_index - start_muscle_index

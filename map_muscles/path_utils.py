@@ -22,6 +22,8 @@ img_dir2 = recording_dir / '5760-6210'
 
 kin_frames_dir = img_dir1/ 'kin_frames'
 
+muscle_frames_dir = img_dir1 / 'muscle_frames'
+
 video_dir = recording_dir / 'videos'
 
 xray_dir = data_dir / 'xray'
@@ -156,4 +158,8 @@ def get_map_matching_dir():
 
 @assert_create_return_dir(kin_frames_dir)
 def get_kin_frames_dir():
+    pass
+
+@assert_create_return_dir(muscle_frames_dir)
+def get_muscle_frames_dir():
     pass
