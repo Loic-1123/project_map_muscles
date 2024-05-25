@@ -137,15 +137,34 @@ def get_matching_muscle_img(
         kin_to_muscle_div_factor:float,
         min_id_muscle:int,
         id_format:str='{:06d}',
+        muscle_ext:str='tif'
 ):
-    muscle_frame_id = get_matching_muscle_id(kin_frame_id, min_id_kin, kin_to_muscle_div_factor, min_id_muscle)
+    """
+    Retrieves the matching muscle image for a given kinematic frame ID.
+
+    Args:
+        muscle_path (Path): The path to the directory containing the muscle images.
+        kin_frame_id (int): The kinematic frame ID number.
+        min_id_kin (int): The minimum kinematic frame ID number in the kinematic folder.
+        kin_to_muscle_div_factor (float): The division factor between kinematic and muscle frame IDs.
+        min_id_muscle (int): The minimum muscle frame ID in the muscle folder.
+        id_format (str, optional): The format string for the muscle frame ID. Defaults to '{:06d}'.
+        muscle_ext (str, optional): The file extension for the muscle images. Defaults to 'tif'.
+
+    Returns:
+        numpy.ndarray: The muscle image corresponding to the given kinematic frame ID.
+
+    Raises:
+        AssertionError: If the muscle image path does not exist.
+    """
     
+    muscle_frame_id = get_matching_muscle_id(kin_frame_id, min_id_kin, kin_to_muscle_div_factor, min_id_muscle)
     if id_format is not None:
         muscle_frame_id_str = id_format.format(muscle_frame_id)
     else:
         muscle_frame_id_str = str(muscle_frame_id)
 
-    muscle_img_path = muscle_path / f"{muscle_frame_id_str}.jpg"
+    muscle_img_path = muscle_path / f"{muscle_frame_id_str}.{muscle_ext}"
 
     assert muscle_img_path.exists(), f"Following muscle_img_path does not exist: {muscle_img_path}"
 

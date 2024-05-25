@@ -4,13 +4,15 @@ add_root()
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull
-
-
+from pathlib import Path
+import cv2
 
 import map_muscles.muscle_template.euler_map as mp
+import map_muscles.extract_fluorescence.imaging_utils as imu
 
 class MappedFrame():
     kin_img: np.ndarray
+    muscle_img: np.ndarray
     kin_middle_axis: np.ndarray # 2D array of shape (2, 2) (middle view)
     kin_top_axis: np.ndarray # 2D array of shape (2, 2) (top view)
     mmap: mp.MuscleMap
@@ -20,11 +22,66 @@ class MappedFrame():
             kin_img: np.ndarray, 
             kin_middle_axis:np.ndarray, 
             kin_top_axis:np.ndarray,
-            mmap: mp.MuscleMap):
+            mmap: mp.MuscleMap,
+            muscle_img: np.ndarray = None
+        ):
         self.set_img(kin_img)
         self.set_kin_middle_axis(kin_middle_axis)
         self.set_kin_top_axis(kin_top_axis)
         self.set_mmap(mmap)
+        self.set_muscle_img(muscle_img)
+
+    @classmethod
+    def from_muscle_img_id(
+        muscle_id: int, 
+        kin_middle_axis: np.ndarray, 
+        kin_top_axis: np.ndarray,
+        mmap: mp.MuscleMap,
+        path_to_muscle_img: Path,
+        path_to_kin_img: Path,
+        muscle_img_extension: str = 'tif',
+        kin_to_muscle_div_factor: int = 4,
+    ):
+        """
+        Create a MappedFrame object from a muscle image ID.
+        Fetches the corresponding muscle image and its matching kin image.
+
+        Args:
+            muscle_id (int): The ID of the muscle image.
+            kin_middle_axis (np.ndarray): The middle axis of the kin image.
+            kin_top_axis (np.ndarray): The top axis of the kin image.
+            mmap (mp.MuscleMap): The muscle map object.
+            path_to_muscle_img (Path): The path to the muscle image directory.
+            path_to_kin_img (Path): The path to the kin image directory.
+            muscle_img_extension (str, optional): The extension of the muscle image files. Defaults to 'tif'.
+            kin_to_muscle_div_factor (int, optional): The division factor between kin and muscle images. Defaults to 4.
+
+        Returns:
+            MappedFrame: The mapped frame object.
+        """
+        muscle_img = cv2.imread(str(path_to_muscle_img / f'{muscle_id:06d}.tif'), -1)
+
+        muscle_min_id = imu.get_min_id(path_to_muscle_img, muscle_img_extension)
+        kin_min_id = imu.get_min_id(path_to_kin_img, 'jpg') 
+
+        kin_img = imu.get_matching_kin_img(
+            muscle_frame_id=muscle_id, 
+            min_id_muscle_file=muscle_min_id,
+            ratio=kin_to_muscle_div_factor,
+            min_id_kin_file=kin_min_id,
+            kin_path=path_to_kin_img)
+        
+        return MappedFrame(
+            kin_img=kin_img,
+            kin_middle_axis=kin_middle_axis,
+            kin_top_axis=kin_top_axis,
+            mmap=mmap,
+            muscle_img=muscle_img
+            )
+            
+        
+
+
 
 
     # Transformations
@@ -107,7 +164,7 @@ class MappedFrame():
         ax.imshow(self.kin_img, **kwargs)
         return ax
     
-    def plot_kin_middle_axis(self, ax, delta=np.array([0,0]),**kwargs):
+    def plot_kin_middle_axis(self, ax, label='labeled kin middle axis', delta=np.array([0,0]),**kwargs):
         """
         Plots the kinematic axis on the given axes.
 
@@ -119,10 +176,10 @@ class MappedFrame():
             matplotlib.axes.Axes: The modified axes object.
 
         """
-        ax.plot(self.kin_middle_axis[:, 0]+delta[0], self.kin_middle_axis[:, 1]+delta[1], **kwargs)
+        ax.plot(self.kin_middle_axis[:, 0]+delta[0], self.kin_middle_axis[:, 1]+delta[1], label=label, **kwargs)
         return ax
     
-    def plot_kin_top_axis(self, ax, delta=np.array([0,0]),**kwargs):
+    def plot_kin_top_axis(self, ax, label='labeled kin top axis', delta=np.array([0,0]),**kwargs):
         """
         Plots the top kinematic axis on the given axes.
 
@@ -134,7 +191,7 @@ class MappedFrame():
             matplotlib.axes.Axes: The modified axes object.
 
         """
-        ax.plot(self.kin_top_axis[:, 0]+delta[0], self.kin_top_axis[:, 1]+delta[1], **kwargs)
+        ax.plot(self.kin_top_axis[:, 0]+delta[0], self.kin_top_axis[:, 1]+delta[1], label=label, **kwargs)
         return ax
 
     def plot_map_axis_middle_view(self, ax, label='map axis middle view',delta=(0,0), **kwargs):
@@ -157,6 +214,33 @@ class MappedFrame():
         ax.plot(axis[:, 0], axis[:, 1], label=label, **kwargs)
         return ax
     
+    def plot_map_axis_points_middle_view(
+            self, 
+            ax, 
+            label='map axis points middle view', 
+            delta=(0,0), 
+            color=np.array([1,0,0]),
+            s=20,
+            **kwargs):
+        """
+        Plots the projected map axis points on the given axes.
+
+        Parameters:
+            ax (matplotlib.axes.Axes): The axes on which to plot the map axis points.
+            **kwargs: Additional keyword arguments to be passed to the `scatter` function.
+
+        Returns:
+            matplotlib.axes.Axes: The modified axes object.
+
+        """
+        axis = self.mmap.get_axis_points()
+
+        # remove z coordinate
+        axis = axis[:, [0, 1]] + delta
+
+        ax.scatter(axis[:, 0], axis[:, 1], label=label, color=color, s=s,**kwargs)
+        return ax
+
     def plot_map_axis_top_view(self, ax, label='map axis top view', delta=(0,0), **kwargs):
         """
         Plots the projected map axis on the y-z plane on the given ax.
@@ -181,7 +265,7 @@ class MappedFrame():
 
         ax.plot(axis[:, 0], axis[:, 1], label=label, **kwargs)
         return ax
-
+    
     def plot_kinematic_vector(self, ax, length=50, top_label='Top kinematic axis', middle_label='Middle kinematic axis', delta=(0,0), **kwargs):
         """
         Plot the kinematic vector on the given axes.
@@ -275,6 +359,22 @@ class MappedFrame():
             plt.plot(points[hull.vertices,0], points[hull.vertices,1], color=c, label=label, **kwargs)
         return ax
 
+    def plot_muscle_img(self, ax, **kwargs):
+        """
+        Plot the muscle image on the given axes.
+
+        Parameters:
+        - ax: The axes object on which to plot the image.
+        - **kwargs: Additional keyword arguments to be passed to the `imshow` function.
+
+        Returns:
+        - The modified axes object.
+
+        """
+        ax.imshow(self.muscle_img, **kwargs)
+        return ax
+
+    
     # Getters
     def get_img(self):
         return self.kin_img  
@@ -305,6 +405,11 @@ class MappedFrame():
         assert type(kin_img) == np.ndarray, \
             f'Expected a numpy array, got {type(kin_img)}'
         self.kin_img = kin_img
+    def set_muscle_img(self, muscle_img):
+        if muscle_img is not None:
+            assert type(muscle_img) == np.ndarray, \
+            f'Expected a numpy array, got {type(muscle_img)}'
+        self.muscle_img = muscle_img
 
     # Computers
 

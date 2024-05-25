@@ -4,6 +4,7 @@ add_root()
 import numpy as np
 import matplotlib.pyplot as plt
 import h5py
+import cv2
 
 import map_muscles.path_utils as pu
 import map_muscles.extract_fluorescence.mapping.euler_mapped_frame as mf
@@ -63,6 +64,10 @@ MMAP = mp.MuscleMap.from_directory(map_dir)
 MMAP.init_default_axis_points()
 
 FIGSIZE = (10, 10)
+
+muscle_dir = pu.get_muscle_dir()
+muscle_min = imu.get_min_id(muscle_dir, 'tif', id_format='{:06d}')
+# muscle id = 1086 -> 186th frame
 
 
 def get_mframe():
@@ -248,8 +253,6 @@ def test_visualize_scaling_on_kinetic_frame():
     ratio = mframe.compute_kin_map_ratio()
     mframe.scale_map(ratio=ratio)
 
-
-
     fig, ax = plt.subplots(1,1, figsize=FIGSIZE)
 
     delta = np.array([10, 0])
@@ -258,11 +261,38 @@ def test_visualize_scaling_on_kinetic_frame():
     mframe.plot_kin_middle_axis(ax, delta=2*delta)
     
     mframe.plot_convex_hulls(ax)
+    mframe.plot_map_axis_points_middle_view(ax)
 
     ax.axis('off')
     ax.legend()
 
     plt.show()
+
+def test_visualize_muscle_img():
+    muscle_img = imu.get_matching_muscle_img(
+        muscle_path=muscle_dir,
+        kin_frame_id=idx+kin_min,
+        min_id_kin=kin_min,
+        kin_to_muscle_div_factor=4,
+        min_id_muscle=muscle_min,
+        id_format='{:06d}',
+    )
+
+    muscle_img = cv2.rotate(muscle_img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    muscle_img = cv2.flip(muscle_img, 1)
+
+    mframe = mf.MappedFrame(KINFRAME, KINAXIS, TOPKINAXIS, MMAP, muscle_img)
+    
+    fig, axs = plt.subplots(1,2, figsize=FIGSIZE)
+
+    mframe.plot_kin_img(axs[0], cmap='gray')
+    mframe.plot_muscle_img(axs[1], cmap='gray')
+
+    for ax in axs:
+        ax.axis('off')
+
+    plt.show()
+
 
 
 if __name__ == "__main__":
@@ -281,6 +311,7 @@ if __name__ == "__main__":
     #test_visualize_compute_kinematic_vector()
     #test_visualize_orient_map()
     test_visualize_scaling_on_kinetic_frame()
+    #test_visualize_muscle_img()
 
 
     print("All tests passed.")

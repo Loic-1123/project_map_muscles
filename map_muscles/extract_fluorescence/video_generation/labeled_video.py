@@ -333,7 +333,7 @@ if __name__ == "__main__":
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec to use for the video
     output_dir = pu.get_video_dir()
     video_name = 'cropped_femur_muscle_fps2.mp4'
-
+    """
     write_cropped_muscle_video(
         label_start_id,
         trochanter_locations,
@@ -374,7 +374,7 @@ if __name__ == "__main__":
         video_name=video_name, output_dir=output_dir,
     )
     print("Video created to ", output_dir / video_name)
-
+    """
     video_name = 'calibration_check_on_cropped_femur_fps_3.mp4'
 
     write_cropped_femur_calibration_check_video(

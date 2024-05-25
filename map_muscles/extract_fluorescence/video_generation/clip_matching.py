@@ -22,7 +22,6 @@ def write_kin_muscle_matching_clip(
         kin_min_id,
         kin_dir_path,
         video_writer,
-        video_name,
         figsize=(10, 5),
         ):
     """
