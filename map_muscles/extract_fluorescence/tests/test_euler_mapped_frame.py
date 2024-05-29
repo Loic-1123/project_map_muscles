@@ -90,18 +90,18 @@ def test_plot_coordinate_frame():
 
 def test_visualize_map_aligned_with_kin_middle_axis():
     """
-    Test align_map_axis_ref_points()
+    Test align_map_axis_ref_point_on_kin()
     """
 
     mframe = get_mframe()
 
-    mframe.align_map_axis_ref_points()
+    mframe.align_map_axis_ref_point_on_kin()
     
     fig, ax = plt.subplots(1,1, figsize=FIGSIZE)
 
     mframe.plot_kin_img(ax, cmap='gray')
     mframe.plot_kin_middle_axis(ax)
-    mframe.plot_map_axis_middle_view(ax)
+    mframe.plot_map_axis_middle_view_on_kin(ax)
     mframe.plot_map_on_frame(ax)
 
     ax.axis('off')
@@ -117,7 +117,7 @@ def test_visualize_scaled_translated_map():
     
     
     mframe.scale_map()
-    mframe.align_map_axis_ref_points()
+    mframe.align_map_axis_ref_point_on_kin()
     
 
     
@@ -125,7 +125,7 @@ def test_visualize_scaled_translated_map():
 
     mframe.plot_kin_img(ax, cmap='gray')
     mframe.plot_kin_middle_axis(ax)
-    mframe.plot_map_axis_middle_view(ax)
+    mframe.plot_map_axis_middle_view_on_kin(ax)
     mframe.plot_map_on_frame(ax, s=1)
 
     ax.axis('off')
@@ -182,7 +182,7 @@ def test_compute_kin_top_axis_angle():
 def test_compute_kinematic_vector():
     mframe = get_mframe()
 
-    mframe.align_map_axis_ref_points()
+    mframe.align_map_axis_ref_point_on_kin()
 
     kin_vec = mframe.compute_kinematic_vector(unit=False)
     kin_top = mframe.compute_kin_top_axis_vector(unit=False)
@@ -204,7 +204,7 @@ def test_compute_kinematic_vector():
 def test_visualize_compute_kinematic_vector():
     mframe = get_mframe()
 
-    mframe.align_map_axis_ref_points()
+    mframe.align_map_axis_ref_point_on_kin()
 
     fig, ax = plt.subplots(1,1, figsize=FIGSIZE)
 
@@ -219,11 +219,11 @@ def test_visualize_compute_kinematic_vector():
     plt.show()
 
 
-def test_visualize_orient_map():
+def test_visualize_orient_map_on_kin():
     mframe = get_mframe()
 
-    mframe.align_map_axis_ref_points()
-    mframe.orient_map()
+    mframe.align_map_axis_ref_point_on_kin()
+    mframe.orient_map_on_kin()
 
     fig, ax = plt.subplots(1,1, figsize=FIGSIZE)
 
@@ -233,8 +233,8 @@ def test_visualize_orient_map():
     mframe.plot_kin_middle_axis(ax)
     mframe.plot_kin_top_axis(ax)
     
-    mframe.plot_map_axis_top_view(ax, delta=delta, label='Map axis top view')
-    mframe.plot_map_axis_middle_view(ax, delta=delta, label='Map axis middle view')
+    mframe.plot_map_axis_top_view_on_kin(ax, delta=delta, label='Map axis top view')
+    mframe.plot_map_axis_middle_view_on_kin(ax, delta=delta, label='Map axis middle view')
 
     mframe.plot_kinematic_vector(ax, delta=2*delta)
 
@@ -248,8 +248,8 @@ def test_visualize_orient_map():
 def test_visualize_scaling_on_kinetic_frame():
     mframe = get_mframe()
 
-    mframe.align_map_axis_ref_points()
-    mframe.orient_map()
+    mframe.align_map_axis_ref_point_on_kin()
+    mframe.orient_map_on_kin()
     ratio = mframe.compute_kin_map_ratio()
     mframe.scale_map(ratio=ratio)
 
@@ -260,8 +260,8 @@ def test_visualize_scaling_on_kinetic_frame():
     
     mframe.plot_kin_middle_axis(ax, delta=2*delta)
     
-    mframe.plot_convex_hulls(ax)
-    mframe.plot_map_axis_points_middle_view(ax)
+    mframe.plot_convex_hulls_on_middle_view(ax)
+    mframe.plot_map_axis_points_middle_view_on_kin(ax)
 
     ax.axis('off')
     ax.legend()
@@ -294,6 +294,125 @@ def test_visualize_muscle_img():
     plt.show()
 
 
+sleap_muscle_file = "labels_muscle_frames_femur_V1.000_muscle_frames_900_1399.analysis.h5"
+path = sleap_dir / sleap_muscle_file
+
+def get_muscle_locations_from_sleap_file(
+        sleap_file_path,
+        trochanter_id=0,
+        femur_tibia_id=1,
+        ):
+    with h5py.File(sleap_file_path, 'r') as f:
+        locations = f["tracks"][:].T
+
+    muscle_tro = locations[:, trochanter_id, :, 0]
+    muscle_ft = locations[:, femur_tibia_id, :, 0]
+    return muscle_tro, muscle_ft
+
+mtro_locations, mft_locations = get_muscle_locations_from_sleap_file(path)
+
+# frame relative id: 173
+idx = 174
+def get_labeled_muscle_frame(
+        npy_file_path,
+        idx):
+    muscle_frames = np.load(npy_file_path)
+
+    labeled_muscle_frame = muscle_frames[idx]
+
+    return labeled_muscle_frame
+
+muscle_npy_file = 'muscle_frames_900_1399.npy'
+muscle_frames_dir = pu.get_muscle_frames_dir()
+muscle_file_path = muscle_frames_dir/ muscle_npy_file
+
+
+mtro = mtro_locations[idx]
+mft = mft_locations[idx]
+m_axis = np.array([mtro, mft])
+muscle_frame = get_labeled_muscle_frame(muscle_file_path, idx)
+
+# get corresponding kin frame id
+kin_to_muscle_div_factor = 4
+rel_kin_idx = idx*kin_to_muscle_div_factor
+
+
+kin_sleap_file = "label_femur_for_muscle_V1.000_900_1440_kin.analysis.h5"
+
+kintro, kinft, _, topkintro, topkinft = get_locations_from_sleap_file(sleap_dir / kin_sleap_file)
+kin_frame = get_labeled_kin_frame(kin_file_path, rel_kin_idx)
+kinmidaxis = np.array([kintro[rel_kin_idx], kinft[rel_kin_idx]])
+kintopaxis = np.array([topkintro[rel_kin_idx], topkinft[rel_kin_idx]])
+
+def get_muscle_mframe():
+    return mf.MappedFrame(
+        kin_frame,
+        kinmidaxis,
+        kintopaxis,
+        MMAP,
+        muscle_frame,
+        m_axis,
+    )
+
+def test_visualize_kin_muscle_with_axis():
+    mframe = get_muscle_mframe()
+
+    fig, axs = plt.subplots(1,2, figsize=FIGSIZE)
+
+    mframe.plot_kin_img(axs[0], cmap='gray')
+    mframe.plot_kin_middle_axis(axs[0])
+    mframe.plot_kin_top_axis(axs[0])
+    
+    mframe.plot_muscle_img(axs[1], cmap='gray')
+    mframe.plot_muscle_middle_axis(axs[1])
+
+    print(mframe.get_muscle_middle_axis())
+
+    for ax in axs:
+        ax.axis('off')
+
+    plt.show()
+
+def test_visualize_muscle_oriented_scaled_map():
+    mframe = get_muscle_mframe()
+
+    mframe.align_map_axis_ref_point_on_muscle()
+    mframe.orient_map_on_muscle()
+    ratio = mframe.compute_muscle_map_ratio()
+    print(ratio)
+    mframe.scale_map(ratio=ratio)
+
+    fig, ax = plt.subplots(1,2, figsize=FIGSIZE)
+
+    delta = np.array([10, 0])
+
+    mframe.plot_kin_img(ax[0], cmap='gray')
+    mframe.plot_kin_middle_axis(ax[0])
+
+    mframe.plot_muscle_img(ax[1], cmap='gray')
+    mframe.plot_muscle_middle_axis(ax[1], delta=2*delta)
+    mframe.plot_map_axis_middle_view_on_muscle(ax[1], delta=delta)
+    mframe.plot_convex_hulls_on_middle_view(ax[1])
+    
+
+    for ax in ax:
+        ax.axis('off')
+
+    plt.show()
+
+
+
+
+
+
+    
+
+    
+    
+
+
+
+
 
 if __name__ == "__main__":
     
@@ -309,9 +428,12 @@ if __name__ == "__main__":
     #test_visualize_map_aligned_with_kin_middle_axis()
     #test_visualize_scaled_translated_map()
     #test_visualize_compute_kinematic_vector()
-    #test_visualize_orient_map()
-    test_visualize_scaling_on_kinetic_frame()
+    #test_visualize_orient_map_on_kin()
+    #test_visualize_scaling_on_kinetic_frame()
     #test_visualize_muscle_img()
+
+    #test_visualize_kin_muscle_with_axis()
+    test_visualize_muscle_oriented_scaled_map()
 
 
     print("All tests passed.")

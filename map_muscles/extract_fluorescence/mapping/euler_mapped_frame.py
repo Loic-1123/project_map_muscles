@@ -12,10 +12,15 @@ import map_muscles.extract_fluorescence.imaging_utils as imu
 
 class MappedFrame():
     kin_img: np.ndarray
-    muscle_img: np.ndarray
     kin_middle_axis: np.ndarray # 2D array of shape (2, 2) (middle view)
     kin_top_axis: np.ndarray # 2D array of shape (2, 2) (top view)
+
     mmap: mp.MuscleMap
+
+    muscle_img: np.ndarray
+    muscle_middle_axis: np.ndarray # 2D array of shape (2, 2) (middle view)
+
+    # The different axes represent the trochanter and femur-tibia joints
 
     def __init__(
             self, 
@@ -23,13 +28,15 @@ class MappedFrame():
             kin_middle_axis:np.ndarray, 
             kin_top_axis:np.ndarray,
             mmap: mp.MuscleMap,
-            muscle_img: np.ndarray = None
+            muscle_img: np.ndarray = None,
+            muscle_middle_axis: np.ndarray = None,
         ):
         self.set_img(kin_img)
         self.set_kin_middle_axis(kin_middle_axis)
         self.set_kin_top_axis(kin_top_axis)
         self.set_mmap(mmap)
         self.set_muscle_img(muscle_img)
+        self.set_muscle_middle_axis(muscle_middle_axis)
 
     @classmethod
     def from_muscle_img_id(
@@ -80,12 +87,8 @@ class MappedFrame():
             )
             
         
-
-
-
-
     # Transformations
-    def align_map_axis_ref_points(self):
+    def align_map_axis_ref_point_on_kin(self):
         """
         Aligns the map axis reference points.
 
@@ -97,6 +100,21 @@ class MappedFrame():
         """
         cmmap = self.mmap.centered_on_axis_point()
         tvec = np.array([self.kin_middle_axis[0][0], self.kin_middle_axis[0][1], 0])
+        aligned_mmap = cmmap.translate(tvec)
+        self.mmap = aligned_mmap
+
+    def align_map_axis_ref_point_on_muscle(self):
+        """
+        Aligns the map axis reference points.
+
+        This method aligns the x and y coordinates of the first map axis point
+        with the first muscle axis point.
+
+        Returns:
+            None
+        """
+        cmmap = self.mmap.centered_on_axis_point()
+        tvec = np.array([self.muscle_middle_axis[0][0], self.muscle_middle_axis[0][1], 0])
         aligned_mmap = cmmap.translate(tvec)
         self.mmap = aligned_mmap
 
@@ -120,7 +138,7 @@ class MappedFrame():
 
         self.mmap = smmap.translate(ref_point)
     
-    def orient_map(self):
+    def orient_map_on_kin(self):
         """
         Orient the map to match the kinematic vector derived from the top and middle views axes.
 
@@ -140,7 +158,29 @@ class MappedFrame():
         gamma = self.mmap.get_gamma()
 
         self.mmap = self.mmap.rotate_to_angles([alpha, beta, gamma])
+    
+    def orient_map_on_muscle(self):
+        """
+        Orient the map to match the muscle vector derived from the top and middle views axes.
+
+        Returns:
+            None
+        """
+
+        muscle_vector = self.compute_muscle_vector(unit=True)
+
+        # we want to align the axis vector with the kin_vector
+        # for that, we extract the alpha and beta angles from the kin vector
+        # and set the map to the corresponding angles
+        alpha = mp.compute_alpha(muscle_vector)
+        beta = mp.compute_beta(muscle_vector)
+
+        # gamma stay unchanged
+        gamma = self.mmap.get_gamma()
+
+        self.mmap = self.mmap.rotate_to_angles([alpha, beta, gamma])
         
+
     # Plotting
 
     def plot_kin_img(self, ax, **kwargs):
@@ -194,7 +234,7 @@ class MappedFrame():
         ax.plot(self.kin_top_axis[:, 0]+delta[0], self.kin_top_axis[:, 1]+delta[1], label=label, **kwargs)
         return ax
 
-    def plot_map_axis_middle_view(self, ax, label='map axis middle view',delta=(0,0), **kwargs):
+    def plot_map_axis_middle_view_on_kin(self, ax, label='map axis middle view',delta=(0,0), **kwargs):
         """
         Plots the projected map axis on the given axes.
 
@@ -214,7 +254,7 @@ class MappedFrame():
         ax.plot(axis[:, 0], axis[:, 1], label=label, **kwargs)
         return ax
     
-    def plot_map_axis_points_middle_view(
+    def plot_map_axis_points_middle_view_on_kin(
             self, 
             ax, 
             label='map axis points middle view', 
@@ -241,7 +281,7 @@ class MappedFrame():
         ax.scatter(axis[:, 0], axis[:, 1], label=label, color=color, s=s,**kwargs)
         return ax
 
-    def plot_map_axis_top_view(self, ax, label='map axis top view', delta=(0,0), **kwargs):
+    def plot_map_axis_top_view_on_kin(self, ax, label='map axis top view', delta=(0,0), **kwargs):
         """
         Plots the projected map axis on the y-z plane on the given ax.
         Align the axis with the kin_top_axis.
@@ -335,7 +375,7 @@ class MappedFrame():
 
         return ax
 
-    def plot_convex_hulls(self, ax, colors=None, labels=None, **kwargs):
+    def plot_convex_hulls_on_middle_view(self, ax, colors=None, labels=None, **kwargs):
         """
         Plot the convex hulls of the muscles on the given axes.
 
@@ -374,7 +414,50 @@ class MappedFrame():
         ax.imshow(self.muscle_img, **kwargs)
         return ax
 
+    def plot_muscle_middle_axis(self, ax, label='labeled muscle middle axis', delta=np.array([0,0]), **kwargs):
+        """
+        Plot the muscle middle axis on the given axes.
+
+        Parameters:
+        - ax: The axes object on which to plot the muscle middle axis.
+        - label: The label of the plotted line.
+        - delta: Optional. The delta to add to the muscle middle axis.
+        - **kwargs: Additional keyword arguments to be passed to the `plot` function.
+
+        Returns:
+        - The modified axes object.
+
+        """
+        ax.plot(self.muscle_middle_axis[:, 0]+delta[0], self.muscle_middle_axis[:, 1]+delta[1], label=label, **kwargs)
+        return ax
     
+    def plot_map_axis_middle_view_on_muscle(
+            self, 
+            ax, 
+            label='map axis middle view', 
+            delta=(0,0), 
+            **kwargs):
+        """
+        Plot the projected map axis on the muscle image.
+
+        Parameters:
+        - ax: The axes object on which to plot the map axis.
+        - label: The label of the plotted line.
+        - delta: Optional. The delta to add to the map axis.
+        - **kwargs: Additional keyword arguments to be passed to the `plot` function.
+
+        Returns:
+        - The modified axes object.
+
+        """
+        axis = self.mmap.get_axis_points()
+
+        # remove z coordinate
+        axis = axis[:, [0, 1]] + delta
+
+        ax.plot(axis[:, 0], axis[:, 1], label=label, **kwargs)
+        return ax
+
     # Getters
     def get_img(self):
         return self.kin_img  
@@ -384,6 +467,10 @@ class MappedFrame():
         return self.kin_top_axis
     def get_mmap(self):
         return self.mmap
+    def get_muscle_img(self):
+        return self.muscle_img
+    def get_muscle_middle_axis(self):
+        return self.muscle_middle_axis
 
     # Setters
     def set_kin_middle_axis(self, axis):
@@ -410,9 +497,12 @@ class MappedFrame():
             assert type(muscle_img) == np.ndarray, \
             f'Expected a numpy array, got {type(muscle_img)}'
         self.muscle_img = muscle_img
-
+    def set_muscle_middle_axis(self, muscle_middle_axis):
+        if muscle_middle_axis is not None:
+            assert muscle_middle_axis.shape == (2, 2), \
+                f'Expected 2D array of shape (2, 2), got {muscle_middle_axis.shape}'
+        self.muscle_middle_axis = muscle_middle_axis
     # Computers
-
     def compute_projected_muscle_points(self):
         points = []
         for muscle in self.mmap.get_muscles():
@@ -485,7 +575,21 @@ class MappedFrame():
             l = l / np.linalg.norm(l)
 
         return l
-    
+
+    def compute_muscle_middle_axis_vector(self, unit=True):
+        """
+        Compute the axis vector derived from the middle view of the muscle camera.
+
+        Returns:
+        - The vector.
+        """
+        vec = self.muscle_middle_axis[1] - self.muscle_middle_axis[0]
+
+        if unit:
+            vec = vec / np.linalg.norm(vec)
+
+        return vec
+
     def compute_beta_from_kin_top_axis(self):
         """
         Compute the angle between the top kinematic axis and the x-axis (gamma/roll).
@@ -539,6 +643,67 @@ class MappedFrame():
         map_axis_vec = self.mmap.compute_axis_vector(unit=False)
 
         ratio = np.linalg.norm(kinematic_vector) / np.linalg.norm(map_axis_vec)
+
+        return ratio
+
+    def compute_length_muscle_vector(self):
+        """
+        Compute the length of the muscle vector.
+
+        Returns:
+        - The length of the muscle vector.
+        """
+        muscle_middle_axis_vec = self.compute_muscle_middle_axis_vector(unit=False)
+        angle = self.compute_kin_top_axis_angle()
+
+        l1 = np.linalg.norm(muscle_middle_axis_vec)
+
+        l_tot = l1 / np.cos(angle) 
+        # length of the muscle vector, derived with the kin top axis angle
+        # l1 is the total length of the vector projected on the x-y plane
+        #  and `angle` the angle between the z-axis and the x-axis
+        # so l_tot * cos(angle) = l1
+
+        return l_tot
+
+    def compute_muscle_vector(self, unit=True):
+        """
+        Compute the muscle vector derived from the middle view of the muscle camera.
+
+        Returns:
+        - The muscle vector.
+        """
+        l1 = self.compute_muscle_middle_axis_vector(unit=False)
+        angle = self.compute_kin_top_axis_angle()
+
+        x, y = l1[0], l1[1]
+    
+        # right triangle, with `angle` and `l1` as the adjacent side
+        z = np.linalg.norm(l1) * np.tan(angle)
+
+        l = np.array([x, y, z])
+
+        if unit:
+            l = l / np.linalg.norm(l)
+
+        return l        
+
+    def compute_muscle_map_ratio(self):
+        """
+        Compute the ratio between the muscle axis and the kinematic axis.
+
+        Returns:
+        - The ratio between the muscle axis and the kinematic axis.
+        """
+        muscle_middle_axis_vec = self.compute_muscle_middle_axis_vector(unit=False)
+
+        l1 = np.linalg.norm(muscle_middle_axis_vec)
+
+        l_tot = self.compute_length_muscle_vector()
+        
+        map_axis_vec = self.mmap.compute_axis_vector(unit=False)
+
+        ratio = l_tot/np.linalg.norm(map_axis_vec)
 
         return ratio
 
