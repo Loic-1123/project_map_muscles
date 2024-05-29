@@ -646,26 +646,6 @@ class MappedFrame():
 
         return ratio
 
-    def compute_length_muscle_vector(self):
-        """
-        Compute the length of the muscle vector.
-
-        Returns:
-        - The length of the muscle vector.
-        """
-        muscle_middle_axis_vec = self.compute_muscle_middle_axis_vector(unit=False)
-        angle = self.compute_kin_top_axis_angle()
-
-        l1 = np.linalg.norm(muscle_middle_axis_vec)
-
-        l_tot = l1 / np.cos(angle) 
-        # length of the muscle vector, derived with the kin top axis angle
-        # l1 is the total length of the vector projected on the x-y plane
-        #  and `angle` the angle between the z-axis and the x-axis
-        # so l_tot * cos(angle) = l1
-
-        return l_tot
-
     def compute_muscle_vector(self, unit=True):
         """
         Compute the muscle vector derived from the middle view of the muscle camera.
@@ -695,15 +675,11 @@ class MappedFrame():
         Returns:
         - The ratio between the muscle axis and the kinematic axis.
         """
-        muscle_middle_axis_vec = self.compute_muscle_middle_axis_vector(unit=False)
-
-        l1 = np.linalg.norm(muscle_middle_axis_vec)
-
-        l_tot = self.compute_length_muscle_vector()
+        muscle_vector = self.compute_muscle_vector(unit=False)
         
         map_axis_vec = self.mmap.compute_axis_vector(unit=False)
 
-        ratio = l_tot/np.linalg.norm(map_axis_vec)
+        ratio = np.linalg.norm(muscle_vector) / np.linalg.norm(map_axis_vec)
 
         return ratio
 
