@@ -400,7 +400,51 @@ def test_visualize_muscle_oriented_scaled_map():
 
     plt.show()
 
+def test_visualize_extract_pixels_coordinates():
+    mframe = get_muscle_mframe()
 
+    mframe.prepare_map()
+
+    muscles_points = mframe.compute_projected_muscle_points()
+
+    pts = muscles_points[0]
+
+    pixels_coor = mframe.extract_pixels_coordinates(muscles_points[0], unique=True)
+
+    fig, ax = plt.subplots(1,1, figsize=FIGSIZE)
+
+    mframe.plot_muscle_img(ax, cmap='gray')
+    
+    # plot scatter the pixels
+    ax.scatter(pts[:, 0], pts[:, 1], s=1, c='r')
+    mframe.plot_muscle_hull_on_middle_view(ax, idx=0, color=np.array([0, 0, 1]))
+
+    ax.scatter(pixels_coor[:, 0], pixels_coor[:, 1], s=10, c='b')
+
+    ax.axis('off')
+
+    plt.show()
+
+def test_visualize_extract_pixel_values():
+    mframe = get_muscle_mframe()
+    mframe.prepare_map()
+
+    muscles_points = mframe.compute_projected_muscle_points()
+    idx=0
+    pts = muscles_points[idx]
+    pixel_coors = mframe.extract_pixels_coordinates(pts, unique=True)
+    pixel_values = mframe.extract_pixel_values(pts)
+
+    fig, ax = plt.subplots(1,1, figsize=FIGSIZE)
+
+    mframe.plot_muscle_img(ax, cmap='gray')
+    ax.scatter(pixel_coors[:, 0], pixel_coors[:, 1], s=1, c='b')
+    mframe.plot_muscle_hull_on_middle_view(ax, idx=0, color=np.array([0, 0, 1]))
+
+    for i in range(len(pixel_coors)):
+        ax.text(pixel_coors[i, 0], pixel_coors[i, 1], str(pixel_values[i]), fontsize=8, color='r')
+
+    plt.show()
 
 
 
@@ -433,7 +477,9 @@ if __name__ == "__main__":
     #test_visualize_muscle_img()
 
     #test_visualize_kin_muscle_with_axis()
-    test_visualize_muscle_oriented_scaled_map()
+    #test_visualize_muscle_oriented_scaled_map()
+    #test_visualize_extract_pixels_coordinates()
+    test_visualize_extract_pixel_values()
 
 
     print("All tests passed.")

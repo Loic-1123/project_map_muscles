@@ -180,7 +180,23 @@ class MappedFrame():
 
         self.mmap = self.mmap.rotate_to_angles([alpha, beta, gamma])
         
+    def prepare_map(self):
+        """
+        Prepare the map by aligning the reference point, orienting the axis and scaling it.
 
+        Parameters:
+            ratio (float): The ratio by which to scale the map.
+
+        Returns:
+            None
+        """
+        self.align_map_axis_ref_point_on_muscle()
+        self.orient_map_on_muscle()
+        ration = self.compute_muscle_map_ratio()
+        self.scale_map(ration)
+
+
+        
     # Plotting
 
     def plot_kin_img(self, ax, **kwargs):
@@ -397,6 +413,26 @@ class MappedFrame():
         for hull, c, label in zip(hulls, colors, labels):
             points = hull.points
             plt.plot(points[hull.vertices,0], points[hull.vertices,1], color=c, label=label, **kwargs)
+        return ax
+    
+    def plot_muscle_hull_on_middle_view(self, ax, idx, color='r', label='muscle convex hull', **kwargs):
+        """
+        Plot the convex hull of a muscle on the given axes.
+
+        Parameters:
+        - ax: The axes object on which to plot the convex hull.
+        - idx: The ID of the muscle for which to plot the convex hull.
+        - color: The color of the convex hull.
+        - label: The label of the convex hull.
+        - **kwargs: Additional keyword arguments to be passed to the `plot` function.
+
+        Returns:
+        - The modified axes object.
+
+        """
+        hull = self.compute_projected_hulls()[idx]
+        points = hull.points
+        ax.plot(points[hull.vertices, 0], points[hull.vertices, 1], color=color, label=label, **kwargs)
         return ax
 
     def plot_muscle_img(self, ax, **kwargs):
@@ -648,7 +684,8 @@ class MappedFrame():
 
     def compute_muscle_vector(self, unit=True):
         """
-        Compute the muscle vector derived from the middle view of the muscle camera.
+        Compute the muscle vector derived from the middle view of the muscle camera
+        and the angle of the top camera axis.
 
         Returns:
         - The muscle vector.
@@ -659,6 +696,7 @@ class MappedFrame():
         x, y = l1[0], l1[1]
     
         # right triangle, with `angle` and `l1` as the adjacent side
+        # tan = opposite / adjacent = z/l1
         z = np.linalg.norm(l1) * np.tan(angle)
 
         l = np.array([x, y, z])
@@ -696,3 +734,55 @@ class MappedFrame():
             hull = ConvexHull(pts)
             hulls.append(hull)
         return hulls
+
+    def extract_pixels_coordinates(self, points, unique=True):
+        """
+        Extract the pixel coordinates of the given points.
+
+        Parameters:
+        - points: The points for which to extract the pixel coordinates.
+
+        Returns:
+        - The pixel coordinates of the given points.
+        """
+
+        # round each coordinate to the nearest integer
+        pts = np.rint(points)
+
+        if unique:
+            pts = np.unique(pts, axis=0)
+            
+        return pts
+
+    def extract_pixel_values(self, points, unique=True):
+        """
+        Extract the pixel values of the muscle image at the given points.
+
+        Parameters:
+        - points: The points at which to extract the pixel values.
+
+        Returns:
+        - The pixel values at the given points.
+        """
+        coor = self.extract_pixels_coordinates(points, unique=unique)
+
+        return self.muscle_img[coor[:, 1].astype(int), coor[:, 0].astype(int)]
+
+    
+    def extract_muscle_pixel_values_from_map(self, unique_points=True):
+        """
+        Extract the pixel values of the muscle image at the projected muscle points.
+
+        Returns:
+        - The pixel values at the projected muscle points.
+        """
+
+        muscles_pts = self.compute_projected_muscle_points()
+
+        pixels_values = []
+        for pts in muscles_pts:
+            pixels_values.append(self.extract_muscle_pixel_values(pts, unique_points=unique_points))
+
+        return pixels_values
+        
+        
