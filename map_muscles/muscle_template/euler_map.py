@@ -448,13 +448,6 @@ class Muscle():
         else:
             return np.hstack((points, np.zeros((points.shape[0], 1))))
     
-    def generate_map2d(self):
-        return IndividualMap2d(
-            self.project_points_on_xy_plane(remove_z_axis=True), 
-            axis_points=self.axis_points,
-            name=self.name
-            )
-    
     # Getters
     def get_points(self):
         return self.points
@@ -1019,7 +1012,7 @@ class MuscleMap():
     def init_default_axis_points(
         self, 
         direction: np.ndarray=np.array([0.4,0.6,-0.3]), 
-        dist: float=500,
+        dist: float=900,
         gamma=0
         ):
         com = self.compute_com()
