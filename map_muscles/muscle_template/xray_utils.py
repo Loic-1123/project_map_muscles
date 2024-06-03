@@ -16,6 +16,7 @@ as well as getting a list of data frames of the femur muscles.
 
 data_path = pu.get_xray_dir()
 muscle_state_path = data_path / 'muscles_state.json'
+muscle_with_joints_state_path = data_path / 'muscles_with_joints_state.json'
 
 def load_muscle_state(path=muscle_state_path):
     """
@@ -110,10 +111,37 @@ def add_lines_to_df(df, A_key='pointA', B_key='pointB'):
     
     return df
 
+def isolate_leg(df, leg='LH'):
+    """
+    Isolate the leg fibers from the DataFrame `df` based on the leg identifier.
 
-if __name__ == "__main__":
-    np.random.seed(0)
-    muscles = load_muscle_state()
+    Parameters:
+    - df: DataFrame
+        The input DataFrame containing the leg fibers.
+    - leg: str, optional
+        The leg identifier. Default is 'LH'.
+
+    Returns:
+    - leg: DataFrame
+        The DataFrame containing the leg fibers of the specified leg.
+    """
+    leg = df[df['leg'] == leg]
+    leg = leg.drop(columns='leg')
+    return leg
+
+def save_legs(
+        muscle_state_path=muscle_state_path, 
+        save_dir=data_path,
+        legs_df_root_name='_with_joint'
+        ):
+    """
+    Save the leg fibers data frames in csv files.
+
+    Parameters:
+    - save_dir: str, optional
+        The directory path where the data is stored. Default is `save_dir`.
+    """
+    muscles = load_muscle_state(muscle_state_path)
     anno_layers = [layer for layer in muscles['layers'] if layer['type'] == 'annotation']
 
     fiber_lines = []
@@ -138,29 +166,49 @@ if __name__ == "__main__":
     leg_fibers['origin'] = leg_fibers['origin-insertion'].str[:2]
     leg_fibers['insertion'] = leg_fibers['origin-insertion'].str[2:]
     leg_fibers = leg_fibers.drop(columns='is_leg_muscle')
-
-    """
-    leg = leg_fibers['leg']
-    leg.describe()
-    leg.unique()
-    # array(['LF', 'RM', 'LH'], dtype=object)
-    """
-
-    def isolate_leg(df=leg_fibers, leg='LH'):
-        leg = df[df['leg'] == leg]
-        leg = leg.drop(columns='leg')
-        return leg
     
-    lh = isolate_leg(leg='LH')
-    lf = isolate_leg(leg='LF')
-    rm = isolate_leg(leg='RM')
+    lh = isolate_leg(leg_fibers,leg='LH')
+    lf = isolate_leg(leg_fibers,leg='LF')
+    rm = isolate_leg(leg_fibers,leg='RM')
 
-    # save the legs
-    lh.to_csv(data_path / 'LHtest.csv', index=False)
-    lf.to_csv(data_path / 'LFtest.csv', index=False)
-    rm.to_csv(data_path / 'RMtest.csv', index=False)
+    lh.to_csv(save_dir / f'LH{legs_df_root_name}.csv', index=False)
+    lf.to_csv(save_dir / f'LF{legs_df_root_name}.csv', index=False)
+    rm.to_csv(save_dir / f'RM{legs_df_root_name}.csv', index=False)
 
-    print(f'Leg fibers data frames saved in {data_path}')
+    print(f'Leg fibers data frames saved in {save_dir}')
 
+def extract_femur_joint_layer(
+        muscle_state_path=muscle_with_joints_state_path,
+        save_dir=data_path,
+        femur_joint_layer_name='Femur segment',
+        femur_df_save_name = 'femur_joints.csv'
+        ):
+    
+    state = load_muscle_state(muscle_state_path)
+    layers = state['layers']
+
+    femur_layer = [layer for layer in layers if layer['name'] == femur_joint_layer_name]
+    femur_layer = femur_layer[0]
+
+    femur_layer_df = pd.DataFrame(femur_layer['annotations'])
+
+    femur_layer_df.to_csv(save_dir / femur_df_save_name, index=False)
+
+    print(f'Femur joint layer saved in {save_dir}')
+
+
+
+if __name__ == "__main__":
+    #save_legs()    
+
+    save_legs(
+        muscle_state_path=muscle_with_joints_state_path,
+        legs_df_root_name='_with_joint'
+        ) # only the femur layer was added, the fibers are the same as in muscle_state_path
+    
+
+    extract_femur_joint_layer()
+
+    
 
 

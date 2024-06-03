@@ -3,7 +3,7 @@ add_root()
 
 
 """
-This file was used to explore the muscle state from the xray data and report the findings.
+This file was used to download and explore the muscle state from the xray data and report the findings.
 """
 
 import pandas as pd
