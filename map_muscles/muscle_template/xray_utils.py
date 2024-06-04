@@ -33,7 +33,7 @@ def get_leg(data_dir=data_path, leg='LH'):
     leg = pd.read_csv(data_dir / f'{leg}.csv')
     return leg
 
-def get_femur_muscles(data_dir=data_path, leg='LH', femur_id='Fe', lines=True, remove=False, to_remove=['LH TrFe']):
+def get_femur_muscles(data_dir=data_path, leg='LH', femur_id='Fe', lines=True, remove=False, to_remove=['LH TrFe', 'LF TrFe', 'RM TrFe']):
     """
     Get the muscles associated with the femur.
 
@@ -132,7 +132,7 @@ def isolate_leg(df, leg='LH'):
 def save_legs(
         muscle_state_path=muscle_state_path, 
         save_dir=data_path,
-        legs_df_root_name='_with_joint'
+        legs_df_root_name=''
         ):
     """
     Save the leg fibers data frames in csv files.
@@ -196,19 +196,27 @@ def extract_femur_joint_layer(
 
     print(f'Femur joint layer saved in {save_dir}')
 
+def get_lf_femur_joints(
+    femur_joint_df_path=pu.get_xray_dir()/'femur_joints.csv',
+    points_key='point'
+    ):
+    
+    femur = pd.read_csv(femur_joint_df_path)
+    joints = femur[points_key].values
+    pts = np.array([np.array(eval(joint)) for joint in joints])
+                   
+    assert pts.shape == (2, 3), \
+    f'Expected shape of joints array (2, 3), got {pts.shape}'
 
+    return pts
 
 if __name__ == "__main__":
     #save_legs()    
 
-    save_legs(
-        muscle_state_path=muscle_with_joints_state_path,
-        legs_df_root_name='_with_joint'
-        ) # only the femur layer was added, the fibers are the same as in muscle_state_path
+    save_legs() # only the femur layer was added, the fibers are the same as in muscle_state_path
     
 
-    extract_femur_joint_layer()
+    #extract_femur_joint_layer()
 
-    
 
 

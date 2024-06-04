@@ -1,4 +1,4 @@
-from _root_path import add_root, get_root_path
+from _root_path import add_root
 add_root()
 
 import numpy as np
@@ -94,12 +94,28 @@ def muscles_hulls_pcds(muscles:list, color=True, voxel_size=1.0):
     return pcds
 
 
-MUSCLE_NAMES = [
+LH_MUSCLE_NAMES = [
     'LH_FeTi_flexor', 
     'LH_FeTi_anterior_acc_flexor', 
     'LH_FeTi_posterior_acc_flexor', 
     'LH_FeTi_extensor', 
     'LH_FeCl_ltm2',
+]
+
+LF_MUSCLE_NAMES = [
+    'LF_FeTi_flexor',
+    'LF_FeTi_medial_acc_flexor',
+    'LF_FeTi_lateral_acc_flexor',
+    'LF_FeTi_extensor',
+    'LF_FeTa_ltm2',
+    ]
+
+RM_MUSCLE_NAMES = [
+    'RM_FeTi_flexor',
+    'RM_FeTi_anterior_acc_flexor',
+    'RM_FeTi_posterior_acc_flexor',
+    'RM_FeTi_extensor',
+    'RM_FeCl_ltm2_detached_origin',
 ]
 
 ORDER_IDX = [f'id_{i}' for i in range(1, 6)]
@@ -113,8 +129,8 @@ def points_from_muscle_df(muscle:pd.DataFrame):
     return points
 
 def generate_and_save_3d_muscles_map(
-    dir_path: Path, root_name:str, muscles:list, voxel_size=1.0, 
-    muscle_names:list=MUSCLE_NAMES, idx=ORDER_IDX
+    dir_path: Path, root_name:str, muscles:list, muscle_names:list, voxel_size=1.0,
+    idx=ORDER_IDX
     ):
     """
     Generate and save 3D muscles map (points of convex hulls of fibers).
@@ -185,22 +201,62 @@ def vs_pcds(pcds:list):
 
     vs.run(); vs.destroy_window()
 
+def generate_femur_muscles_map(
+    save_dir: Path, root_name:str, 
+    muscle_names:list, 
+    voxel_size=1.0,
+    leg='LH',
+    idx=ORDER_IDX,
+    ):
+    """
+    Generate a 3D muscles map of the femur.
 
+    Args:
+        save_dir (Path): The directory to save the generated map.
+        root_name (str): The root name of the generated map file.
+        muscle_names (list): A list of muscle names to include in the map.
+        voxel_size (float, optional): The size of each voxel used to generate the hull. Defaults to 1.0.
+        leg (str, optional): The leg side to generate the map for. Defaults to 'LH'.
+        idx (int, optional): The index of the order to generate the map. Defaults to ORDER_IDX.
+
+    Returns:
+        None
+    """
+
+    if not save_dir.exists():
+        save_dir.mkdir(exist_ok=True, parents=True)
+        print(f'Created directory: {save_dir}')
+
+    muscles = xu.get_femur_muscles(remove=True, leg=leg)
+
+    generate_and_save_3d_muscles_map(
+        dir_path=save_dir, 
+        root_name=root_name, 
+        muscle_names=muscle_names,
+        muscles=muscles,
+        voxel_size=voxel_size,
+        idx=idx,
+        )
 if __name__ == "__main__":
 
-    dfs = xu.get_femur_muscles(remove=True)
     data_dir_path = pu.get_map_dir()
-    dir_name='basic_map_without_fiber_segmentation'
 
+    dir_name='lh_leg_map'
     save_dir_path = data_dir_path / dir_name
-    save_dir_path.mkdir(exist_ok=True, parents=True)
+    generate_femur_muscles_map(save_dir_path, root_name=dir_name, muscle_names=LH_MUSCLE_NAMES, voxel_size=1.0, leg='LH')
 
-    root_name = 'basic_vsize_1.0'
+    dir_name='rm_leg_map'
+    save_dir_path = data_dir_path / dir_name
+    generate_femur_muscles_map(save_dir_path, root_name=dir_name, muscle_names=RM_MUSCLE_NAMES, voxel_size=1.0, leg='RM')
 
-    generate_and_save_3d_muscles_map(save_dir_path, root_name,muscles=dfs, voxel_size=1.0)
+    dir_name = 'lf_leg_map'
+    save_dir_path = data_dir_path / dir_name
+    generate_femur_muscles_map(save_dir_path, root_name=dir_name, muscle_names=LF_MUSCLE_NAMES, voxel_size=1.0, leg='LF')
 
-    pcds = load_muscles_map_pcds(save_dir_path)
 
-    pcds = color_pcds(pcds)
 
-    vs_pcds(pcds)
+
+
+    
+
+

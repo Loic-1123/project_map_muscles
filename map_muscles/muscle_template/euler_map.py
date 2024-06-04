@@ -1148,7 +1148,25 @@ class MuscleMap():
         vis.add_geometry(y_axis)
         vis.add_geometry(z_axis)
 
+    def draw_axis_points(self, vis: o3d.visualization.Visualizer, radius=10, color=K):
+        """
+        Draw the axis points of the muscle map.
+
+        Returns:
+        None
+        """
+        assert self.axis_points is not None, "Axis points must be set before drawing."
+
+        for point in self.axis_points:
+            pt = o3d.geometry.TriangleMesh.create_sphere(radius=radius)
+            pt.translate(point)
+
+            pt.paint_uniform_color(color)
+
+            vis.add_geometry(pt)
+
     def draw_default(self, vis: o3d.visualization.Visualizer):
         self.draw_points(vis)
         self.draw_axis(vis)
         self.draw_xyz_vectors(vis)
+        self.draw_axis_points(vis)

@@ -14,6 +14,8 @@ import os
 client = CAVEclient()
 auth = client.auth
 
+import map_muscles.path_utils as pu
+
 #auth.get_new_token()
 
 client.auth.token = "d1dfc8e7d3ade48310f724fcbd62d34e"
@@ -25,7 +27,7 @@ client.auth.token = "d1dfc8e7d3ade48310f724fcbd62d34e"
 muscles = client.state.get_state_json(5920404218576896)
 
 # save the state to a file
-save_path = Path(get_root_path()) / 'map_muscles' / 'data' / 'Xray' / 'muscles_state.json'
+save_path = pu.get_xray_dir() / 'muscles_state.json'
 os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
 print('Saving state to:', save_path)
@@ -272,6 +274,49 @@ array(['LH ThCo 1', 'LH ThCo 2', 'LH ThCo 3', 'LH ThCo? 4',
 
 thco1 = lh[lh['layer_name'] == 'LH ThCo 1']
 thco1.describe()
+
+lf = get_leg(leg='LF')
+lf.describe()
+
+layer_name = lf['layer_name']
+layer_name.describe()
+layer_name.unique()
+
+"""
+array(['LF ThCo 1', 'LF ThCo 3 (same muscle as 1?)',
+       'LF ThCo sternal anterior rotator', 'LF ThCo 4', 'LF ThCo 5',
+       'LF ThCo 6 (same as 5?)', 'LF ThCo 7', 'LF ThTr tergotrochanter',
+       'LF ThTr sternotrochanter', 'LF CoTr flexor?',
+       'LF CoTr acc flexor?', 'LF CoTr extensor?',
+       'LF CoTr acc extensor?', 'LF TrFe', 'LF FeTi flexor',
+       'LF FeTi medial acc flexor', 'LF FeTi lateral acc flexor',
+       'LF FeTi extensor', 'LF FeTa ltm2', 'LF TiTa 1', 'LF TiTa 2',
+       'LF TiTa 3 (same as 1?)'], dtype=object)
+"""
+
+rm = get_leg(leg='RM')
+rm.describe()
+
+layer_name = rm['layer_name']
+layer_name.describe()
+layer_name.unique()    
+
+"""
+array(['RM ThCo 1', 'RM ThCo 2 (same as 1?)', 'RM ThCo 3',
+       'RM ThCo 4 (same as 3?)', 'RM ThTr? 1', 'RM ThTr? 2 (insert=1)',
+       'RM ThTr 3 (origin~=2, insert=1&2)', 'RM tergotrochanter',
+       'RM ThTr? 4 (insert=tergotroch)', 'RM ThTr? 5 (insert=tergotroch)',
+       'RM CoTr 1', 'RM CoTr 2 (origin ~= 1, insert=1)', 'RM CoTr 3',
+       'RM TrFe', 'RM FeTi flexor', 'RM FeTi anterior acc flexor',
+       'RM FeTi posterior acc flexor', 'RM FeTi extensor',
+       'RM FeCl ltm2 (detached origin)', 'RM TiCl ltm1', 'RM TiTa 1',
+       'RM TiTa 2', 'RM TiTa 3', 'RM TiTa 4'], dtype=object)
+"""
+
+
+
+
+
 
 
 
