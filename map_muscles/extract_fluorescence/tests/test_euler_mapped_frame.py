@@ -10,6 +10,7 @@ import map_muscles.path_utils as pu
 import map_muscles.extract_fluorescence.mapping.euler_mapped_frame as mf
 import map_muscles.muscle_template.euler_map as mp
 import map_muscles.extract_fluorescence.imaging_utils as imu
+import map_muscles.muscle_template.xray_utils as xu
 
 
 def get_locations_from_sleap_file(
@@ -59,9 +60,12 @@ kin_file_path = kin_frames_dir/ kin_file
 
 KINFRAME = get_labeled_kin_frame(kin_file_path, idx)
 
-map_dir = pu.get_basic_map_dir()
-MMAP = mp.MuscleMap.from_directory(map_dir)
-MMAP.init_default_axis_points()
+map_dir = pu.get_lf_map_dir()
+MMAP = mp.MuscleMap.from_directory(map_dir, gamma=90)
+#MMAP.init_default_axis_points()
+
+joints = xu.get_lf_femur_joints()
+MMAP.set_axis_points(joints)
 
 FIGSIZE = (10, 10)
 
@@ -103,30 +107,6 @@ def test_visualize_map_aligned_with_kin_middle_axis():
     mframe.plot_kin_middle_axis(ax)
     mframe.plot_map_axis_middle_view_on_kin(ax)
     mframe.plot_map_on_frame(ax)
-
-    ax.axis('off')
-    ax.legend()
-
-    plt.show()
-
-def test_visualize_scaled_translated_map():
-    """
-    Test get_scaled_translated_map()
-    """
-    mframe = get_mframe()
-    
-    
-    mframe.scale_map()
-    mframe.align_map_axis_ref_point_on_kin()
-    
-
-    
-    fig, ax = plt.subplots(1,1, figsize=FIGSIZE)
-
-    mframe.plot_kin_img(ax, cmap='gray')
-    mframe.plot_kin_middle_axis(ax)
-    mframe.plot_map_axis_middle_view_on_kin(ax)
-    mframe.plot_map_on_frame(ax, s=1)
 
     ax.axis('off')
     ax.legend()
@@ -294,7 +274,7 @@ def test_visualize_muscle_img():
     plt.show()
 
 
-sleap_muscle_file = "labels_muscle_frames_femur_V1.000_muscle_frames_900_1399.analysis.h5"
+sleap_muscle_file = "labels_muscle_frames_femur_V2.000_muscle_frames_900_1399.analysis.h5"
 path = sleap_dir / sleap_muscle_file
 
 def get_muscle_locations_from_sleap_file(
@@ -379,7 +359,7 @@ def test_visualize_muscle_oriented_scaled_map():
     mframe.align_map_axis_ref_point_on_muscle()
     mframe.orient_map_on_muscle()
     ratio = mframe.compute_muscle_map_ratio()
-    print(ratio)
+    
     mframe.scale_map(ratio=ratio)
 
     fig, ax = plt.subplots(1,2, figsize=FIGSIZE)
@@ -390,8 +370,8 @@ def test_visualize_muscle_oriented_scaled_map():
     mframe.plot_kin_middle_axis(ax[0])
 
     mframe.plot_muscle_img(ax[1], cmap='gray')
-    mframe.plot_muscle_middle_axis(ax[1], delta=2*delta)
-    mframe.plot_map_axis_middle_view_on_muscle(ax[1], delta=delta)
+    mframe.plot_muscle_middle_axis(ax[1], delta=delta)
+    mframe.plot_map_axis_middle_view_on_muscle(ax[1])
     mframe.plot_convex_hulls_on_middle_view(ax[1])
     
 
@@ -430,7 +410,7 @@ def test_visualize_extract_pixel_values():
     mframe.prepare_map()
 
     muscles_points = mframe.compute_projected_muscle_points()
-    idx=0
+    idx=4
     pts = muscles_points[idx]
     pixel_coors = mframe.extract_pixels_coordinates(pts, unique=True)
     pixel_values = mframe.extract_pixel_values(pts)
@@ -438,25 +418,13 @@ def test_visualize_extract_pixel_values():
     fig, ax = plt.subplots(1,1, figsize=FIGSIZE)
 
     mframe.plot_muscle_img(ax, cmap='gray')
-    ax.scatter(pixel_coors[:, 0], pixel_coors[:, 1], s=1, c='b')
-    mframe.plot_muscle_hull_on_middle_view(ax, idx=0, color=np.array([0, 0, 1]))
+    ax.scatter(pixel_coors[:, 0], pixel_coors[:, 1], s=3, c='b')
+    mframe.plot_muscle_hull_on_middle_view(ax, idx=idx, color=np.array([0, 0, 1]))
 
     for i in range(len(pixel_coors)):
         ax.text(pixel_coors[i, 0], pixel_coors[i, 1], str(pixel_values[i]), fontsize=8, color='r')
 
     plt.show()
-
-
-
-
-    
-
-    
-    
-
-
-
-
 
 if __name__ == "__main__":
     
@@ -470,16 +438,16 @@ if __name__ == "__main__":
 
     #test_plot_coordinate_frame()
     #test_visualize_map_aligned_with_kin_middle_axis()
-    #test_visualize_scaled_translated_map()
     #test_visualize_compute_kinematic_vector()
     #test_visualize_orient_map_on_kin()
     #test_visualize_scaling_on_kinetic_frame()
+    
+    
     #test_visualize_muscle_img()
-
     #test_visualize_kin_muscle_with_axis()
-    #test_visualize_muscle_oriented_scaled_map()
+    test_visualize_muscle_oriented_scaled_map()
     #test_visualize_extract_pixels_coordinates()
-    test_visualize_extract_pixel_values()
+    #test_visualize_extract_pixel_values()
 
 
     print("All tests passed.")

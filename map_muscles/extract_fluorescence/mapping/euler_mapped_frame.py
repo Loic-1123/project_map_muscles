@@ -194,9 +194,23 @@ class MappedFrame():
         self.orient_map_on_muscle()
         ration = self.compute_muscle_map_ratio()
         self.scale_map(ration)
+    
+    def roll_map_to_gamma(self, gamma):
+        """
 
+        Roll the map to a given gamma angle.
 
-        
+        Parameters:
+            gamma (float): The angle by which to roll the map.
+
+        Returns:
+            None
+        """
+
+        a = self.mmap.get_alpha()
+        b = self.mmap.get_beta()
+
+        self.mmap = self.mmap.rotate_to_angles([a,b,gamma])
     # Plotting
 
     def plot_kin_img(self, ax, **kwargs):
@@ -391,12 +405,13 @@ class MappedFrame():
 
         return ax
 
-    def plot_convex_hulls_on_middle_view(self, ax, colors=None, labels=None, **kwargs):
+    def plot_convex_hulls_on_middle_view(self, ax, idx=None, colors=None, labels=None, **kwargs):
         """
         Plot the convex hulls of the muscles on the given axes.
 
         Parameters:
         - ax: The axes object on which to plot the convex hulls.
+        - idx: Optional. A list of indices of the muscles for which to plot the convex hulls. If not provided, all muscles will be plotted.
         - colors: Optional. A list of colors to use for each convex hull. If not provided, a set of equally spaced colors will be used.
         - labels: Optional. A list of labels for each convex hull. If provided, the labels will be displayed on the plot.
         - **kwargs: Additional keyword arguments to be passed to the `convex_hull_plot_2d` function.
@@ -405,14 +420,18 @@ class MappedFrame():
         - The modified axes object.
 
         """
+
+        if idx is None:
+            idx = np.arange(len(self.mmap.get_muscles()))
         if colors is None:
             colors = mp.get_equally_spaced_colors(len(self.mmap.get_muscles()))
         if labels is None:
             labels = [None] * len(self.mmap.get_muscles())
         hulls = self.compute_projected_hulls()
-        for hull, c, label in zip(hulls, colors, labels):
+        for i, c, label in zip(idx, colors, labels):
+            hull = hulls[i]
             points = hull.points
-            plt.plot(points[hull.vertices,0], points[hull.vertices,1], color=c, label=label, **kwargs)
+            ax.plot(points[hull.vertices,0], points[hull.vertices,1], color=c, label=label, **kwargs)
         return ax
     
     def plot_muscle_hull_on_middle_view(self, ax, idx, color='r', label='muscle convex hull', **kwargs):
@@ -747,7 +766,7 @@ class MappedFrame():
         """
 
         # round each coordinate to the nearest integer
-        pts = np.rint(points)
+        pts = np.rint(points).astype(int)
 
         if unique:
             pts = np.unique(pts, axis=0)
@@ -768,8 +787,24 @@ class MappedFrame():
 
         return self.muscle_img[coor[:, 1].astype(int), coor[:, 0].astype(int)]
 
+    def extract_muscles_pixels_coordinates(self, unique=True):
+        """
+        Extract the pixel coordinates of the muscle image at the projected muscles points.
+
+        Returns:
+        - A list of the pixel coordinates for each muscle.
+        """
+
+        muscles_pts = self.compute_projected_muscle_points()
+
+        muscles_pixels_coor = []
+        for pts in muscles_pts:
+            coor = self.extract_pixels_coordinates(pts, unique=unique)
+            muscles_pixels_coor.append(coor)
+
+        return muscles_pixels_coor
     
-    def extract_muscle_pixel_values_from_map(self, unique_points=True):
+    def extract_muscles_pixel_values(self, unique_points=True):
         """
         Extract the pixel values of the muscle image at the projected muscle points.
 
@@ -779,10 +814,16 @@ class MappedFrame():
 
         muscles_pts = self.compute_projected_muscle_points()
 
-        pixels_values = []
+        muscles_pixels_values = []
         for pts in muscles_pts:
-            pixels_values.append(self.extract_muscle_pixel_values(pts, unique_points=unique_points))
+            values = self.extract_pixel_values(pts, unique=unique_points)
+            muscles_pixels_values.append(values)
 
-        return pixels_values
+        return muscles_pixels_values
+            
+
         
         
+
+
+

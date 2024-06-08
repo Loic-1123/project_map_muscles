@@ -6,6 +6,7 @@ import os
 import tqdm
 import numpy as np
 import matplotlib as mpl
+import h5py
 mpl.use('TkAgg')
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from pathlib import Path
@@ -390,10 +391,25 @@ def save_muscle_video(frames, output_path:Path, fps=30):
     assert output_path.exists(), f'video {output_path} was not created'
     print(f'Video created to {output_path}')
 
-def write_muscle_video(
+def extract_only_muscle_npy(
+    h5_path=pu.get_data_dir()/'only_muscle_data.h5',
+    output_path=pu.get_data_dir()/'only_muscle.npy',
+    ):
+
+    f = h5py.File(h5_path, 'r')
+
+    images = f['images']
+
+    np_imgs = np.array(images)
+
+    np.save(output_path, np_imgs)
+
+def write_muscle_video_from_array_path(
         muscle_frames_path=pu.get_muscle_frames_dir()/'muscle_frames_900_1399.npy',
         save_path=pu.get_video_dir()/'muscle_frames_900_1399.mp4',
         fps=6,
+        scale=True,
+        convert=True,
 ):
     """
     Writes a muscle video using the muscle frames stored in the given muscle_frames_path.
@@ -404,41 +420,23 @@ def write_muscle_video(
         fps (int): Frames per second for the muscle video.
     """
     muscle_frames = np.load(muscle_frames_path)
-    save_muscle_video(muscle_frames, save_path, fps=fps)
 
-def write_muscle_video_with_threshold(
-        muscle_frames_path=pu.get_muscle_frames_dir()/'muscle_frames_900_1399.npy',
-        save_dir=pu.get_video_dir(),
-        root_name='muscle_video_900_1399',
-        threshold=250,
-        fps=6,
-):
-    """
-    Writes a muscle video with a specified threshold.
+    if scale:
+        muscle_frames = muscle_frames/muscle_frames.max() * 255
+    if convert:
+        muscle_frames = cv2.convertScaleAbs(muscle_frames)
 
-    Args:
-        muscle_frames_path (str): Path to the muscle frames file.
-        save_dir (str): Directory to save the muscle video.
-        root_name (str): Root name of the muscle video file.
-        threshold (int): Threshold value to apply to the muscle frames.
-        fps (int): Frames per second for the muscle video.
-
-    Returns:
-        None
-    """
-    muscle_frames = np.load(muscle_frames_path)
-    muscle_frames[muscle_frames > threshold] = threshold
-    name = root_name + f'_threshold_{threshold}.mp4'
-    save_path = save_dir/name
     save_muscle_video(muscle_frames, save_path, fps=fps)
 
 
 if __name__ == "__main__":
     #save_corrected_muscle_frames()
-    write_muscle_video()
-    
-    thresholds = np.arange(200, 600, 50)
+    #write_muscle_video_from_array_path()
 
-    for threshold in thresholds:
-        write_muscle_video_with_threshold(threshold=threshold)
+    #extract_only_muscle_npy()
+
+    only_muscle_path = pu.get_data_dir()/'only_muscle.npy'
+    save_path = pu.get_data_dir()/'only_muscle_video.mp4'
+    write_muscle_video_from_array_path(muscle_frames_path=only_muscle_path, save_path=save_path, fps=6)
+
     

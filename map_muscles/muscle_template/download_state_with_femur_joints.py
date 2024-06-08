@@ -16,7 +16,6 @@ and test the joints positions.
 
 """
 
-
 def download_state_with_femur_joints():
 
     client = CAVEclient()

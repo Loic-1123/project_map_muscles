@@ -34,6 +34,12 @@ map_dir = data_dir / 'muscles_maps'
 
 basic_map_dir = map_dir / 'basic_map'
 
+lf_map_dir = map_dir / 'lf_leg_map'
+
+lh_map_dir = map_dir / 'lh_leg_map'
+
+rm_map_dir = map_dir / 'rm_leg_map'
+
 map_matching_dir = map_dir / 'map_matching'
 
 def assert_directory(dir_path):
@@ -162,4 +168,17 @@ def get_kin_frames_dir():
 
 @assert_create_return_dir(muscle_frames_dir)
 def get_muscle_frames_dir():
+    pass
+
+
+@assert_create_return_dir(lf_map_dir)
+def get_lf_map_dir():
+    pass
+
+@assert_create_return_dir(lh_map_dir)
+def get_lh_map_dir():
+    pass
+
+@assert_create_return_dir(rm_map_dir)
+def get_rm_map_dir():
     pass

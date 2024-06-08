@@ -198,12 +198,16 @@ def extract_femur_joint_layer(
 
 def get_lf_femur_joints(
     femur_joint_df_path=pu.get_xray_dir()/'femur_joints.csv',
-    points_key='point'
+    points_key='point',
+    reverse_order=True
     ):
     
     femur = pd.read_csv(femur_joint_df_path)
     joints = femur[points_key].values
     pts = np.array([np.array(eval(joint)) for joint in joints])
+
+    if reverse_order:
+        pts = pts[::-1]
                    
     assert pts.shape == (2, 3), \
     f'Expected shape of joints array (2, 3), got {pts.shape}'
