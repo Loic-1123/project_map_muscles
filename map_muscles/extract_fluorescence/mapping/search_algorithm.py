@@ -97,24 +97,6 @@ def generate_linear_prediction(
     # sum all the muscle predictions
     return np.sum(muscles_predictions, axis=0)
 
-def loss_function(mmap, img_pixel_values, n=20):
-
-    # get the muscle pixels coordinates
-    muscles_pixels_coordinates = mmap.extract_muscles_pixels_coordinates()
-
-    # generate round 0 of the linear prediction
-
-    r0 = 1/(n-1)
-    activitiess = generate_equally_spaced_activities(n, len(mmap.get_muscles()))
-
-    # generate combinations of possible values
-
-    n_muscles = len(mmap.get_muscles())
-
-    # meshgrid of possible values
-
-    combination_grid = np.tiles(values, n_muscles)
-    
 def generate_equally_spaced_activities(n_values, n_muscles):
     """
     Generate equally spaced activities for a given number of values and muscles.
@@ -171,5 +153,17 @@ def generate_close_activities_vector(activities, r):
 
 
 
+def loss_function(mmap, img_pixel_values, n=20):
+
+    # get the muscle pixels coordinates
+    muscles_pixels_coordinates = mmap.extract_muscles_pixels_coordinates()
+
+    # generate round 0 of the linear prediction
+
+    activitiess = generate_equally_spaced_activities(n, len(mmap.get_muscles()))
+
+    # compare the linear prediction with the image pixel values
+
+    
 
 

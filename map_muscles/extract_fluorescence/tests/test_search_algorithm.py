@@ -80,7 +80,6 @@ def test_visualize_generate_equally_spaced_activities():
 
     plt.show()
 
-
 def test_visualize_generate_close_activities_vector():
     mframe = get_muscle_mframe()
     mframe.prepare_map()
@@ -135,10 +134,36 @@ def test_visualize_generate_close_activities_vector():
     plt.show()
 
 
+def test_visualize_extract_fluorescence_array():
+    mframe = get_muscle_mframe()
+    mframe.prepare_map()
+
+    array = mframe.extract_fluorescence_array()
+
+    fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+
+    ax.imshow(array)
+
+    mframe.plot_convex_hulls_on_middle_view(ax)
+
+    ax.axis('off')
+
+    plt.show()
+
+
+
+    
+
+
+    
+
 if __name__ == '__main__':
     #test_visualize_generate_linear_prediction()
     #test_visualize_generate_equally_spaced_activities()
-    test_visualize_generate_close_activities_vector()
+    #test_visualize_generate_close_activities_vector()
+    test_visualize_extract_fluorescence_array()
+
+    
 
 
 

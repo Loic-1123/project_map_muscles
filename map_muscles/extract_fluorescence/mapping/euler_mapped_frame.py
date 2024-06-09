@@ -820,6 +820,53 @@ class MappedFrame():
             muscles_pixels_values.append(values)
 
         return muscles_pixels_values
+    
+    def extract_fluorescence_array(self):
+
+        """
+        Extract the fluorescence array of the muscle image at the projected muscle points.
+
+        Returns:
+        - The fluorescence array at the projected muscle points.
+        """
+        points = []
+        for muscle in self.mmap.get_muscles():
+            pts = muscle.get_points()
+            # remove z coordinate
+            projected_pts = pts[:, :2]
+            points.extend(projected_pts)
+
+        # remove duplicates
+        points = np.unique(points, axis=0)
+
+        img_shape = self.muscle_img.shape
+
+        # fluorescence_array with img_shape as shape
+
+        fluorescence_array = np.zeros(img_shape)
+
+        # pixels coordinates
+        pixels_coordinates = self.extract_pixels_coordinates(points)
+
+        # pixels values
+        pixels_values = self.extract_pixel_values(points)
+
+        # fill the fluorescence array
+        fluorescence_array[pixels_coordinates[:, 1], pixels_coordinates[:, 0]] = pixels_values
+
+        return fluorescence_array
+
+        
+
+
+        
+
+    
+
+
+        
+
+        
             
 
         
