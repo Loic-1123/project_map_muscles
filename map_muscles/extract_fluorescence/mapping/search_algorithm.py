@@ -2,6 +2,7 @@ from _root_path import add_root
 add_root()
 
 import numpy as np
+import pandas as pd
 
 import map_muscles.extract_fluorescence.mapping.euler_mapped_frame as mf
 from map_muscles.extract_fluorescence.tests.test_euler_mapped_frame import get_muscle_mframe
@@ -127,6 +128,7 @@ def generate_close_activities_vector(activities, r):
 
     Returns:
     numpy.ndarray: The new vector of activities obtained by adding combinations of -r, 0, and r to the input vector.
+    shape = (3**n, n), n is the number of muscles (aka the number of activities)
     """
 
     # prepare the combinations to be added: -r, 0, r
@@ -143,27 +145,131 @@ def generate_close_activities_vector(activities, r):
     return new_activities
 
 
+def euclidean_distance_loss(array1, array2):
+    """
+    Calculate the Euclidean distance loss between two arrays.
+
+    Parameters:
+    - array1 (numpy.ndarray): The first array.
+    - array2 (numpy.ndarray): The second array.
+
+    Returns:
+    - float: The Euclidean distance loss between the two arrays.
+    """
+
+    return np.linalg.norm(array1 - array2)
 
 
+import numpy as np
+
+def remove_worse_idx(losses, fraction=0.5):
+    """
+    Remove the worst fraction of losses and return the indices of the remaining losses.
+
+    Parameters:
+    - losses (numpy.ndarray): Array of loss values.
+    - fraction (float): Fraction of losses to remove. Default is 0.5.
+
+    Returns:
+    - numpy.ndarray: Array of indices corresponding to the remaining losses.
+    """
+
+    sorted_idx = np.argsort(losses)
+    return sorted_idx[:int(fraction * len(losses))]
+   
+def remove_compare_to_best_idx(losses, ratio=1.5):
+    """
+    return the idx of the losses that are better than the best loss by a ratio
+    """
+
+    best_loss = np.min(losses)
+
+    return np.where(losses < best_loss*ratio)[0]
+
+def array_loss_function(
+        mmap, 
+        distance_loss_func=euclidean_distance_loss,
+        loss_selector=remove_compare_to_best_idx,
+        n=20, 
+        max_iter=1000,
+        plateau_max_iter=10,
+        plateau_fraction=0.95,
+        ):
 
 
-
-
-
-
-
-
-def loss_function(mmap, img_pixel_values, n=20):
-
-    # get the muscle pixels coordinates
+    # fluorescence array of the image
+    array = mmap.extract_fluorescence_array()
+    # muscles pixels coordinates
     muscles_pixels_coordinates = mmap.extract_muscles_pixels_coordinates()
 
-    # generate round 0 of the linear prediction
 
+    # Prepare first iteration    
+    ## generate activitiess0
     activitiess = generate_equally_spaced_activities(n, len(mmap.get_muscles()))
+    r = 1/n
 
-    # compare the linear prediction with the image pixel values
+    plateau_counter = 0
+    best_loss = np.inf
+
+    # start iterations
+    while max_iter > 0:
+        max_iter -= 1
+
+        # generate predictions
+        predictions = [generate_linear_prediction(activities, muscles_pixels_coordinates, array.shape) for activities in activitiess]
+
+        # calculate the loss for each prediction
+        distance_losses = [distance_loss_func(array, prediction) for prediction in predictions]
+
+        chosen_idx = loss_selector(distance_losses)
+
+        # update
+        ## update the activities
+        selected_activitiess = activitiess[chosen_idx]
+        new_activitiess = np.array([generate_close_activities_vector(activities, r) for activities in selected_activitiess])
+        activitiess = np.unique(new_activitiess, axis=0)
+
+        ## update the r
+        r = r/2
+
+        ## check for plateau: if best loss is not changing
+        best_ratio = np.min(distance_losses)/best_loss
+        if best_ratio > plateau_fraction:
+            plateau_counter += 1
+            if plateau_counter > plateau_max_iter:
+                break
+        else:
+            plateau_counter = 0
+            best_loss = np.min(distance_losses)
+
+    # return sorted activitiess
+    return activitiess[np.argsort(distance_losses)]
+
+
+        
+
+        
 
     
+
+    
+    
+
+    
+
+    
+
+    
+
+
+
+    
+
+
+        
+
+
+
+
 
 

@@ -133,7 +133,6 @@ def test_visualize_generate_close_activities_vector():
 
     plt.show()
 
-
 def test_visualize_extract_fluorescence_array():
     mframe = get_muscle_mframe()
     mframe.prepare_map()
@@ -150,20 +149,63 @@ def test_visualize_extract_fluorescence_array():
 
     plt.show()
 
+def test_remove_worse():
+    def assert_remove_worse(losses, idx, fraction):
+        # assert that the idx has the correct length
+        assert len(idx) == int(fraction*len(losses)), \
+            f"Expected idx to have length {int(fraction*len(losses))}, got {len(idx)}"
 
+        # assert that all results are smaller than 1*fraction
+        assert np.all(losses[idx] < 1*fraction), \
+            f"Expected all losses to be smaller than 1*fraction, got {np.sort(losses[idx])}"
 
-    
+    losses1 = np.linspace(0, 1, 100)
 
+    losses2 = np.random.rand(100)
 
-    
+    lossess = [losses1, losses2]
+
+    for losses in lossess:
+        for fraction in [0.1, 0.5, 0.7]:
+            idx = sa.remove_worse_idx(losses, fraction)
+            assert_remove_worse(losses, idx, fraction)
+
+def test_remove_compare_to_best():
+    def assert_remove_compare_to_best(losses, idx, ratio):
+        # assert that the idx has the correct length
+        assert len(idx) == np.sum(losses < np.min(losses)*ratio), \
+            f"Expected idx to have length {np.sum(losses < np.min(losses)*ratio)}, got {len(idx)}"
+
+        # assert that all results are smaller than 1*fraction
+        assert np.all(losses[idx] < np.min(losses)*ratio), \
+            f"Expected all losses to be smaller than 1*fraction, got {np.sort(losses[idx])}"
+
+    losses1 = np.linspace(0, 1, 100)
+
+    losses2 = np.random.rand(100)
+
+    lossess = [losses1, losses2]
+    ratios = [1.1, 1.5, 2.0, 20, 50]
+
+    for losses in lossess:
+        for ratio in ratios:
+            idx = sa.remove_compare_to_best_idx(losses, ratio)
+            assert_remove_compare_to_best(losses, idx, ratio)
 
 if __name__ == '__main__':
+    
+    test_remove_worse()
+    test_remove_compare_to_best()
+    
+    
     #test_visualize_generate_linear_prediction()
     #test_visualize_generate_equally_spaced_activities()
     #test_visualize_generate_close_activities_vector()
-    test_visualize_extract_fluorescence_array()
+    #test_visualize_extract_fluorescence_array()
 
-    
+    print("All tests passed")
+
+
 
 
 
