@@ -3,9 +3,11 @@ add_root()
 
 import numpy as np
 import pandas as pd
+import tqdm
 
 import map_muscles.extract_fluorescence.mapping.euler_mapped_frame as mf
 from map_muscles.extract_fluorescence.tests.test_euler_mapped_frame import get_muscle_mframe
+
 
 
 # greedy algorithm to find opimized last orientation parameter (gamm/roll)
@@ -118,7 +120,7 @@ def generate_equally_spaced_activities(n_values, n_muscles):
 
     return combinations
 
-def generate_close_activities_vector(activities, r):
+def generate_all_close_activities_vector(activities, r):
     """
     Generate a new vector of activities by adding combinations of -r, 0, and r to the input vector.
 
@@ -144,6 +146,32 @@ def generate_close_activities_vector(activities, r):
 
     return new_activities
 
+def generate_one_step_close_activities_vector(activities, r):
+    """
+    Generate a new vector of activities by adding combinations of -r, 0, and r to the input vector.
+
+    Parameters:
+    activities (numpy.ndarray): The input vector of activities.
+    r (float): The value to be added to the input vector.
+
+    Returns:
+    numpy.ndarray: The new vector of activities obtained by adding combinations of -r, 0, r to the input vector.
+    shape = (3*n, n), n is the number of muscles (aka the number of activities)
+    """
+
+    # prepare the combinations to be added: -r, 0, r
+    n = len(activities)
+
+    r_minus = np.diag([-r]*n)
+    r_plus = np.diag([r]*n)
+
+    new_activities = np.vstack([activities, activities + r_minus, activities + r_plus])
+
+    # clamp the values to be between 0 and 1
+    new_activities = np.clip(new_activities, 0, 1)
+
+    return new_activities
+
 
 def euclidean_distance_loss(array1, array2):
     """
@@ -158,9 +186,6 @@ def euclidean_distance_loss(array1, array2):
     """
 
     return np.linalg.norm(array1 - array2)
-
-
-import numpy as np
 
 def remove_worse_idx(losses, fraction=0.5):
     """
@@ -184,69 +209,126 @@ def remove_compare_to_best_idx(losses, ratio=1.5):
 
     best_loss = np.min(losses)
 
-    return np.where(losses < best_loss*ratio)[0]
+    return np.where(losses <= best_loss*ratio)[0]
+
+
+
 
 def array_loss_function(
-        mmap, 
+        img_array,
+        muscles_pixels_coordinates,
         distance_loss_func=euclidean_distance_loss,
         loss_selector=remove_compare_to_best_idx,
-        n=20, 
+        nb_activities_threshold=1000,
+        activities_generator=generate_one_step_close_activities_vector,
+        n=3, 
         max_iter=1000,
         plateau_max_iter=10,
-        plateau_fraction=0.95,
+        plateau_fraction=1.05,
+        yield_iter=False,
+        threshold_warning=False
         ):
+    """
+    Calculates the loss function for an array of activities.
 
+    Parameters:
+    - mmap: The mmap object containing muscles pixels coordinates.
+    - array: The input array for which the loss function is calculated.
+    - distance_loss_func: The distance loss function to be used. Default is euclidean_distance_loss.
+    - loss_selector: The loss selector function to be used. Default is remove_compare_to_best_idx.
+    - n: The number of equally spaced values for 1 dimension. CAREFUL exponential growth. Default is 5.
+    - max_iter: The maximum number of iterations. Default is 1000.
+    - plateau_max_iter: The maximum number of iterations to wait for a plateau. Default is 10.
+    - plateau_fraction: The fraction of the best loss to consider as a plateau. Default is 1.05.
 
-    # fluorescence array of the image
-    array = mmap.extract_fluorescence_array()
-    # muscles pixels coordinates
-    muscles_pixels_coordinates = mmap.extract_muscles_pixels_coordinates()
+    Returns:
+    - activitiess: The generated activities.
+    - distance_losses: The calculated distance losses.
+    - predictions: The generated predictions.
+    """
 
-
-    # Prepare first iteration    
-    ## generate activitiess0
-    activitiess = generate_equally_spaced_activities(n, len(mmap.get_muscles()))
+    # Prepare first iteration
+    n_muscles = len(muscles_pixels_coordinates)
+    activitiess = generate_equally_spaced_activities(n, n_muscles)
+    predictions = []
+    distance_losses = []
     r = 1/n
 
     plateau_counter = 0
     best_loss = np.inf
 
+    iter_count = 0
+    
+    def log_decaying_frac2(i):
+        return 1 + 1/np.log(i+2)**2
+
+
     # start iterations
-    while max_iter > 0:
-        max_iter -= 1
+    for _ in tqdm.tqdm(range(max_iter)):
 
         # generate predictions
-        predictions = [generate_linear_prediction(activities, muscles_pixels_coordinates, array.shape) for activities in activitiess]
+        predictions = np.array([generate_linear_prediction(activities, muscles_pixels_coordinates, img_array.shape) for activities in activitiess])
 
         # calculate the loss for each prediction
-        distance_losses = [distance_loss_func(array, prediction) for prediction in predictions]
+        distance_losses = np.array([distance_loss_func(img_array, prediction) for prediction in predictions])
 
-        chosen_idx = loss_selector(distance_losses)
+        chosen_idx = loss_selector(distance_losses, ratio=log_decaying_frac2(iter_count))
+
+        #preventing exponential growth of the number of activities
+        if len(chosen_idx) > nb_activities_threshold:
+            # select best activities
+            if threshold_warning:
+                str_reached = "Nb activities threshold reached."
+                str_nb_activies = f"Chosen nb activities for next round = {len(chosen_idx)}"
+                str_clamped = f"Clamping, keeping the best {nb_activities_threshold} activities."
+                warning_str = f"{str_reached}\n{str_nb_activies}\n{str_clamped}"
+                print(warning_str)
+
+            chosen_idx = np.argsort(distance_losses)[:nb_activities_threshold]
+
+        if yield_iter:
+            yield activitiess, distance_losses, predictions, r, iter_count
 
         # update
-        ## update the activities
-        selected_activitiess = activitiess[chosen_idx]
-        new_activitiess = np.array([generate_close_activities_vector(activities, r) for activities in selected_activitiess])
-        activitiess = np.unique(new_activitiess, axis=0)
-
-        ## update the r
-        r = r/2
 
         ## check for plateau: if best loss is not changing
-        best_ratio = np.min(distance_losses)/best_loss
+        best_ratio = best_loss/np.min(distance_losses)
         if best_ratio > plateau_fraction:
             plateau_counter += 1
-            if plateau_counter > plateau_max_iter:
+            if plateau_counter > plateau_max_iter or np.isclose(best_loss, 0):
                 break
         else:
             plateau_counter = 0
-            best_loss = np.min(distance_losses)
 
-    # return sorted activitiess
-    return activitiess[np.argsort(distance_losses)]
+        ## update itreation counter
+        iter_count += 1
 
-
+        ## update r: update every n_muscles iterations, to enable reaching [+r, +r, +r, ...]
+        # since the one step activities generation change one dimension at a time
+        if (iter_count % n_muscles) == 0:
+            r = r/2
         
+        ## update best loss
+        best_loss = np.min(distance_losses)
+
+        ## update the activities
+        selected_activitiess = activitiess[chosen_idx]
+        new_activitiess = np.array([activities_generator(activities, r) for activities in selected_activitiess])
+        new_activitiess = new_activitiess.reshape(-1, len(muscles_pixels_coordinates))
+
+        ### rounding to enable the removal of duplicates (due to float numbers)
+        rounded_activitiess = np.round(new_activitiess, decimals=4)
+        activitiess = np.unique(rounded_activitiess, axis=0)
+
+
+
+    # return sorted 
+    sorted_idx = np.argsort(distance_losses)
+    activitiess = activitiess[sorted_idx]
+    distance_losses = distance_losses[sorted_idx]
+    predictions = np.array(predictions)[sorted_idx]
+    
+    return activitiess, distance_losses, predictions, r, iter_count
 
         
 

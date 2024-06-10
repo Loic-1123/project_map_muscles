@@ -80,13 +80,13 @@ def test_visualize_generate_equally_spaced_activities():
 
     plt.show()
 
-def test_visualize_generate_close_activities_vector():
+def test_visualize_generate_all_close_activities_vector():
     mframe = get_muscle_mframe()
     mframe.prepare_map()
 
     activities = np.random.rand(len(mframe.mmap.get_muscles()))
 
-    new_activitiess = sa.generate_close_activities_vector(activities, 0.5)
+    new_activitiess = sa.generate_all_close_activities_vector(activities, 0.5)
 
     coordinates = mframe.extract_muscles_pixels_coordinates()
 
@@ -192,15 +192,82 @@ def test_remove_compare_to_best():
             idx = sa.remove_compare_to_best_idx(losses, ratio)
             assert_remove_compare_to_best(losses, idx, ratio)
 
+def test_euclidian_distance_loss():
+
+    mframe = get_muscle_mframe()
+    mframe.prepare_map()
+
+    shape = mframe.get_muscle_img().shape
+
+    v = np.random.randn(*shape)
+
+    assert sa.euclidean_distance_loss(v, v) == 0, "Expected the loss(v, v) to be 0"
+
+    v2 = np.random.randn(*shape)
+
+    assert sa.euclidean_distance_loss(v, v2) > 0, "Expected the loss(v, v2) to be > 0"
+
+    v3 = np.zeros(shape)
+
+    assert np.isclose(sa.euclidean_distance_loss(v, v3), np.linalg.norm(v)) , "Expected the euclidian loss(v, 0) to be the norm of v3"
+
+    v4 = np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    v5 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 1])
+
+    assert np.isclose(sa.euclidean_distance_loss(v4, v5), np.sqrt(2)), f"Expected the euclidian loss(v4, v5) to be 2, got {sa.euclidean_distance_loss(v4, v5)}"
+
+def demo_array_loss_function(
+        max_iter =1000,
+        m = 10,
+        modulo = 20
+):
+    mframe = get_muscle_mframe()
+    mframe.prepare_map()
+
+    np.random.seed(0)
+    truth_activities = np.random.rand(len(mframe.mmap.get_muscles()))
+
+    coordinates = mframe.extract_muscles_pixels_coordinates()
+    shape = mframe.get_muscle_img().shape
+
+    truth_array = sa.generate_linear_prediction(truth_activities, coordinates, shape)
+
+    print("=== DEMO array_loss_function ===")
+
+    print("MAX ITER: ", max_iter)
+
+
+
+    values = sa.array_loss_function(
+        truth_array, coordinates, max_iter=max_iter, yield_iter=True
+    )
+
+    for activitiess, distance_losses, predictions, r, iter_count in values:
+        if (iter_count % modulo == 0) or (iter_count == max_iter):
+            idx = np.argsort(distance_losses)
+            print(f"---Iteration {iter_count}---\n")
+            print(f"Target activities: {truth_activities}\n")
+            print(f"Best losses: {distance_losses[idx[:m]]}\n")
+            print(f"Best activities: {activitiess[idx[:m]]}, activitiess.shape: { activitiess.shape}\n")
+            print(f"r: {r}")
+            print("------")
+
+
+
+
 if __name__ == '__main__':
     
-    test_remove_worse()
-    test_remove_compare_to_best()
+    #test_remove_worse()
+    #test_remove_compare_to_best()
+    #test_euclidian_distance_loss()
+    
+    demo_array_loss_function()
+    
     
     
     #test_visualize_generate_linear_prediction()
     #test_visualize_generate_equally_spaced_activities()
-    #test_visualize_generate_close_activities_vector()
+    #test_visualize_generate_all_close_activities_vector()
     #test_visualize_extract_fluorescence_array()
 
     print("All tests passed")
