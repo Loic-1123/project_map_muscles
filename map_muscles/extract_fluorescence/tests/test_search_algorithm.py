@@ -3,10 +3,12 @@ add_root()
 
 import numpy as np
 import matplotlib.pyplot as plt
+import tqdm
 
 import map_muscles.extract_fluorescence.mapping.euler_mapped_frame as mf
 import map_muscles.extract_fluorescence.mapping.search_algorithm as sa
 from map_muscles.extract_fluorescence.tests.test_euler_mapped_frame import get_muscle_mframe
+import map_muscles.path_utils as pu
 
 def test_visualize_generate_linear_prediction():
     mframe = get_muscle_mframe()
@@ -217,9 +219,9 @@ def test_euclidian_distance_loss():
     assert np.isclose(sa.euclidean_distance_loss(v4, v5), np.sqrt(2)), f"Expected the euclidian loss(v4, v5) to be 2, got {sa.euclidean_distance_loss(v4, v5)}"
 
 def demo_array_loss_function(
-        max_iter =1000,
+        max_iter =100,
         m = 10,
-        modulo = 20
+        modulo = 10
 ):
     mframe = get_muscle_mframe()
     mframe.prepare_map()
@@ -239,7 +241,9 @@ def demo_array_loss_function(
 
 
     values = sa.array_loss_function(
-        truth_array, coordinates, max_iter=max_iter, yield_iter=True
+        truth_array, coordinates, 
+        max_iter=max_iter, 
+        yield_iter=True, threshold_warning=True,
     )
 
     for activitiess, distance_losses, predictions, r, iter_count in values:
@@ -247,12 +251,172 @@ def demo_array_loss_function(
             idx = np.argsort(distance_losses)
             print(f"---Iteration {iter_count}---\n")
             print(f"Target activities: {truth_activities}\n")
-            print(f"Best losses: {distance_losses[idx[:m]]}\n")
-            print(f"Best activities: {activitiess[idx[:m]]}, activitiess.shape: { activitiess.shape}\n")
+            print(f"Best losses: \n{distance_losses[idx[:m]]}\n")
+            print(f"Best activities: \n{activitiess[idx[:m]]}, activitiess.shape: { activitiess.shape}\n")
             print(f"r: {r}")
             print("------")
 
+def stats_on_array_loss_function(
+    n=30,
+    max_iter=50,
+    fig_name = "mean_losses_per_target_with_noise.png",
+):
 
+    mframe = get_muscle_mframe()
+    mframe.prepare_map()
+
+    n_muscles = len(mframe.mmap.get_muscles())
+    coordinates = mframe.extract_muscles_pixels_coordinates()
+    shape = mframe.get_muscle_img().shape
+
+    target_activitiess = sa.generate_random_activities(n, n_muscles)
+
+    tqdm1 = tqdm.tqdm(
+        target_activitiess, 
+        leave=True, 
+        total=n,
+        desc="Iterating over targets"
+        )
+
+    target_mean_losses_per_target = []
+    noised_mean_losses_per_target = []
+
+    for target_activities in tqdm1:
+        target_prediction = sa.generate_linear_prediction(target_activities, coordinates, shape)
+        noise = np.random.randn(*shape)
+        noised_prediction = target_prediction + noise
+
+        values = sa.array_loss_function(
+            target_prediction, coordinates, 
+            max_iter=max_iter, 
+            yield_iter=True, threshold_warning=False,
+        )
+
+        mean_best_losses = []
+
+        tqdm2 = tqdm.tqdm(values, leave=False, desc="Iterating over losses: target")
+
+        for activitiess, distance_losses, predictions, r, iter_count in tqdm2:
+            idx = np.argsort(distance_losses)
+            mean_best_losses.append(np.mean(distance_losses))
+
+        mean_best_losses = np.array(mean_best_losses)
+        target_mean_losses_per_target.append(mean_best_losses)
+
+        noised_values = sa.array_loss_function(
+            noised_prediction, coordinates, 
+            max_iter=max_iter, 
+            yield_iter=True, threshold_warning=False,
+        )
+
+        noised_mean_losses = []
+
+        for activitiess, distance_losses, predictions, r, iter_count in noised_values:
+            losses = np.array([sa.euclidean_distance_loss(noised_prediction, prediction) for prediction in predictions])
+            noised_mean_losses.append(np.mean(losses))
+
+        noised_mean_losses = np.array(noised_mean_losses)
+        noised_mean_losses_per_target.append(noised_mean_losses)
+
+
+    target_mean_losses_per_target = np.array(target_mean_losses_per_target)
+    noised_mean_losses_per_target = np.array(noised_mean_losses_per_target)
+
+    # plot the mean losses per target, as scatter plot
+
+    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+
+    for mean_losses, noised_losses in zip(target_mean_losses_per_target, noised_mean_losses_per_target):
+        axs[0].scatter(np.arange(len(mean_losses)), mean_losses, alpha=0.1, color=[0,0,0])
+        axs[1].scatter(np.arange(len(noised_losses)), noised_losses, alpha=0.1, color=[1,0,0])
+
+    axs[0].set_title("Mean losses per target")
+    axs[1].set_title("Mean losses per noised target, compared to unnoised target")
+    
+    for ax in axs:        
+        ax.set_xlabel("Iteration")
+        ax.set_ylabel("Mean loss")
+
+    save_dir = pu.get_data_dir() / "search_algorithm"
+    save_dir.mkdir(exist_ok=True)
+
+    plt.savefig(save_dir / fig_name)
+    plt.show()
+
+def test_visualize_MappedFrame_extract_imgs_bool():
+    mframe = get_muscle_mframe()
+    mframe.prepare_map()
+
+    imgs_bool = mframe.extract_imgs_bool()
+
+    fig, ax = plt.subplots(1, 1, figsize=(15, 5))
+
+    ax.imshow(imgs_bool[0]+imgs_bool[1])
+
+    mframe.plot_convex_hulls_on_middle_view(ax)
+
+    ax.axis('off')
+
+    plt.show()
+
+def test_least_squares_activities(n=30, seed=0):
+    mframe = get_muscle_mframe()
+    mframe.prepare_map()
+
+    n_muscles = len(mframe.mmap.get_muscles())
+    coordinates = mframe.extract_muscles_pixels_coordinates()
+    shape = mframe.get_muscle_img().shape
+    imgs_bool = mframe.extract_imgs_bool()
+
+    np.random.seed(seed)
+
+    tqdmn = tqdm.tqdm(
+        range(n), 
+        leave=True, 
+        total=n,
+        desc=f"test_least_squares(): testing least squares {n} times"
+        )
+
+    for _ in tqdmn:
+
+        target_activities = np.random.rand(n_muscles)
+
+        target_prediction = sa.generate_linear_prediction(target_activities, coordinates, shape)
+
+        lsqu_activities = sa.least_squares_activities(target_prediction, imgs_bool)
+
+        # round to 4 decimals
+        target_activities = np.round(target_activities, 4)
+        lsqu_activities = np.round(lsqu_activities, 4)
+
+        assert np.allclose(target_activities, lsqu_activities), \
+            f"Expected the target activities to be the same as the least squares activities, got {target_activities} and {lsqu_activities}"
+
+def test_lstsq_activities_loss(n=30):
+    mframe = get_muscle_mframe()
+    mframe.prepare_map()
+
+    n_muscles = len(mframe.mmap.get_muscles())
+    coordinates = mframe.extract_muscles_pixels_coordinates()
+    shape = mframe.get_muscle_img().shape
+    imgs_bool = mframe.extract_imgs_bool()
+
+    tqdmn = tqdm.tqdm(
+        range(n),
+        leave=True,
+        total=n,
+        desc=f"test_lstsq_loss(): testing least squares loss {n} times"
+    )
+
+    for _ in tqdmn:
+        target_activities = np.random.rand(n_muscles)
+
+        target_prediction = sa.generate_linear_prediction(target_activities, coordinates, shape)
+
+        loss, _ = sa.lstsq_activities_loss(target_prediction, imgs_bool)
+
+        assert np.isclose(loss, 0),\
+            f"Expected the loss to be 0, got {loss}"
 
 
 if __name__ == '__main__':
@@ -260,8 +424,11 @@ if __name__ == '__main__':
     #test_remove_worse()
     #test_remove_compare_to_best()
     #test_euclidian_distance_loss()
-    
-    demo_array_loss_function()
+    test_least_squares_activities()
+    test_lstsq_activities_loss()
+
+    #demo_array_loss_function()
+    #stats_on_array_loss_function()
     
     
     
@@ -270,16 +437,5 @@ if __name__ == '__main__':
     #test_visualize_generate_all_close_activities_vector()
     #test_visualize_extract_fluorescence_array()
 
+
     print("All tests passed")
-
-
-
-
-
-
-
-
-
-
-    
-    

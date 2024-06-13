@@ -192,8 +192,8 @@ class MappedFrame():
         """
         self.align_map_axis_ref_point_on_muscle()
         self.orient_map_on_muscle()
-        ration = self.compute_muscle_map_ratio()
-        self.scale_map(ration)
+        ratio = self.compute_muscle_map_ratio()
+        self.scale_map(ratio)
     
     def roll_map_to_gamma(self, gamma):
         """
@@ -857,7 +857,30 @@ class MappedFrame():
         return fluorescence_array
 
         
+    def extract_imgs_bool(self):
 
+        muscles_pts = self.compute_projected_muscle_points()
+
+        imgs_bool = []
+        
+        for pts in muscles_pts:
+            coor = np.rint(pts).astype(int)
+            coor = np.unique(coor, axis=0)
+
+            img_bool = np.zeros(self.muscle_img.shape, dtype=bool)
+            img_bool[coor[:, 1], coor[:, 0]] = 1
+
+            imgs_bool.append(img_bool)
+
+        return imgs_bool
+
+        
+
+
+
+            
+            
+            
 
         
 

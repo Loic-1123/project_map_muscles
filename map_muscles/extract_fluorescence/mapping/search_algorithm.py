@@ -211,9 +211,6 @@ def remove_compare_to_best_idx(losses, ratio=1.5):
 
     return np.where(losses <= best_loss*ratio)[0]
 
-
-
-
 def array_loss_function(
         img_array,
         muscles_pixels_coordinates,
@@ -222,29 +219,39 @@ def array_loss_function(
         nb_activities_threshold=1000,
         activities_generator=generate_one_step_close_activities_vector,
         n=3, 
-        max_iter=1000,
+        max_iter=50,
         plateau_max_iter=10,
         plateau_fraction=1.05,
         yield_iter=False,
         threshold_warning=False
         ):
     """
-    Calculates the loss function for an array of activities.
+    Calculates the loss function an array of pixels values,
+    compared to the possible configuration of muscle activities.
+
+    This function returns the best prediction of the muscle activities that would map 
+    on the input image array.
 
     Parameters:
-    - mmap: The mmap object containing muscles pixels coordinates.
-    - array: The input array for which the loss function is calculated.
+    - img_array: The input image array of pixel values to compare with.
+    - muscles_pixels_coordinates: The coordinates of the muscles pixels, that the area taken by each muscle on the image.
     - distance_loss_func: The distance loss function to be used. Default is euclidean_distance_loss.
-    - loss_selector: The loss selector function to be used. Default is remove_compare_to_best_idx.
-    - n: The number of equally spaced values for 1 dimension. CAREFUL exponential growth. Default is 5.
-    - max_iter: The maximum number of iterations. Default is 1000.
+    - loss_selector: The loss selector function to be used to choose the best idx. Default is remove_compare_to_best_idx.
+    - nb_activities_threshold: The threshold for the number of activities. Default is 1000.
+    - activities_generator: The activities generator function. Default is generate_one_step_close_activities_vector.
+    - n: The number of equally spaced values for 1 dimension used to generate the firt round of activities. Default is 3, aka [0., 0.5, 1.].
+    - max_iter: The maximum number of iterations. Default is 500.
     - plateau_max_iter: The maximum number of iterations to wait for a plateau. Default is 10.
     - plateau_fraction: The fraction of the best loss to consider as a plateau. Default is 1.05.
+    - yield_iter: Whether to yield intermediate results at each iteration. Default is False.
+    - threshold_warning: Whether to print a warning when the number of activities exceeds the threshold. Default is False.
 
     Returns:
-    - activitiess: The generated activities.
-    - distance_losses: The calculated distance losses.
-    - predictions: The generated predictions.
+    - activitiess: The generated activities, sorted from best to worse of the last iteration.
+    - distance_losses: The calculated distance losses, sorted too.
+    - predictions: The corresponding generated predictions, sorted too. Could be used to plot the best predictions as an img.
+    - r: The value of r.
+    - iter_count: The id of the iteration.
     """
 
     # Prepare first iteration
@@ -257,7 +264,7 @@ def array_loss_function(
     plateau_counter = 0
     best_loss = np.inf
 
-    iter_count = 0
+    iter_count = 1
     
     def log_decaying_frac2(i):
         return 1 + 1/np.log(i+2)**2
@@ -271,7 +278,6 @@ def array_loss_function(
 
         # calculate the loss for each prediction
         distance_losses = np.array([distance_loss_func(img_array, prediction) for prediction in predictions])
-
         chosen_idx = loss_selector(distance_losses, ratio=log_decaying_frac2(iter_count))
 
         #preventing exponential growth of the number of activities
@@ -289,6 +295,10 @@ def array_loss_function(
         if yield_iter:
             yield activitiess, distance_losses, predictions, r, iter_count
 
+        # if last iteration, break without updating
+        if iter_count == max_iter:
+            break
+
         # update
 
         ## check for plateau: if best loss is not changing
@@ -299,9 +309,6 @@ def array_loss_function(
                 break
         else:
             plateau_counter = 0
-
-        ## update itreation counter
-        iter_count += 1
 
         ## update r: update every n_muscles iterations, to enable reaching [+r, +r, +r, ...]
         # since the one step activities generation change one dimension at a time
@@ -320,7 +327,8 @@ def array_loss_function(
         rounded_activitiess = np.round(new_activitiess, decimals=4)
         activitiess = np.unique(rounded_activitiess, axis=0)
 
-
+        ## update itreation counter
+        iter_count += 1
 
     # return sorted 
     sorted_idx = np.argsort(distance_losses)
@@ -330,27 +338,56 @@ def array_loss_function(
     
     return activitiess, distance_losses, predictions, r, iter_count
 
-        
+def generate_random_activities(n, n_muscles, seed=0):
+    """
+    Generate random activities for muscles.
 
+    Parameters:
+    - n (int): Number of activities to generate.
+    - n_muscles (int): Number of muscles.
+    - seed (int): Seed for random number generation. Default is 0.
+    - noise (bool): Whether to add noise to the generated activities. Default is True.
+
+    Returns:
+    - activitiess (ndarray): Array of shape (n, n_muscles) containing the generated activities.
+    - noised_activitiess (ndarray): Array of shape (n, n_muscles) containing the generated activities with added noise.
+    """
+
+    np.random.seed(seed)
+
+    activitiess = np.random.rand(n, n_muscles)
     
+    return activitiess
 
-    
-    
+def least_squares_activities(img_array, imgs_bool):
+    """
+    Calculate the least squares activities for a given image array and boolean images.
 
-    
+    Parameters:
+    img_array (ndarray): The input image array.
+    imgs_bool (list): The list of boolean images representing the pixels where a muscle is located on the image (True = 1).
 
-    
+    Returns:
+    ndarray: The least squares activities.
 
-    
+    """
+    A = np.array([img.flatten() for img in imgs_bool]).T
+    B = img_array.flatten().reshape(-1, 1)
+    x = np.linalg.lstsq(A, B, rcond=None)[0]
+    return x.reshape(-1)
 
+def lstsq_activities_loss(
+    img_array,
+    imgs_bool,
+    loss_function=euclidean_distance_loss,
+    ):
 
+    activities = least_squares_activities(img_array, imgs_bool)
+    predicted_img = activities @ np.array([img.flatten() for img in imgs_bool])
+    predicted_img = predicted_img.flatten()
+    img = img_array.flatten()
 
-    
-
-
-        
-
-
+    return loss_function(img, predicted_img), activities
 
 
 
