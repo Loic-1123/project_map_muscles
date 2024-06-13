@@ -426,12 +426,44 @@ def test_visualize_extract_pixel_values():
 
     plt.show()
 
+def test_roll_map_to_gamma(n=24):
+    mframe = get_muscle_mframe()
+    mframe.prepare_map()
+
+    alpha, beta, gamma = mframe.mmap.get_angles()
+
+    assert np.isclose(gamma, 0),\
+        f"Gamma angle should be 0 as default, got: {gamma}"
+    
+    gammas = np.linspace(0, 2*np.pi, n)
+
+    for gamma in gammas:
+        mframe.roll_map_to_gamma(gamma)
+        a, b, new_gamma = mframe.mmap.get_angles()
+        assert np.isclose(new_gamma, gamma),\
+            f"Gamma angle should be {gamma} after roll to chosen gamma, got: {new_gamma}"
+        
+        # assert other angles are the same
+        assert np.isclose(alpha, a),\
+            f"Alpha angle should be the same after roll to chosen gamma, got: {a}"
+        
+        assert np.isclose(beta, b),\
+            f"Beta angle should be the same after roll to chosen gamma, got: {b}"
+        
+
+        
+
+
+
+
+
 if __name__ == "__main__":
     
     ### Numerical tests ###
     test_compute_kin_middle_axis_angle()
     test_compute_kin_top_axis_angle()
     test_compute_kinematic_vector()
+    test_roll_map_to_gamma()
 
     
     ### Visualizations tests ###
@@ -445,7 +477,7 @@ if __name__ == "__main__":
     
     #test_visualize_muscle_img()
     #test_visualize_kin_muscle_with_axis()
-    test_visualize_muscle_oriented_scaled_map()
+    #test_visualize_muscle_oriented_scaled_map()
     #test_visualize_extract_pixels_coordinates()
     #test_visualize_extract_pixel_values()
 

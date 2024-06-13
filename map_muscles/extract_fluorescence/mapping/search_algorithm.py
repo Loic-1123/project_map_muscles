@@ -48,36 +48,132 @@ def generate_gammas(gamma, r, keep_gamma=True):
     else:
         return np.array([gamma1, gamma2])
 
+def remove_worse_idx(losses, fraction=0.5):
+    """
+    Remove the worst fraction of losses and return the indices of the remaining losses.
+
+    Parameters:
+    - losses (numpy.ndarray): Array of loss values.
+    - fraction (float): Fraction of losses to remove. Default is 0.5.
+
+    Returns:
+    - numpy.ndarray: Array of indices corresponding to the remaining losses.
+    """
+
+    sorted_idx = np.argsort(losses)
+    return sorted_idx[:int(fraction * len(losses))]
+   
+def remove_compare_to_best_idx(losses, ratio=1.5):
+    """
+    return the idx of the losses that are better than the best loss by a ratio
+    """
+
+    best_loss = np.min(losses)
+
+    return np.where(losses <= best_loss*ratio)[0]
+
+def euclidean_distance_loss(array1, array2):
+    """
+    Calculate the Euclidean distance loss between two arrays.
+
+    Parameters:
+    - array1 (numpy.ndarray): The first array.
+    - array2 (numpy.ndarray): The second array.
+
+    Returns:
+    - float: The Euclidean distance loss between the two arrays.
+    """
+
+    return np.linalg.norm(array1 - array2)
+
+def least_squares_activities(img_array, imgs_bool):
+    """
+    Calculate the least squares activities for a given image array and boolean images.
+
+    Parameters:
+    img_array (ndarray): The input image array.
+    imgs_bool (list): The list of boolean images representing the pixels where a muscle is located on the image (True = 1).
+
+    Returns:
+    ndarray: The least squares activities.
+
+    """
+    A = np.array([img.flatten() for img in imgs_bool]).T
+    B = img_array.flatten().reshape(-1, 1)
+    x = np.linalg.lstsq(A, B, rcond=None)[0]
+    return x.reshape(-1)
+
+def lstsq_activities_loss(
+    img_array,
+    imgs_bool,
+    loss_function=euclidean_distance_loss,
+    ):
+
+    activities = least_squares_activities(img_array, imgs_bool)
+    predicted_img = activities @ np.array([img.flatten() for img in imgs_bool])
+    predicted_img = predicted_img.flatten()
+    img = img_array.flatten()
+
+    return loss_function(img, predicted_img), activities
 
 def optimize_gamma(
-        mframe: mf.MappedFrame, 
-        loss_function,
-        n=24, n_iter=1000, keep_best=5,
+        mframe: mf.MappedFrame,
+        normalization_divisor,
+        n_gammas=24, n_iter=10,
+        loss_selector=remove_compare_to_best_idx,
+        yield_iter=False,
         ):
     
-    # prepare the first iteration
-    gammas = generate_equally_spaced_gammas(n)
-    losses = []
-    r = (GAMMA_RANGE / (n-1)) / 2
+    img_array = mframe.get_muscle_img()
+    bool_imgs = mframe.extract_imgs_bool()
 
-    for _ in range(n_iter):
+    img_array = img_array / normalization_divisor
+    # multiply by n_muscles to keep the values between 0 and n_muscles, 
+    # assuming a linear sum of the muscles activities
+
+    tqdmr = tqdm.tqdm(
+        range(n_iter),
+        desc="Optimizing gamma",
+        total=n_iter
+        )
+
+    # prepare the first iteration
+    gammas = generate_equally_spaced_gammas(n_gammas)
+    losses = []
+    activitiess = []
+    r = (GAMMA_RANGE / n_gammas) / 2
+
+
+    for i in tqdmr:
         for gamma in gammas:
             mframe.roll_map_to_gamma(gamma)
-            loss = loss_function(mframe)
+            loss, activities = lstsq_activities_loss(img_array, bool_imgs)
 
             losses.append(loss)
+            activitiess.append(activities)
         
-        best_gammas = best_gammas[np.argsort(losses)[:keep_best]]
+        idx= loss_selector(losses)
+        best_gammas = gammas[idx]
 
-        new_gammas = []
-        for gamma in best_gammas:
-            new_gammas.extend(generate_gammas(gamma, r))
+        if yield_iter:
+            yield gammas, activitiess, losses, r, i
+
+        new_gammas = np.array([generate_gammas(gamma, r) for gamma in best_gammas]).flatten()
+        new_gammas = np.unique(new_gammas)
+
 
         # prepare new iteration
         gammas = new_gammas
         losses.clear()
+        activitiess.clear()
         r = r/2
 
+    # sort
+    sorted_idx = np.argsort(losses)
+    gammas = gammas[sorted_idx]
+    losses = losses[sorted_idx]
+
+    return gammas, losses, r, i
 
 def generate_linear_prediction(
         muscles_activities, 
@@ -171,45 +267,6 @@ def generate_one_step_close_activities_vector(activities, r):
     new_activities = np.clip(new_activities, 0, 1)
 
     return new_activities
-
-
-def euclidean_distance_loss(array1, array2):
-    """
-    Calculate the Euclidean distance loss between two arrays.
-
-    Parameters:
-    - array1 (numpy.ndarray): The first array.
-    - array2 (numpy.ndarray): The second array.
-
-    Returns:
-    - float: The Euclidean distance loss between the two arrays.
-    """
-
-    return np.linalg.norm(array1 - array2)
-
-def remove_worse_idx(losses, fraction=0.5):
-    """
-    Remove the worst fraction of losses and return the indices of the remaining losses.
-
-    Parameters:
-    - losses (numpy.ndarray): Array of loss values.
-    - fraction (float): Fraction of losses to remove. Default is 0.5.
-
-    Returns:
-    - numpy.ndarray: Array of indices corresponding to the remaining losses.
-    """
-
-    sorted_idx = np.argsort(losses)
-    return sorted_idx[:int(fraction * len(losses))]
-   
-def remove_compare_to_best_idx(losses, ratio=1.5):
-    """
-    return the idx of the losses that are better than the best loss by a ratio
-    """
-
-    best_loss = np.min(losses)
-
-    return np.where(losses <= best_loss*ratio)[0]
 
 def array_loss_function(
         img_array,
@@ -359,36 +416,11 @@ def generate_random_activities(n, n_muscles, seed=0):
     
     return activitiess
 
-def least_squares_activities(img_array, imgs_bool):
-    """
-    Calculate the least squares activities for a given image array and boolean images.
 
-    Parameters:
-    img_array (ndarray): The input image array.
-    imgs_bool (list): The list of boolean images representing the pixels where a muscle is located on the image (True = 1).
 
-    Returns:
-    ndarray: The least squares activities.
 
-    """
-    A = np.array([img.flatten() for img in imgs_bool]).T
-    B = img_array.flatten().reshape(-1, 1)
-    x = np.linalg.lstsq(A, B, rcond=None)[0]
-    return x.reshape(-1)
-
-def lstsq_activities_loss(
-    img_array,
-    imgs_bool,
-    loss_function=euclidean_distance_loss,
-    ):
-
-    activities = least_squares_activities(img_array, imgs_bool)
-    predicted_img = activities @ np.array([img.flatten() for img in imgs_bool])
-    predicted_img = predicted_img.flatten()
-    img = img_array.flatten()
-
-    return loss_function(img, predicted_img), activities
-
+    
+    
 
 
 
