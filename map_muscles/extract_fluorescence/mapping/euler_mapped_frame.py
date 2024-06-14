@@ -211,8 +211,8 @@ class MappedFrame():
         b = self.mmap.get_beta()
 
         self.mmap = self.mmap.rotate_to_angles([a,b,gamma])
+    
     # Plotting
-
     def plot_kin_img(self, ax, **kwargs):
         """
         Plots the kinematic image on the given axes.
@@ -872,7 +872,15 @@ class MappedFrame():
 
             imgs_bool.append(img_bool)
 
-        return imgs_bool
+        return np.array(imgs_bool)
+    
+    def extract_flatten_imgs_bool(self):
+
+        imgs_bool = self.extract_imgs_bool()
+
+        flatten_imgs_bool = np.array([img.flatten() for img in imgs_bool])
+
+        return flatten_imgs_bool
 
         
 

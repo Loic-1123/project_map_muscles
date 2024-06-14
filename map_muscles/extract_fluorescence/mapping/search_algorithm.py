@@ -7,6 +7,7 @@ import tqdm
 
 import map_muscles.extract_fluorescence.mapping.euler_mapped_frame as mf
 from map_muscles.extract_fluorescence.tests.test_euler_mapped_frame import get_muscle_mframe
+import matplotlib.pyplot as plt
 
 
 
@@ -27,7 +28,7 @@ def generate_equally_spaced_gammas(n):
 
     return np.linspace(0, GAMMA_RANGE, n)
 
-def generate_gammas(gamma, r, keep_gamma=True):
+def generate_gammas(gamma, r, keep_gamma=False):
     """
     Generate gamma values around a given gamma value.
 
@@ -71,6 +72,55 @@ def remove_compare_to_best_idx(losses, ratio=1.5):
     best_loss = np.min(losses)
 
     return np.where(losses <= best_loss*ratio)[0]
+
+def keep_best_idx(losses, fraction=None, keep_n = None):
+    """
+    Keep the best fraction of losses and return the indices of the remaining losses.
+
+    Parameters:
+    - losses (numpy.ndarray): Array of loss values.
+    - fraction (float): Fraction of losses to keep. Default is None.
+
+    Returns:
+    - numpy.ndarray: Array of indices corresponding to the remaining losses.
+    """
+
+    sorted_idx = np.argsort(losses)
+
+    if keep_n is None:
+        return sorted_idx
+    else:   
+        return sorted_idx[:keep_n]
+
+def remove_worse_idx(losses, remove_n=1):
+    """
+    Remove the worst n losses and return the indices of the remaining losses.
+
+    Parameters:
+    - losses (numpy.ndarray): Array of loss values.
+    - remove_n (int): Number of losses to remove. Default is 1.
+
+    Returns:
+    - numpy.ndarray: Array of indices corresponding to the remaining losses.
+    """
+
+    sorted_idx = np.argsort(losses)
+    return sorted_idx[:-remove_n]
+
+def keep_best_frac_idx(losses, fraction=0.5):
+    """
+    Keep the best fraction of losses and return the indices of the remaining losses.
+
+    Parameters:
+    - losses (numpy.ndarray): Array of loss values.
+    - fraction (float): Fraction of losses to keep. Default is 0.5.
+
+    Returns:
+    - numpy.ndarray: Array of indices corresponding to the remaining losses.
+    """
+
+    sorted_idx = np.argsort(losses)
+    return sorted_idx[:int(fraction * len(losses))]
 
 def euclidean_distance_loss(array1, array2):
     """
@@ -116,20 +166,79 @@ def lstsq_activities_loss(
 
     return loss_function(img, predicted_img), activities
 
+
+def log_decaying_frac2(i):
+    """
+    Calculate a logarithmically decaying fraction based on the input value.
+
+    Parameters:
+    i (int): The input value.
+
+    Returns:
+    float: The calculated fraction.
+
+    Example:
+    
+    Input array: array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+    
+    Output array:
+    array([1.82853545, 1.52034225, 1.3860571 , 1.31148747, 1.26409151,
+       1.23126322, 1.20713386, 1.1886117 , 1.17391602])
+
+    """
+    return 1 + 1/np.log(i+2)**2
+
+def linear_decaying_frac(i):
+    """
+    Calculates a linearly decaying fraction based on the input value i.
+    
+    Parameters:
+        i (int): The input value.
+        
+    Returns:
+        float: The linearly decaying fraction.
+
+    Example:
+
+    Input array: array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+
+    Output array:
+    array([1.5       , 1.33333333, 1.25      , 1.2       , 1.16666667,
+       1.14285714, 1.125     , 1.11111111, 1.1       ])
+    """
+    return 1 + 1/(i+1)
+
+def exponential_decaying_frac(i):
+    """
+    Calculate the exponential decaying fraction for a given index.
+
+    Parameters:
+    i (int): The index value.
+
+    Returns:
+    float: The exponential decaying fraction.
+
+    Example:
+
+    Input array: array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+
+    Output array:
+    array([1.13533528, 1.04978707, 1.01831564, 1.00673795, 1.00247875,
+       1.00091188, 1.00033546, 1.00012341, 1.0000454 ])
+
+    """
+    return 1 + 1/np.exp(i+1)
+
 def optimize_gamma(
         mframe: mf.MappedFrame,
-        normalization_divisor,
-        n_gammas=24, n_iter=10,
-        loss_selector=remove_compare_to_best_idx,
-        yield_iter=False,
+        target_img_array,
+        normalization_divisor=1,
+        n_gammas=60, n_iter=2,
+        n_rounding=10,
         ):
     
-    img_array = mframe.get_muscle_img()
-    bool_imgs = mframe.extract_imgs_bool()
+    n_muscles = len(mframe.mmap.get_muscles())
 
-    img_array = img_array / normalization_divisor
-    # multiply by n_muscles to keep the values between 0 and n_muscles, 
-    # assuming a linear sum of the muscles activities
 
     tqdmr = tqdm.tqdm(
         range(n_iter),
@@ -139,41 +248,84 @@ def optimize_gamma(
 
     # prepare the first iteration
     gammas = generate_equally_spaced_gammas(n_gammas)
-    losses = []
-    activitiess = []
-    r = (GAMMA_RANGE / n_gammas) / 2
+    losses = np.zeros(n_gammas)
+    activitiess = np.zeros((n_gammas, n_muscles))
+    r = (GAMMA_RANGE / (n_gammas-1)) / 2
+    iter_count = 0
 
+    old_gammas = np.array([np.inf])
+    old_losses = np.array([np.inf])
+    old_activitiess = np.full((1, n_muscles), np.inf)
 
-    for i in tqdmr:
-        for gamma in gammas:
-            mframe.roll_map_to_gamma(gamma)
+    for _ in tqdmr:
+
+        tqdmg = tqdm.tqdm(
+            range(len(gammas)),
+            desc=f"Gammas iteration {iter_count}: {len(gammas)} gammas",
+            )
+
+        for i in tqdmg:
+            mframe.roll_map_to_gamma(gammas[i])
+
+            bool_imgs = mframe.extract_imgs_bool()
+            
+            # isolate the muscles coordinates only
+            total_bool_img = np.sum(bool_imgs, axis=0) > 0
+            img_array = target_img_array * total_bool_img
+            
+            # normalization
+            img_array = img_array / normalization_divisor
+
             loss, activities = lstsq_activities_loss(img_array, bool_imgs)
 
-            losses.append(loss)
-            activitiess.append(activities)
+            # insert new results at the end
+            losses[i] = loss
+            activitiess[i] = activities
+
+
+        # extend with old results
+        gammas = np.append(gammas, old_gammas)
+        losses = np.append(losses, old_losses)
+        activitiess = np.append(activitiess, old_activitiess, axis=0)
         
-        idx= loss_selector(losses)
-        best_gammas = gammas[idx]
-
+        idx= keep_best_frac_idx(losses, fraction=0.5)
+        # store best results
+        old_gammas = gammas[idx]
+        old_losses = losses[idx]
+        old_activitiess = activitiess[idx]
+        
+        
+        """
+        # uncomment if needed. Else, the function is considered as a generator and cannot return anything
         if yield_iter:
-            yield gammas, activitiess, losses, r, i
+            # sort
+            sorted_idx = np.argsort(old_losses)
+            old_gammas = old_gammas[sorted_idx]
+            old_losses = old_losses[sorted_idx]
+            old_activitiess = old_activitiess[sorted_idx]
+            print('YIELDING')
+            yield old_gammas, old_losses, old_activitiess, r, iter_count
+        """
 
-        new_gammas = np.array([generate_gammas(gamma, r) for gamma in best_gammas]).flatten()
-        new_gammas = np.unique(new_gammas)
-
+        new_gammas = np.array([generate_gammas(gamma, r) for gamma in old_gammas]).flatten()
+        ### rounding to enable the removal of duplicates (due to float numbers)
+        rounded_gammas = np.round(new_gammas, decimals=n_rounding)
+        new_gammas = np.unique(rounded_gammas)
 
         # prepare new iteration
         gammas = new_gammas
-        losses.clear()
-        activitiess.clear()
+        losses = np.zeros(len(gammas))
+        activitiess = np.zeros((len(gammas), n_muscles))
         r = r/2
+        iter_count += 1
 
     # sort
-    sorted_idx = np.argsort(losses)
-    gammas = gammas[sorted_idx]
-    losses = losses[sorted_idx]
+    sorted_idx = np.argsort(old_losses)
+    gammas = old_gammas[sorted_idx]
+    losses = old_losses[sorted_idx]
+    activitiess = old_activitiess[sorted_idx]
 
-    return gammas, losses, r, i
+    return gammas, losses, activitiess, r, iter_count
 
 def generate_linear_prediction(
         muscles_activities, 

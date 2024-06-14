@@ -418,17 +418,67 @@ def test_lstsq_activities_loss(n=30):
         assert np.isclose(loss, 0),\
             f"Expected the loss to be 0, got {loss}"
 
+def demo_optimize_gamma():
+    mframe = get_muscle_mframe()
+    mframe.prepare_map()
+
+    np.random.seed(0)
+    target_gamma = np.random.rand()*2*np.pi
+    target_activities = np.random.rand(len(mframe.mmap.get_muscles()))
+
+    mframe.roll_map_to_gamma(target_gamma)
+
+    flat_imgs_bool = mframe.extract_flatten_imgs_bool()
+
+    target_img_array = (target_activities @ flat_imgs_bool).reshape(mframe.get_muscle_img().shape)
+
+    gammas, losses, activitiess, r, iter_count = sa.optimize_gamma(
+        mframe, target_img_array, n_gammas = 60)
+
+
+    # plot 5 best predictions
+    n=5
+    fig, axs = plt.subplots(1, n+1, figsize=(5*(n+1), 5))
+
+    # plot the target prediction
+    mframe.roll_map_to_gamma(target_gamma)
+    axs[0].imshow(target_img_array)
+    mframe.plot_convex_hulls_on_middle_view(axs[0])
+    axs[0].set_title(f"Target prediction: gamma: {target_gamma:.2f}, activities: {target_activities.round(2)}")
+    axs[0].title.set_fontsize(6)
+    axs[0].axis('off')
+
+    for i in range(0,n):
+        ax = axs[i+1]
+        gamma = gammas[i]
+        mframe.roll_map_to_gamma(gamma)
+        prediction = (activitiess[i] @ mframe.extract_flatten_imgs_bool()).reshape(mframe.get_muscle_img().shape)
+        ax.imshow(prediction)
+        mframe.plot_convex_hulls_on_middle_view(ax)
+
+        title = f"Gamma: {gamma:.2f}, Loss: {losses[i]:.2f}, Activities: {activitiess[i].round(2)}"
+        ax.set_title(title)
+        # reduce title size
+        ax.title.set_fontsize(6)
+        
+        ax.axis('off')
+
+    plt.show()
+
+
+
 
 if __name__ == '__main__':
     
     #test_remove_worse()
     #test_remove_compare_to_best()
     #test_euclidian_distance_loss()
-    test_least_squares_activities()
-    test_lstsq_activities_loss()
+    #test_least_squares_activities()
+    #test_lstsq_activities_loss()
 
     #demo_array_loss_function()
     #stats_on_array_loss_function()
+    demo_optimize_gamma()
     
     
     
