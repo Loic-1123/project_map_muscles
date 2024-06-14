@@ -255,7 +255,7 @@ class Muscle():
         """
         t_points = self.points + translation
         t_axis_points = self.axis_points + translation
-        return Muscle(t_points, name=self.name, axis_points=t_axis_points)
+        return Muscle(t_points, name=self.name, axis_points=t_axis_points, gamma=self.gamma)
     
     def centered_on_axis_point(self):
         """
@@ -489,7 +489,7 @@ class Muscle():
     
     # Setters / Initializers
       
-    def set_axis_points(self, axis_points: np.ndarray, gamma=0, compute_dependent_attributes=True):
+    def set_axis_points(self, axis_points: np.ndarray, gamma, compute_dependent_attributes=True):
         """
         Set the axis points of the muscle template.
 
@@ -536,7 +536,7 @@ class Muscle():
         self.assert_z_vector("In init_beta()")
         self.beta = compute_beta(self.z_vector)
 
-    def init_gamma_and_x_y_vectors(self, gamma=0):
+    def init_gamma_and_x_y_vectors(self, gamma):
         self.assert_alpha("In init_gamma_and_x_y_vectors()")
         self.assert_beta("In init_gamma_and_x_y_vectors()")
         self.assert_z_vector("In init_gamma_and_x_y_vectors()")
@@ -728,10 +728,8 @@ class MuscleMap():
         
         self.muscles = muscles
 
-        self.gamma = gamma
-
         if np.any(axis_points, None):
-            self.set_axis_points(axis_points, compute_dependent_attributes=compute_dependent_attributes)
+            self.set_axis_points(axis_points, compute_dependent_attributes=compute_dependent_attributes, gamma=gamma)
 
         else:
             self.axis_points = None
@@ -816,14 +814,14 @@ class MuscleMap():
                 print_warning=print_warning, 
                 raise_assertions=raise_assertions, translate_back=translate_back) \
                 for muscle in self.muscles]
-        
+                
         r = Rot.from_euler('ZXZ', [-self.gamma, -self.beta, -self.alpha])
         centered_axis = self.get_axis_points() - self.get_axis_points()[0]
         r_axis_points = r.apply(centered_axis)
 
         if translate_back:
             r_axis_points = r_axis_points + self.axis_points[0] 
-
+ 
         return MuscleMap(r_muscles, axis_points=r_axis_points, name=self.name, gamma=0)
     
     def rotate_to_angles(
@@ -943,7 +941,7 @@ class MuscleMap():
 
     # Setters
 
-    def set_axis_points(self, axis_points: np.ndarray, gamma=0, compute_dependent_attributes=True):
+    def set_axis_points(self, axis_points: np.ndarray, gamma=None, compute_dependent_attributes=True):
         """
         Set the axis points of the muscle map.
 
@@ -963,6 +961,12 @@ class MuscleMap():
             self.init_z_vector()
             self.init_aplha_from_z_vector()
             self.init_beta_from_z_vector()
+
+            if gamma is None:
+                if self.gamma is None:
+                    gamma = 0
+                else:
+                    gamma = self.gamma
             self.init_gamma_and_x_y_vectors(gamma=gamma)
             
             self.assert_muscles("In set_axis_points()")
@@ -993,7 +997,7 @@ class MuscleMap():
         self.assert_z_vector("In init_beta()")
         self.beta = compute_beta(self.z_vector)
 
-    def init_gamma_and_x_y_vectors(self, gamma=0):
+    def init_gamma_and_x_y_vectors(self, gamma):
         self.assert_alpha("In init_default_gamma_and_x_y_vectors()")
         self.assert_beta("In init_default_gamma_and_x_y_vectors()")
         self.assert_z_vector("In init_default_gamma_and_x_y_vectors()")

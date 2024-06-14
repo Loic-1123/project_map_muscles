@@ -236,12 +236,56 @@ def test_visualize_apply_rotation():
 
 
 
+def test_visualize_rotate_to_angles():
+    mmap = get_map()
+    alpha, beta, gamma0 = mmap.get_angles()
+
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+
+    center = mmap.get_axis_points()[0]
+    add_coor_frame(vis, center, size=500)
+    add_pcd_xy_plane(vis, 4000, 100, z=center[2], center=(center[0], center[1]))
+    
+    mmap.draw_default(vis)
+
+    print('mmap reset rotation')
+    mmapr = mmap.reset_rotation()
+    mmapr.draw_default(vis)
+
+    gamma = pi/3
+    # translation vector 
+    dist = 200
+    x = np.array([dist, 0, 0])
+
+    print('mmap1: rotate to angles')
+    mmap1 = mmap.rotate_to_angles(np.array([alpha, beta, gamma])).translate(x)
+
+    # print angles of Muscle object
+    print('mmap1 Muscle angles:', mmap1.muscles[0].get_angles())
+
+    print('mmap1 reset rotation')
+    mmap1r = mmap1.reset_rotation()
+    mmap1r.draw_default(vis)
+
+    print('mmap2: rotate to angles')
+    mmap2 = mmap1.rotate_to_angles(np.array([alpha, beta, gamma0])).translate(x)
+    print('mmap2 reset rotation')
+    mmap2r = mmap2.reset_rotation()
+    mmap2r.draw_default(vis)
 
 
+    print('mmap3: rotate to angles')
+    mmap3 = mmap2.rotate_to_angles(np.array([alpha, beta, gamma])).translate(x)
+    print('mmap3 reset rotation')
+    mmap3r = mmap3.reset_rotation()
+    mmap3r.draw_default(vis)
 
-    
-    
-    
+    mmap1.draw_default(vis)
+    mmap2.draw_default(vis)
+    mmap3.draw_default(vis)
+
+    vis.run(); vis.destroy_window()
 
 
 
@@ -259,7 +303,9 @@ if __name__ == "__main__":
     #test_visualize_reset_rotation()
     #test_visualize_rotation()
     #test_visualize_roll()
-    test_visualize_apply_rotation()
+    #test_visualize_apply_rotation()
+
+    test_visualize_rotate_to_angles()
 
 
 
